@@ -1,58 +1,58 @@
 const mongoose = require('mongoose');
 
 const submissionSchema = new mongoose.Schema({
-  assignment: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Assignment',
-    required: [true, 'Assignment is required']
-  },
-  student: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'Student is required']
-  },
-  content: {
-    type: String,
-    trim: true
-  },
-  attachments: [{
-    name: String,
-    url: String,
-    uploadedAt: {
+   assignment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Assignment',
+      required: [true, 'Assignment is required']
+   },
+   student: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Student is required']
+   },
+   content: {
+      type: String,
+      trim: true
+   },
+   attachments: [{
+      name: String,
+      url: String,
+      uploadedAt: {
+         type: Date,
+         default: Date.now
+      }
+   }],
+   submittedAt: {
       type: Date,
       default: Date.now
-    }
-  }],
-  submittedAt: {
-    type: Date,
-    default: Date.now
-  },
-  status: {
-    type: String,
-    enum: ['draft', 'submitted', 'graded', 'returned'],
-    default: 'draft'
-  },
-  score: {
-    type: Number,
-    min: 0
-  },
-  feedback: {
-    type: String,
-    trim: true
-  },
-  gradedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  gradedAt: {
-    type: Date
-  },
-  isLate: {
-    type: Boolean,
-    default: false
-  }
+   },
+   status: {
+      type: String,
+      enum: ['draft', 'submitted', 'graded', 'returned'],
+      default: 'draft'
+   },
+   score: {
+      type: Number,
+      min: 0
+   },
+   feedback: {
+      type: String,
+      trim: true
+   },
+   gradedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+   },
+   gradedAt: {
+      type: Date
+   },
+   isLate: {
+      type: Boolean,
+      default: false
+   }
 }, {
-  timestamps: true
+   timestamps: true
 });
 
 // Compound index to prevent duplicate submissions

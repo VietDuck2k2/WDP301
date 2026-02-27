@@ -7,12 +7,12 @@ const ApiResponse = require('../../utils/apiResponse');
  * @access  Private/Student
  */
 const getClassAssignments = async (req, res, next) => {
-  try {
-    const assignments = await assignmentService.getClassAssignments(req.params.classId, 'published');
-    ApiResponse.ok(res, assignments);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const assignments = await assignmentService.getClassAssignments(req.params.classId, 'published');
+      ApiResponse.ok(res, assignments);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -21,15 +21,15 @@ const getClassAssignments = async (req, res, next) => {
  * @access  Private/Student
  */
 const getAssignmentById = async (req, res, next) => {
-  try {
-    const assignment = await assignmentService.getAssignmentById(req.params.id);
-    ApiResponse.ok(res, assignment);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const assignment = await assignmentService.getAssignmentById(req.params.id);
+      ApiResponse.ok(res, assignment);
+   } catch (error) {
+      next(error);
+   }
 };
 
 module.exports = {
-  getClassAssignments,
-  getAssignmentById
+   getClassAssignments,
+   getAssignmentById
 };

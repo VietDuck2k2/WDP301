@@ -15,9 +15,9 @@ router.put('/', meController.updateProfile);
 
 // @route   POST /api/me/change-password
 router.post(
-  '/change-password',
-  validate(['currentPassword', 'newPassword']),
-  meController.changePassword
+   '/change-password',
+   validate(['currentPassword', 'newPassword']),
+   meController.changePassword
 );
 
 module.exports = router;

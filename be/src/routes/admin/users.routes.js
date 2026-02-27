@@ -19,10 +19,10 @@ router.get('/:id', validateObjectId('id'), usersController.getUserById);
 
 // @route   POST /api/admin/users
 router.post(
-  '/',
-  validate(['email', 'password', 'firstName', 'lastName', 'role']),
-  validateEmail,
-  usersController.createUser
+   '/',
+   validate(['email', 'password', 'firstName', 'lastName', 'role']),
+   validateEmail,
+   usersController.createUser
 );
 
 // @route   PUT /api/admin/users/:id

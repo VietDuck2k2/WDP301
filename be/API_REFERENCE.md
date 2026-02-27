@@ -1,12 +1,15 @@
 # ECMS API Quick Reference
 
 ## Base URL
+
 ```
 http://localhost:5000/api
 ```
 
 ## Authentication
+
 Include JWT token in header for protected routes:
+
 ```
 Authorization: Bearer <your-token>
 ```
@@ -16,6 +19,7 @@ Authorization: Bearer <your-token>
 ## 🔓 Public Endpoints
 
 ### Auth
+
 ```http
 POST /api/auth/register
 POST /api/auth/login
@@ -26,6 +30,7 @@ POST /api/auth/login
 ## 🔐 Authenticated Endpoints
 
 ### Profile (All Roles)
+
 ```http
 GET    /api/me
 PUT    /api/me
@@ -33,6 +38,7 @@ POST   /api/me/change-password
 ```
 
 ### Files (All Roles)
+
 ```http
 POST   /api/files/upload
 POST   /api/files/upload-multiple
@@ -45,6 +51,7 @@ GET    /api/files/:filename/info
 ## 👑 Admin Endpoints
 
 ### Users
+
 ```http
 GET    /api/admin/users
 GET    /api/admin/users/:id
@@ -55,6 +62,7 @@ DELETE /api/admin/users/:id
 ```
 
 ### Classes
+
 ```http
 GET    /api/admin/classes
 GET    /api/admin/classes/:id
@@ -67,6 +75,7 @@ DELETE /api/admin/classes/:id
 ```
 
 ### Schedule Templates
+
 ```http
 GET    /api/admin/schedule-templates
 GET    /api/admin/schedule-templates/:id
@@ -76,6 +85,7 @@ DELETE /api/admin/schedule-templates/:id
 ```
 
 ### Sessions
+
 ```http
 GET    /api/admin/sessions
 GET    /api/admin/sessions/:id
@@ -89,6 +99,7 @@ DELETE /api/admin/sessions/:id
 ## 👨‍🏫 Teacher Endpoints
 
 ### Classes
+
 ```http
 GET    /api/teacher/classes
 GET    /api/teacher/classes/:id
@@ -96,6 +107,7 @@ GET    /api/teacher/classes/:id/members
 ```
 
 ### Sessions
+
 ```http
 GET    /api/teacher/sessions
 GET    /api/teacher/sessions/:id
@@ -105,6 +117,7 @@ POST   /api/teacher/sessions/:id/materials
 ```
 
 ### Attendance
+
 ```http
 GET    /api/teacher/attendances/sessions/:sessionId
 POST   /api/teacher/attendances/sessions/:sessionId
@@ -113,6 +126,7 @@ GET    /api/teacher/attendances/students/:studentId
 ```
 
 ### Assignments
+
 ```http
 GET    /api/teacher/assignments
 GET    /api/teacher/assignments/:id
@@ -125,6 +139,7 @@ DELETE /api/teacher/assignments/:id
 ```
 
 ### Announcements
+
 ```http
 GET    /api/teacher/announcements
 GET    /api/teacher/announcements/:id
@@ -139,18 +154,21 @@ DELETE /api/teacher/announcements/:id
 ## 👨‍🎓 Student Endpoints
 
 ### Classes
+
 ```http
 GET    /api/student/classes
 GET    /api/student/classes/:id
 ```
 
 ### Assignments
+
 ```http
 GET    /api/student/assignments/classes/:classId
 GET    /api/student/assignments/:id
 ```
 
 ### Submissions
+
 ```http
 GET    /api/student/submissions
 GET    /api/student/submissions/:id
@@ -160,6 +178,7 @@ POST   /api/student/submissions/assignments/:assignmentId/save-draft
 ```
 
 ### Announcements
+
 ```http
 GET    /api/student/announcements/classes/:classId
 GET    /api/student/announcements/:id
@@ -170,6 +189,7 @@ GET    /api/student/announcements/:id
 ## 📝 Request Examples
 
 ### Register User
+
 ```bash
 curl -X POST http://localhost:5000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -183,6 +203,7 @@ curl -X POST http://localhost:5000/api/auth/register \
 ```
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -193,12 +214,14 @@ curl -X POST http://localhost:5000/api/auth/login \
 ```
 
 ### Get Profile
+
 ```bash
 curl http://localhost:5000/api/me \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Create Class (Admin)
+
 ```bash
 curl -X POST http://localhost:5000/api/admin/classes \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -214,6 +237,7 @@ curl -X POST http://localhost:5000/api/admin/classes \
 ```
 
 ### Upload File
+
 ```bash
 curl -X POST http://localhost:5000/api/files/upload \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -221,6 +245,7 @@ curl -X POST http://localhost:5000/api/files/upload \
 ```
 
 ### Create Assignment (Teacher)
+
 ```bash
 curl -X POST http://localhost:5000/api/teacher/assignments \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -235,6 +260,7 @@ curl -X POST http://localhost:5000/api/teacher/assignments \
 ```
 
 ### Submit Assignment (Student)
+
 ```bash
 curl -X POST http://localhost:5000/api/student/submissions/assignments/ASSIGNMENT_ID/submit \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -245,6 +271,7 @@ curl -X POST http://localhost:5000/api/student/submissions/assignments/ASSIGNMEN
 ```
 
 ### Mark Attendance (Teacher)
+
 ```bash
 curl -X POST http://localhost:5000/api/teacher/attendances/sessions/SESSION_ID \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -260,11 +287,13 @@ curl -X POST http://localhost:5000/api/teacher/attendances/sessions/SESSION_ID \
 ## 🔍 Query Parameters
 
 ### Pagination (Most list endpoints)
+
 ```
 ?page=1&limit=20
 ```
 
 ### Filtering
+
 ```
 # By role
 /api/admin/users?role=teacher
@@ -280,6 +309,7 @@ curl -X POST http://localhost:5000/api/teacher/attendances/sessions/SESSION_ID \
 ```
 
 ### Sorting
+
 ```
 # Most endpoints sort by creation date descending by default
 ```
@@ -289,6 +319,7 @@ curl -X POST http://localhost:5000/api/teacher/attendances/sessions/SESSION_ID \
 ## 📤 Response Format
 
 ### Success Response
+
 ```json
 {
   "success": true,
@@ -300,6 +331,7 @@ curl -X POST http://localhost:5000/api/teacher/attendances/sessions/SESSION_ID \
 ```
 
 ### Error Response
+
 ```json
 {
   "success": false,
@@ -309,6 +341,7 @@ curl -X POST http://localhost:5000/api/teacher/attendances/sessions/SESSION_ID \
 ```
 
 ### Paginated Response
+
 ```json
 {
   "success": true,
@@ -338,27 +371,32 @@ curl -X POST http://localhost:5000/api/teacher/attendances/sessions/SESSION_ID \
 ## 📋 Data Models
 
 ### User Fields
+
 - email, password, firstName, lastName
 - role (admin/teacher/student)
 - phone, avatar, dateOfBirth, address
 - isActive, lastLogin
 
 ### Class Fields
+
 - name, code, description, level
 - capacity, startDate, endDate
 - scheduleTemplate, room, status
 
 ### Assignment Fields
+
 - class, title, description, instructions
 - dueDate, maxScore, attachments
 - createdBy, status, publishedAt
 
 ### Session Fields
+
 - class, title, description, sessionNumber
 - date, startTime, endTime, room
 - teacher, status, materials, notes
 
 ### Attendance Fields
+
 - session, student, status
 - arrivedAt, notes, markedBy, markedAt
 
@@ -367,23 +405,29 @@ curl -X POST http://localhost:5000/api/teacher/attendances/sessions/SESSION_ID \
 ## 🎯 Validation Rules
 
 ### Email
+
 - Must be valid email format
 - Case insensitive
 
 ### Password
+
 - Minimum 6 characters
 - Automatically hashed
 
 ### ObjectId
+
 - Must be valid MongoDB ObjectId (24 hex characters)
 
 ### Date
+
 - Format: YYYY-MM-DD
 
 ### Time
+
 - Format: HH:MM (24-hour)
 
 ### File Upload
+
 - Max size: 10MB (configurable)
 - Allowed types: jpg, png, pdf, doc, docx
 
@@ -392,6 +436,7 @@ curl -X POST http://localhost:5000/api/teacher/attendances/sessions/SESSION_ID \
 ## 🔒 Security Headers
 
 All requests should include:
+
 ```
 Content-Type: application/json
 Authorization: Bearer <token>

@@ -16,10 +16,10 @@ router.get('/:id', validateObjectId('id'), assignmentsController.getAssignmentBy
 
 // @route   POST /api/teacher/assignments
 router.post(
-  '/',
-  validate(['class', 'title', 'description', 'dueDate', 'maxScore']),
-  validateDate('dueDate'),
-  assignmentsController.createAssignment
+   '/',
+   validate(['class', 'title', 'description', 'dueDate', 'maxScore']),
+   validateDate('dueDate'),
+   assignmentsController.createAssignment
 );
 
 // @route   PUT /api/teacher/assignments/:id
@@ -36,10 +36,10 @@ router.get('/:id/submissions', validateObjectId('id'), assignmentsController.get
 
 // @route   POST /api/teacher/submissions/:id/grade
 router.post(
-  '/submissions/:id/grade',
-  validateObjectId('id'),
-  validate(['score']),
-  assignmentsController.gradeSubmission
+   '/submissions/:id/grade',
+   validateObjectId('id'),
+   validate(['score']),
+   assignmentsController.gradeSubmission
 );
 
 module.exports = router;

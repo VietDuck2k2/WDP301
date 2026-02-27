@@ -7,12 +7,12 @@ const ApiResponse = require('../../utils/apiResponse');
  * @access  Private/Student
  */
 const getClassAnnouncements = async (req, res, next) => {
-  try {
-    const announcements = await announcementService.getClassAnnouncements(req.params.classId);
-    ApiResponse.ok(res, announcements);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const announcements = await announcementService.getClassAnnouncements(req.params.classId);
+      ApiResponse.ok(res, announcements);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -21,15 +21,15 @@ const getClassAnnouncements = async (req, res, next) => {
  * @access  Private/Student
  */
 const getAnnouncementById = async (req, res, next) => {
-  try {
-    const announcement = await announcementService.getAnnouncementById(req.params.id);
-    ApiResponse.ok(res, announcement);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const announcement = await announcementService.getAnnouncementById(req.params.id);
+      ApiResponse.ok(res, announcement);
+   } catch (error) {
+      next(error);
+   }
 };
 
 module.exports = {
-  getClassAnnouncements,
-  getAnnouncementById
+   getClassAnnouncements,
+   getAnnouncementById
 };

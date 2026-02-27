@@ -16,9 +16,9 @@ router.get('/:id', validateObjectId('id'), announcementsController.getAnnounceme
 
 // @route   POST /api/teacher/announcements
 router.post(
-  '/',
-  validate(['class', 'title', 'content']),
-  announcementsController.createAnnouncement
+   '/',
+   validate(['class', 'title', 'content']),
+   announcementsController.createAnnouncement
 );
 
 // @route   PUT /api/teacher/announcements/:id

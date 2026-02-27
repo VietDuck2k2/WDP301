@@ -13,18 +13,18 @@ router.get('/sessions/:sessionId', validateObjectId('sessionId'), attendancesCon
 
 // @route   POST /api/teacher/sessions/:sessionId/attendance
 router.post(
-  '/sessions/:sessionId',
-  validateObjectId('sessionId'),
-  validate(['studentId', 'status']),
-  attendancesController.markAttendance
+   '/sessions/:sessionId',
+   validateObjectId('sessionId'),
+   validate(['studentId', 'status']),
+   attendancesController.markAttendance
 );
 
 // @route   POST /api/teacher/sessions/:sessionId/attendance/bulk
 router.post(
-  '/sessions/:sessionId/bulk',
-  validateObjectId('sessionId'),
-  validate(['attendanceList']),
-  attendancesController.bulkMarkAttendance
+   '/sessions/:sessionId/bulk',
+   validateObjectId('sessionId'),
+   validate(['attendanceList']),
+   attendancesController.bulkMarkAttendance
 );
 
 // @route   GET /api/teacher/students/:studentId/attendance

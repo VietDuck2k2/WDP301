@@ -7,12 +7,12 @@ const ApiResponse = require('../../utils/apiResponse');
  * @access  Private/Admin
  */
 const getAllUsers = async (req, res, next) => {
-  try {
-    const result = await userService.getAllUsers(req.query);
-    ApiResponse.ok(res, result);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const result = await userService.getAllUsers(req.query);
+      ApiResponse.ok(res, result);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -21,12 +21,12 @@ const getAllUsers = async (req, res, next) => {
  * @access  Private/Admin
  */
 const getUserById = async (req, res, next) => {
-  try {
-    const user = await userService.getUserById(req.params.id);
-    ApiResponse.ok(res, user);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const user = await userService.getUserById(req.params.id);
+      ApiResponse.ok(res, user);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -35,12 +35,12 @@ const getUserById = async (req, res, next) => {
  * @access  Private/Admin
  */
 const createUser = async (req, res, next) => {
-  try {
-    const user = await userService.createUser(req.body);
-    ApiResponse.created(res, user, 'User created successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const user = await userService.createUser(req.body);
+      ApiResponse.created(res, user, 'User created successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -49,12 +49,12 @@ const createUser = async (req, res, next) => {
  * @access  Private/Admin
  */
 const updateUser = async (req, res, next) => {
-  try {
-    const user = await userService.updateUser(req.params.id, req.body);
-    ApiResponse.ok(res, user, 'User updated successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const user = await userService.updateUser(req.params.id, req.body);
+      ApiResponse.ok(res, user, 'User updated successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -63,12 +63,12 @@ const updateUser = async (req, res, next) => {
  * @access  Private/Admin
  */
 const deleteUser = async (req, res, next) => {
-  try {
-    const user = await userService.deleteUser(req.params.id);
-    ApiResponse.ok(res, user, 'User deactivated successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const user = await userService.deleteUser(req.params.id);
+      ApiResponse.ok(res, user, 'User deactivated successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -77,19 +77,19 @@ const deleteUser = async (req, res, next) => {
  * @access  Private/Admin
  */
 const getUsersByRole = async (req, res, next) => {
-  try {
-    const users = await userService.getUsersByRole(req.params.role);
-    ApiResponse.ok(res, users);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const users = await userService.getUsersByRole(req.params.role);
+      ApiResponse.ok(res, users);
+   } catch (error) {
+      next(error);
+   }
 };
 
 module.exports = {
-  getAllUsers,
-  getUserById,
-  createUser,
-  updateUser,
-  deleteUser,
-  getUsersByRole
+   getAllUsers,
+   getUserById,
+   createUser,
+   updateUser,
+   deleteUser,
+   getUsersByRole
 };

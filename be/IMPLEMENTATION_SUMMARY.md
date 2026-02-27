@@ -5,6 +5,7 @@
 Your complete backend skeleton for the English Center Management System (ECMS) is ready!
 
 ### 📊 Statistics
+
 - **Total Files Created**: 67+
 - **Models**: 9
 - **Services**: 10
@@ -127,18 +128,21 @@ be/
 ## 🎯 Features Implemented
 
 ### Core Features
+
 - ✅ **Express App Setup** - CORS, JSON parsing, URL encoding, Morgan logging
 - ✅ **MongoDB Connection** - Mongoose with connection events
 - ✅ **Environment Config** - Centralized configuration management
 - ✅ **Static File Serving** - `/uploads` directory for file access
 
 ### Authentication & Authorization
+
 - ✅ **JWT Authentication** - Token generation and verification
 - ✅ **Password Hashing** - Bcrypt for secure passwords
 - ✅ **Role-Based Access** - Admin, Teacher, Student roles
 - ✅ **Resource Ownership** - Middleware for ownership checks
 
 ### Data Models (9 Models)
+
 1. ✅ **User** - With roles, password hashing, validation
 2. ✅ **Class** - Course management with capacity tracking
 3. ✅ **ClassMember** - Enrollment tracking (teacher/student)
@@ -150,6 +154,7 @@ be/
 9. ✅ **Announcement** - Class announcements
 
 ### Business Logic (10 Services)
+
 - ✅ **Auth Service** - Register, login, password management
 - ✅ **User Service** - CRUD operations, role filtering
 - ✅ **Class Service** - Class management, enrollment
@@ -164,22 +169,27 @@ be/
 ### API Endpoints (50+ Endpoints)
 
 #### Public Routes
+
 - `POST /api/auth/register` - Register user
 - `POST /api/auth/login` - Login
 
 #### Profile Routes (Authenticated)
+
 - `GET /api/me` - Get profile
 - `PUT /api/me` - Update profile
 - `POST /api/me/change-password` - Change password
 
 #### File Routes (Authenticated)
+
 - `POST /api/files/upload` - Upload file
 - `POST /api/files/upload-multiple` - Upload multiple
 - `DELETE /api/files/:filename` - Delete file
 - `GET /api/files/:filename/info` - Get file info
 
 #### Admin Routes (Admin Only)
+
 **Users:**
+
 - `GET /api/admin/users` - List all users
 - `GET /api/admin/users/:id` - Get user
 - `POST /api/admin/users` - Create user
@@ -188,6 +198,7 @@ be/
 - `GET /api/admin/users/role/:role` - Get by role
 
 **Classes:**
+
 - `GET /api/admin/classes` - List classes
 - `GET /api/admin/classes/:id` - Get class
 - `POST /api/admin/classes` - Create class
@@ -198,30 +209,37 @@ be/
 - `GET /api/admin/classes/:id/members` - Get members
 
 **Schedule Templates:**
+
 - Full CRUD operations
 
 **Sessions:**
+
 - Full CRUD operations
 
 #### Teacher Routes
+
 **Classes:**
+
 - `GET /api/teacher/classes` - My classes
 - `GET /api/teacher/classes/:id` - Class details
 - `GET /api/teacher/classes/:id/members` - Class students
 
 **Sessions:**
+
 - `GET /api/teacher/sessions` - My sessions
 - `GET /api/teacher/sessions/:id` - Session details
 - `PUT /api/teacher/sessions/:id` - Update session
 - `POST /api/teacher/sessions/:id/materials` - Add materials
 
 **Attendance:**
+
 - `GET /api/teacher/sessions/:sessionId/attendance` - View attendance
 - `POST /api/teacher/sessions/:sessionId/attendance` - Mark attendance
 - `POST /api/teacher/sessions/:sessionId/attendance/bulk` - Bulk mark
 - `GET /api/teacher/students/:studentId/attendance` - Student summary
 
 **Assignments:**
+
 - `GET /api/teacher/assignments` - My assignments
 - `POST /api/teacher/assignments` - Create assignment
 - `PUT /api/teacher/assignments/:id` - Update assignment
@@ -231,28 +249,35 @@ be/
 - `POST /api/teacher/submissions/:id/grade` - Grade submission
 
 **Announcements:**
+
 - Full CRUD + pin/unpin
 
 #### Student Routes
+
 **Classes:**
+
 - `GET /api/student/classes` - My enrolled classes
 - `GET /api/student/classes/:id` - Class details
 
 **Assignments:**
+
 - `GET /api/student/classes/:classId/assignments` - Class assignments
 - `GET /api/student/assignments/:id` - Assignment details
 
 **Submissions:**
+
 - `GET /api/student/submissions` - My submissions
 - `GET /api/student/assignments/:assignmentId/submission` - My submission
 - `POST /api/student/assignments/:assignmentId/submit` - Submit work
 - `POST /api/student/assignments/:assignmentId/save-draft` - Save draft
 
 **Announcements:**
+
 - `GET /api/student/classes/:classId/announcements` - Class announcements
 - `GET /api/student/announcements/:id` - Announcement details
 
 ### Middleware Features
+
 - ✅ **Authentication** - JWT token verification
 - ✅ **Authorization** - Role-based access control
 - ✅ **Validation** - Input validation (fields, email, ObjectId, date, time)
@@ -261,6 +286,7 @@ be/
 - ✅ **Ownership Check** - Resource ownership verification
 
 ### Utility Features
+
 - ✅ **API Response Helper** - Standardized success responses
 - ✅ **API Error Helper** - Custom error class with factory methods
 - ✅ **Date Utilities** - 15+ date helper functions for scheduling
@@ -270,6 +296,7 @@ be/
 ## 🚀 Ready To Use
 
 ### Start Development
+
 ```bash
 cd be
 npm install
@@ -277,6 +304,7 @@ npm run dev
 ```
 
 ### Test the API
+
 ```bash
 # Health check
 curl http://localhost:5000/health
@@ -315,6 +343,7 @@ Your backend is **100% ready** for feature development. You can now:
 5. ✅ Deploy when ready
 
 ### Suggested Enhancements (Optional)
+
 - Add email notifications
 - Implement real-time features (Socket.io)
 - Add API documentation (Swagger)

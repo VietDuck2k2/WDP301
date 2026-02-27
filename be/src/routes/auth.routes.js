@@ -5,17 +5,23 @@ const { validate, validateEmail } = require('../middlewares/validate.middleware'
 
 // @route   POST /api/auth/register
 router.post(
-  '/register',
-  validate(['email', 'password', 'firstName', 'lastName']),
-  validateEmail,
-  authController.register
+   '/register',
+   validate(['email', 'password', 'firstName', 'lastName']),
+   validateEmail,
+   authController.register
 );
 
 // @route   POST /api/auth/login
 router.post(
-  '/login',
-  validate(['email', 'password']),
-  authController.login
+   '/login',
+   validate(['email', 'password']),
+   authController.login
 );
+
+// @route   POST /api/auth/refresh-token
+router.post('/refresh-token', authController.refreshToken);
+
+// @route   POST /api/auth/logout
+router.post('/logout', authController.logout);
 
 module.exports = router;

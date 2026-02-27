@@ -16,12 +16,12 @@ router.get('/:id', validateObjectId('id'), sessionsController.getSessionById);
 
 // @route   POST /api/admin/sessions
 router.post(
-  '/',
-  validate(['class', 'title', 'sessionNumber', 'date', 'startTime', 'endTime']),
-  validateDate('date'),
-  validateTime('startTime'),
-  validateTime('endTime'),
-  sessionsController.createSession
+   '/',
+   validate(['class', 'title', 'sessionNumber', 'date', 'startTime', 'endTime']),
+   validateDate('date'),
+   validateTime('startTime'),
+   validateTime('endTime'),
+   sessionsController.createSession
 );
 
 // @route   PUT /api/admin/sessions/:id

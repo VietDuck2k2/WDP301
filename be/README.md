@@ -45,20 +45,24 @@ src/
 ## Setup
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Configure environment variables**
+
    ```bash
    cp .env.example .env
    ```
+
    Edit `.env` with your configuration
 
 3. **Start MongoDB**
    Make sure MongoDB is running locally or update `MONGO_URI` in `.env`
 
 4. **Run the server**
+
    ```bash
    # Development mode with nodemon
    npm run dev
@@ -70,6 +74,7 @@ src/
 ## API Documentation
 
 ### Base URL
+
 ```
 http://localhost:5000/api
 ```
@@ -77,6 +82,7 @@ http://localhost:5000/api
 ### Authentication
 
 All authenticated endpoints require a Bearer token in the Authorization header:
+
 ```
 Authorization: Bearer <your-jwt-token>
 ```
@@ -84,26 +90,31 @@ Authorization: Bearer <your-jwt-token>
 ### Main Endpoints
 
 #### Auth
+
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login
 
 #### Profile
+
 - `GET /api/me` - Get current user profile
 - `PUT /api/me` - Update profile
 - `POST /api/me/change-password` - Change password
 
 #### Files
+
 - `POST /api/files/upload` - Upload single file
 - `POST /api/files/upload-multiple` - Upload multiple files
 - `DELETE /api/files/:filename` - Delete file
 
 #### Admin Routes
+
 - `/api/admin/users` - User management
 - `/api/admin/classes` - Class management
 - `/api/admin/schedule-templates` - Schedule templates
 - `/api/admin/sessions` - Session management
 
 #### Teacher Routes
+
 - `/api/teacher/classes` - View assigned classes
 - `/api/teacher/sessions` - Manage sessions
 - `/api/teacher/attendances` - Mark attendance
@@ -111,6 +122,7 @@ Authorization: Bearer <your-jwt-token>
 - `/api/teacher/announcements` - Post announcements
 
 #### Student Routes
+
 - `/api/student/classes` - View enrolled classes
 - `/api/student/assignments` - View assignments
 - `/api/student/submissions` - Submit assignments
@@ -134,6 +146,7 @@ See `.env.example` for all configuration options.
 ## Error Handling
 
 All errors follow this format:
+
 ```json
 {
   "success": false,
@@ -145,6 +158,7 @@ All errors follow this format:
 ## Success Response
 
 Standard success response:
+
 ```json
 {
   "success": true,
@@ -174,6 +188,7 @@ This skeleton is designed for incremental feature development:
 - ✅ Clean separation of concerns
 
 Add new features by:
+
 1. Creating/updating models
 2. Adding service methods
 3. Creating controller functions

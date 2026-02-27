@@ -16,9 +16,9 @@ router.get('/:id', validateObjectId('id'), scheduleTemplatesController.getTempla
 
 // @route   POST /api/admin/schedule-templates
 router.post(
-  '/',
-  validate(['name', 'schedule']),
-  scheduleTemplatesController.createTemplate
+   '/',
+   validate(['name', 'schedule']),
+   scheduleTemplatesController.createTemplate
 );
 
 // @route   PUT /api/admin/schedule-templates/:id

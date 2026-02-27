@@ -7,12 +7,12 @@ const ApiResponse = require('../utils/apiResponse');
  * @access  Private
  */
 const getProfile = async (req, res, next) => {
-  try {
-    const user = await authService.getProfile(req.user._id);
-    ApiResponse.ok(res, user);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const user = await authService.getProfile(req.user._id);
+      ApiResponse.ok(res, user);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -21,12 +21,12 @@ const getProfile = async (req, res, next) => {
  * @access  Private
  */
 const updateProfile = async (req, res, next) => {
-  try {
-    const user = await authService.updateProfile(req.user._id, req.body);
-    ApiResponse.ok(res, user, 'Profile updated successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const user = await authService.updateProfile(req.user._id, req.body);
+      ApiResponse.ok(res, user, 'Profile updated successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -35,17 +35,17 @@ const updateProfile = async (req, res, next) => {
  * @access  Private
  */
 const changePassword = async (req, res, next) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-    const result = await authService.changePassword(req.user._id, currentPassword, newPassword);
-    ApiResponse.ok(res, result);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const { currentPassword, newPassword } = req.body;
+      const result = await authService.changePassword(req.user._id, currentPassword, newPassword);
+      ApiResponse.ok(res, result);
+   } catch (error) {
+      next(error);
+   }
 };
 
 module.exports = {
-  getProfile,
-  updateProfile,
-  changePassword
+   getProfile,
+   updateProfile,
+   changePassword
 };

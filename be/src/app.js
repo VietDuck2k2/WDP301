@@ -15,9 +15,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Logging
 if (config.nodeEnv === 'development') {
-  app.use(morgan('dev'));
+   app.use(morgan('dev'));
 } else {
-  app.use(morgan('combined'));
+   app.use(morgan('combined'));
 }
 
 // Serve static files (uploaded files)
@@ -25,12 +25,12 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'ECMS API is running',
-    timestamp: new Date().toISOString(),
-    environment: config.nodeEnv
-  });
+   res.json({
+      success: true,
+      message: 'ECMS API is running',
+      timestamp: new Date().toISOString(),
+      environment: config.nodeEnv
+   });
 });
 
 // API routes
