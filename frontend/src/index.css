@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Theme fallbacks - đảm bảo giao diện đúng khi dùng Tailwind */
+@layer base {
+  :root {
+    --color-primary: #137fec;
+    --bg-light: #f6f7f8;
+    --bg-dark: #101922;
+  }
+  body {
+    font-family: 'Lexend', ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg-light);
+    color: #111418;
+  }
+  .dark body {
+    background-color: var(--bg-dark);
+    color: #fff;
+  }
+}

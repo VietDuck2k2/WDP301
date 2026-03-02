@@ -60,34 +60,42 @@ export default function StudentTimetable() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Lịch học</h1>
-      <div className="flex items-center gap-4 mb-6">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-black tracking-tight text-[#111418] dark:text-white">Lịch học</h1>
+        <p className="text-[#617589] dark:text-gray-400">Xem lịch học theo tuần.</p>
+      </div>
+
+      <div className="flex items-center gap-4">
         <button
           onClick={prevWeek}
-          className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+          className="flex items-center justify-center gap-2 rounded-lg h-10 px-4 bg-[#f0f2f4] dark:bg-gray-800 text-[#111418] dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-700"
         >
+          <span className="material-symbols-outlined text-lg">chevron_left</span>
           Tuần trước
         </button>
-        <span className="font-medium">
+        <span className="font-semibold text-[#111418] dark:text-white">
           Tuần {new Date(weekStart).toLocaleDateString('vi-VN')}
         </span>
         <button
           onClick={nextWeek}
-          className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+          className="flex items-center justify-center gap-2 rounded-lg h-10 px-4 bg-[#f0f2f4] dark:bg-gray-800 text-[#111418] dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-700"
         >
           Tuần sau
+          <span className="material-symbols-outlined text-lg">chevron_right</span>
         </button>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg">{error}</div>
+        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+          {error}
+        </div>
       )}
 
       {loading ? (
-        <p className="text-gray-500">Đang tải...</p>
+        <p className="text-[#617589] dark:text-gray-400">Đang tải...</p>
       ) : (
-        <p className="text-gray-500">
+        <p className="text-[#617589] dark:text-gray-400">
           Lịch học chi tiết theo buổi sẽ hiển thị khi backend có API sessions cho student.
         </p>
       )}

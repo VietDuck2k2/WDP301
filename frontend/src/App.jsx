@@ -23,9 +23,15 @@ function Home() {
   if (user?.role === 'teacher') return <Navigate to="/teacher/timetable" replace />;
   if (user?.role === 'student') return <Navigate to="/student/classes" replace />;
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">English Center LMS</h1>
-      <p className="text-gray-500 mt-2">Chào mừng bạn!</p>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-black tracking-tight text-[#111418] dark:text-white">
+          {user?.role === 'admin' ? `Chào admin ${user.firstName}!` : 'Chào mừng bạn!'}
+        </h1>
+        <p className="text-[#617589] dark:text-gray-400">
+          {user?.role === 'admin' ? 'Giao diện quản trị admin chưa có trong phiên bản này.' : 'Chọn mục trong menu để bắt đầu.'}
+        </p>
+      </div>
     </div>
   );
 }

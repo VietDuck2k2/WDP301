@@ -13,20 +13,33 @@ export const studentApi = {
     return axiosInstance.get(`/student/assignments/${id}`);
   },
 
+  // GET /student/assignments/:assignmentId/submission
   getMySubmission(assignmentId) {
-    return axiosInstance.get(`/student/submissions/assignments/${assignmentId}`);
+    return axiosInstance.get(`/student/assignments/${assignmentId}/submission`);
   },
 
+  // POST /student/assignments/:assignmentId/submit
   submitAssignment(assignmentId, body) {
-    return axiosInstance.post(`/student/submissions/assignments/${assignmentId}/submit`, body);
+    return axiosInstance.post(`/student/assignments/${assignmentId}/submit`, body);
   },
 
+  // POST /student/assignments/:assignmentId/save-draft
   saveDraft(assignmentId, body) {
-    return axiosInstance.post(`/student/submissions/assignments/${assignmentId}/save-draft`, body);
+    return axiosInstance.post(`/student/assignments/${assignmentId}/save-draft`, body);
   },
 
   getMySubmissions(params = {}) {
     return axiosInstance.get('/student/submissions', { params });
+  },
+
+  // GET /student/grades
+  getGrades() {
+    return axiosInstance.get('/student/grades');
+  },
+
+  // GET /student/grades/classes/:classId
+  getGradesByClass(classId) {
+    return axiosInstance.get(`/student/grades/classes/${classId}`);
   },
 
   getAttendances() {

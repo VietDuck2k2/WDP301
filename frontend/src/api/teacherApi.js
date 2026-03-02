@@ -1,26 +1,16 @@
 import axiosInstance from './axios';
 
-function getWeekRange(weekStart) {
-  const start = new Date(weekStart);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-  return {
-    startDate: start.toISOString().split('T')[0],
-    endDate: end.toISOString().split('T')[0],
-  };
-}
-
 export const teacherApi = {
+  // GET /teacher/timetable?week=2026-02-24 (week = ngày thứ 2 của tuần)
   getTimetable(week) {
-    const { startDate, endDate } = getWeekRange(week);
-    return axiosInstance.get('/teacher/sessions', { params: { startDate, endDate } });
+    return axiosInstance.get('/teacher/timetable', { params: { week } });
   },
 
+  // GET /teacher/sessions?classId=cls01&page=1
   getSessions(classId, page = 1) {
-    if (classId) {
-      return axiosInstance.get(`/teacher/sessions/classes/${classId}`);
-    }
-    return axiosInstance.get('/teacher/sessions', { params: { page } });
+    return axiosInstance.get('/teacher/sessions', {
+      params: { classId: classId || undefined, page },
+    });
   },
 
   getSessionById(id) {
@@ -69,8 +59,9 @@ export const teacherApi = {
     return axiosInstance.get(`/teacher/assignments/${assignmentId}/submissions`);
   },
 
+  // POST /teacher/submissions/:id/grade
   gradeSubmission(submissionId, { score, feedback }) {
-    return axiosInstance.post(`/teacher/assignments/submissions/${submissionId}/grade`, { score, feedback });
+    return axiosInstance.post(`/teacher/submissions/${submissionId}/grade`, { score, feedback });
   },
 
   getAnnouncements() {

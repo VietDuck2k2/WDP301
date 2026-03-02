@@ -4,8 +4,26 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#137fec',
+        'background-light': '#f6f7f8',
+        'background-dark': '#101922',
+      },
+      fontFamily: {
+        sans: ['Lexend', 'sans-serif'],
+        display: ['Lexend', 'sans-serif'],
+      },
+      borderRadius: {
+        DEFAULT: '0.25rem',
+        lg: '0.5rem',
+        xl: '0.75rem',
+        '2xl': '1rem',
+        full: '9999px',
+      },
+    },
   },
   plugins: [],
 }

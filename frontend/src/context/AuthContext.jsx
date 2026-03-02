@@ -16,6 +16,10 @@ export function AuthProvider({ children }) {
       } catch {
         setUser(null);
       }
+      if (token === 'demo') {
+        setLoading(false);
+        return;
+      }
       authApi.getProfile()
         .then((res) => {
           if (res.success && res.data) {
@@ -54,8 +58,15 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const enterDemo = (role) => {
+    const user = { _id: 'demo', firstName: 'Demo', lastName: '', email: 'demo@local', role };
+    localStorage.setItem('token', 'demo');
+    localStorage.setItem('user', JSON.stringify(user));
+    setUser(user);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, enterDemo }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,5 +1,4 @@
 import { Popover } from '@headlessui/react';
-import { BellIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
 import axiosInstance from '../api/axios';
 
@@ -41,21 +40,19 @@ export default function NotificationBell() {
 
   return (
     <Popover className="relative">
-      <Popover.Button className="relative p-2 hover:bg-gray-100 rounded-full">
-        <BellIcon className="h-6 w-6 text-gray-600" />
+      <Popover.Button className="relative p-2 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+        <span className="material-symbols-outlined">notifications</span>
         {data.unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {data.unreadCount > 9 ? '9+' : data.unreadCount}
-          </span>
+          <span className="absolute top-1 right-1 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#1a242f]" />
         )}
       </Popover.Button>
-      <Popover.Panel className="absolute right-0 z-50 mt-2 w-80 bg-white shadow-xl rounded-2xl border border-gray-100">
-        <div className="p-3 flex justify-between items-center border-b">
-          <h3 className="font-semibold">Thông báo</h3>
+      <Popover.Panel className="absolute right-0 z-50 mt-2 w-80 bg-white dark:bg-[#1a242f] shadow-xl rounded-xl border border-[#f0f2f4] dark:border-gray-800">
+        <div className="p-3 flex justify-between items-center border-b border-[#f0f2f4] dark:border-gray-800">
+          <h3 className="font-semibold text-[#111418] dark:text-white">Thông báo</h3>
           {data.unreadCount > 0 && (
             <button
               onClick={markAllRead}
-              className="text-xs text-blue-600 hover:underline"
+              className="text-xs text-primary hover:underline font-medium"
             >
               Đọc tất cả
             </button>
@@ -63,16 +60,16 @@ export default function NotificationBell() {
         </div>
         <div className="max-h-80 overflow-y-auto">
           {data.notifications.length === 0 ? (
-            <p className="p-4 text-center text-gray-400 text-sm">Không có thông báo</p>
+            <p className="p-4 text-center text-[#617589] dark:text-gray-400 text-sm">Không có thông báo</p>
           ) : (
             data.notifications.map((n) => (
               <div
                 key={n._id}
-                className={`p-3 border-b hover:bg-gray-50 ${!n.isRead ? 'bg-blue-50' : ''}`}
+                className={`p-3 border-b border-[#f0f2f4] dark:border-gray-800 hover:bg-[#f0f2f4] dark:hover:bg-gray-800/50 ${!n.isRead ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
               >
-                <p className="font-medium text-sm">{n.title}</p>
-                <p className="text-xs text-gray-500">{n.body}</p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="font-medium text-sm text-[#111418] dark:text-white">{n.title}</p>
+                <p className="text-xs text-[#617589] dark:text-gray-400">{n.body}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                   {new Date(n.createdAt).toLocaleString('vi-VN')}
                 </p>
               </div>

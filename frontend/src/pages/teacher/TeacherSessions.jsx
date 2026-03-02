@@ -37,40 +37,46 @@ export default function TeacherSessions() {
   }, [classId]);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">
-        Buổi học {classInfo?.name ? `- ${classInfo.name}` : ''}
-      </h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-black tracking-tight text-[#111418] dark:text-white">
+          Buổi học {classInfo?.name ? `- ${classInfo.name}` : ''}
+        </h1>
+        <p className="text-[#617589] dark:text-gray-400">Danh sách buổi học và điểm danh.</p>
+      </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg">{error}</div>
+        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+          {error}
+        </div>
       )}
 
       {loading ? (
-        <p className="text-gray-500">Đang tải...</p>
+        <p className="text-[#617589] dark:text-gray-400">Đang tải...</p>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-4">
           {sessions.length === 0 ? (
-            <p className="text-gray-500">Chưa có buổi học.</p>
+            <p className="text-[#617589] dark:text-gray-400">Chưa có buổi học.</p>
           ) : (
             sessions.map((s) => (
               <div
                 key={s._id}
-                className="p-4 bg-white border rounded-lg shadow-sm flex justify-between items-center"
+                className="p-5 bg-white dark:bg-[#1a242f] border border-[#f0f2f4] dark:border-gray-800 rounded-xl flex justify-between items-center"
               >
                 <div>
-                  <h3 className="font-bold">{s.title || `Session ${s.sessionNumber}`}</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="font-bold text-[#111418] dark:text-white">{s.title || `Buổi ${s.sessionNumber}`}</h3>
+                  <p className="text-sm text-[#617589] dark:text-gray-400">
                     {new Date(s.date).toLocaleDateString('vi-VN')} • {s.startTime} - {s.endTime} • {s.room || '-'}
                   </p>
                   {s.notes && (
-                    <p className="text-xs text-gray-600 mt-1">{s.notes}</p>
+                    <p className="text-xs text-[#617589] dark:text-gray-400 mt-1">{s.notes}</p>
                   )}
                 </div>
                 <Link
                   to={`/teacher/sessions/${s._id}/attendance`}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  className="flex items-center gap-2 rounded-lg h-9 px-4 bg-primary text-white text-sm font-bold hover:opacity-90"
                 >
+                  <span className="material-symbols-outlined text-lg">fact_check</span>
                   Điểm danh
                 </Link>
               </div>

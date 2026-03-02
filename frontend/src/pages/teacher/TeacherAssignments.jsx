@@ -43,17 +43,20 @@ export default function TeacherAssignments() {
   }, []);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Bài tập</h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-black tracking-tight text-[#111418] dark:text-white">Bài tập</h1>
+        <p className="text-[#617589] dark:text-gray-400">Quản lý và chấm bài tập theo lớp.</p>
+      </div>
 
-      <div className="flex gap-4 mb-4">
+      <div className="flex gap-4">
         <select
           value={classId}
           onChange={(e) => {
             setClassId(e.target.value);
             setPage(1);
           }}
-          className="border rounded px-3 py-2"
+          className="bg-[#f0f2f4] dark:bg-gray-800 border-none rounded-lg px-4 h-10 text-sm text-[#111418] dark:text-white focus:ring-2 focus:ring-primary/50"
         >
           <option value="">Tất cả lớp</option>
           {classes.map((c) => (
@@ -65,42 +68,42 @@ export default function TeacherAssignments() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg">{error}</div>
+        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+          {error}
+        </div>
       )}
 
       {loading ? (
-        <p className="text-gray-500">Đang tải...</p>
+        <p className="text-[#617589] dark:text-gray-400">Đang tải...</p>
       ) : (
         <>
-          <div className="bg-white border rounded-lg overflow-hidden">
+          <div className="bg-white dark:bg-[#1a242f] border border-[#f0f2f4] dark:border-gray-800 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left font-medium">Tiêu đề</th>
-                  <th className="px-4 py-3 text-left font-medium">Lớp</th>
-                  <th className="px-4 py-3 text-left font-medium">Hạn nộp</th>
-                  <th className="px-4 py-3 text-left font-medium">Trạng thái</th>
-                  <th className="px-4 py-3 text-left font-medium">Thao tác</th>
+                <tr className="bg-[#f0f2f4] dark:bg-gray-800">
+                  <th className="px-4 py-3 text-left font-semibold text-[#111418] dark:text-white">Tiêu đề</th>
+                  <th className="px-4 py-3 text-left font-semibold text-[#111418] dark:text-white">Lớp</th>
+                  <th className="px-4 py-3 text-left font-semibold text-[#111418] dark:text-white">Hạn nộp</th>
+                  <th className="px-4 py-3 text-left font-semibold text-[#111418] dark:text-white">Trạng thái</th>
+                  <th className="px-4 py-3 text-left font-semibold text-[#111418] dark:text-white">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {assignments.map((a) => (
-                  <tr key={a._id} className="border-t">
-                    <td className="px-4 py-3 font-medium">{a.title}</td>
-                    <td className="px-4 py-3">{a.class?.name || '-'}</td>
-                    <td className="px-4 py-3">
-                      {a.dueDate
-                        ? new Date(a.dueDate).toLocaleDateString('vi-VN')
-                        : '-'}
+                  <tr key={a._id} className="border-t border-[#f0f2f4] dark:border-gray-800">
+                    <td className="px-4 py-3 font-medium text-[#111418] dark:text-white">{a.title}</td>
+                    <td className="px-4 py-3 text-[#617589] dark:text-gray-400">{a.class?.name || '-'}</td>
+                    <td className="px-4 py-3 text-[#617589] dark:text-gray-400">
+                      {a.dueDate ? new Date(a.dueDate).toLocaleDateString('vi-VN') : '-'}
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`px-2 py-0.5 rounded text-xs ${
+                        className={`px-2 py-1 rounded-lg text-xs font-medium ${
                           a.status === 'published'
-                            ? 'bg-blue-100 text-blue-700'
+                            ? 'bg-primary/20 text-primary'
                             : a.status === 'closed'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-600'
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                            : 'bg-gray-100 dark:bg-gray-800 text-[#617589] dark:text-gray-400'
                         }`}
                       >
                         {STATUS_LABELS[a.status] || a.status}
@@ -109,8 +112,9 @@ export default function TeacherAssignments() {
                     <td className="px-4 py-3">
                       <Link
                         to={`/teacher/assignments/${a._id}`}
-                        className="text-blue-600 hover:underline"
+                        className="font-bold text-primary hover:underline inline-flex items-center gap-1"
                       >
+                        <span className="material-symbols-outlined text-lg">grading</span>
                         Xem / Chấm
                       </Link>
                     </td>
@@ -121,23 +125,25 @@ export default function TeacherAssignments() {
           </div>
 
           {pagination.pages > 1 && (
-            <div className="mt-4 flex gap-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="flex items-center gap-1 rounded-lg h-9 px-3 bg-[#f0f2f4] dark:bg-gray-800 text-[#111418] dark:text-white text-sm font-bold disabled:opacity-50"
               >
+                <span className="material-symbols-outlined text-lg">chevron_left</span>
                 Trước
               </button>
-              <span className="px-3 py-1">
+              <span className="text-sm text-[#617589] dark:text-gray-400">
                 {page} / {pagination.pages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
                 disabled={page >= pagination.pages}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="flex items-center gap-1 rounded-lg h-9 px-3 bg-[#f0f2f4] dark:bg-gray-800 text-[#111418] dark:text-white text-sm font-bold disabled:opacity-50"
               >
                 Sau
+                <span className="material-symbols-outlined text-lg">chevron_right</span>
               </button>
             </div>
           )}
