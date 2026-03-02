@@ -1,0 +1,109 @@
+.page-common {
+   max-width: 1200px;
+}
+
+.page-common-title {
+   margin: 0 0 24px 0;
+   font-size: 1.5rem;
+   font-weight: 600;
+   color: #2c3e50;
+}
+
+.page-common-toolbar {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   gap: 12px;
+   margin-bottom: 16px;
+}
+
+.page-common-select {
+   margin-left: 8px;
+   padding: 8px 12px;
+   border: 1px solid #e1e8ed;
+   border-radius: 6px;
+   font-size: 0.9rem;
+}
+
+.page-common-input {
+   padding: 8px 12px;
+   border: 1px solid #e1e8ed;
+   border-radius: 6px;
+   font-size: 0.9rem;
+   width: 100%;
+   max-width: 280px;
+}
+
+.page-common-btn {
+   padding: 10px 20px;
+   border: 1px solid #e1e8ed;
+   border-radius: 6px;
+   background: #fff;
+   font-size: 0.9rem;
+   cursor: pointer;
+}
+
+.page-common-btn:hover {
+   background: #f0f4f8;
+}
+
+.page-common-btn-primary {
+   background: #0ba360;
+   color: #fff;
+   border-color: #0ba360;
+}
+
+.page-common-btn-primary:hover {
+   background: #099354;
+}
+
+.page-common-card {
+   background: #fff;
+   border-radius: 8px;
+   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+   padding: 20px;
+   margin-bottom: 24px;
+}
+
+.page-common-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 0.9rem;
+}
+
+.page-common-table th,
+.page-common-table td {
+   padding: 12px;
+   text-align: left;
+   border-bottom: 1px solid #eef1f3;
+}
+
+.page-common-table th {
+   font-weight: 600;
+   color: #4a5568;
+   background: #f8fafc;
+}
+
+.page-common-table tr:hover td {
+   background: #fafbfc;
+}
+
+.page-common-link {
+   color: #0ba360;
+   text-decoration: none;
+}
+
+.page-common-link:hover {
+   text-decoration: underline;
+}
+
+.page-common-error {
+   color: #c53030;
+   margin: 0 0 16px 0;
+}
+
+.page-common-loading,
+.page-common-empty {
+   color: #718096;
+   margin: 0 0 16px 0;
+}

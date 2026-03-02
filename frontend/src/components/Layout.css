@@ -187,6 +187,12 @@
     color: #2c3e50;
 }
 
+.topbar-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
 .main-content {
     flex: 1;
     overflow-y: auto;

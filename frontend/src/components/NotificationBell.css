@@ -1,0 +1,131 @@
+.notification-bell-wrapper {
+   position: relative;
+}
+
+.notification-bell-btn {
+   position: relative;
+   padding: 0.5rem;
+   border: none;
+   background: transparent;
+   cursor: pointer;
+   border-radius: 50%;
+}
+
+.notification-bell-btn:hover {
+   background: rgba(0, 0, 0, 0.05);
+}
+
+.bell-icon {
+   font-size: 1.25rem;
+}
+
+.notification-bell-badge {
+   position: absolute;
+   top: 2px;
+   right: 2px;
+   min-width: 1.25rem;
+   height: 1.25rem;
+   padding: 0 4px;
+   font-size: 0.7rem;
+   font-weight: 600;
+   color: white;
+   background: #ef4444;
+   border-radius: 9999px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.notification-bell-panel {
+   position: absolute;
+   right: 0;
+   top: 100%;
+   margin-top: 0.5rem;
+   width: 320px;
+   max-height: 80vh;
+   background: white;
+   border-radius: 8px;
+   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+   border: 1px solid #e5e7eb;
+   z-index: 50;
+   overflow: hidden;
+   display: flex;
+   flex-direction: column;
+}
+
+.notification-bell-panel-header {
+   padding: 12px;
+   border-bottom: 1px solid #e5e7eb;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.notification-bell-panel-title {
+   margin: 0;
+   font-size: 1rem;
+   font-weight: 600;
+}
+
+.notification-bell-mark-all {
+   font-size: 0.75rem;
+   color: #2563eb;
+   background: none;
+   border: none;
+   cursor: pointer;
+   padding: 0;
+}
+
+.notification-bell-mark-all:hover {
+   text-decoration: underline;
+}
+
+.notification-bell-mark-all:disabled {
+   opacity: 0.6;
+   cursor: not-allowed;
+}
+
+.notification-bell-list {
+   overflow-y: auto;
+   max-height: 360px;
+}
+
+.notification-bell-empty {
+   padding: 24px;
+   text-align: center;
+   color: #6b7280;
+   font-size: 0.875rem;
+   margin: 0;
+}
+
+.notification-bell-item {
+   padding: 12px;
+   border-bottom: 1px solid #f3f4f6;
+   cursor: pointer;
+}
+
+.notification-bell-item:hover {
+   background: #f9fafb;
+}
+
+.notification-bell-item.unread {
+   background: #eff6ff;
+}
+
+.notification-bell-item-title {
+   margin: 0 0 4px 0;
+   font-weight: 500;
+   font-size: 0.875rem;
+}
+
+.notification-bell-item-body {
+   margin: 0 0 4px 0;
+   font-size: 0.8rem;
+   color: #4b5563;
+}
+
+.notification-bell-item-time {
+   margin: 0;
+   font-size: 0.75rem;
+   color: #9ca3af;
+}

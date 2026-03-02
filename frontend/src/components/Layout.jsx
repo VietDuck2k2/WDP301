@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 import './Layout.css';
 
 const Layout = () => {
@@ -28,10 +29,72 @@ const Layout = () => {
                     <ul>
                         <li>
                             <NavLink to={`/${user?.role}/timetable`} className={({isActive}) => isActive ? 'active' : ''}>
-                                <span className="icon">📅</span> 
-                                <span className="text">Weekly Timetable</span>
+                                <span className="icon">📅</span>
+                                <span className="text">Thời khóa biểu</span>
                             </NavLink>
                         </li>
+                        {user?.role === 'teacher' && (
+                            <>
+                                <li>
+                                    <NavLink to="/teacher/sessions" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">📋</span>
+                                        <span className="text">Buổi học</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/teacher/attendance" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">✓</span>
+                                        <span className="text">Điểm danh</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/teacher/assignments" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">📝</span>
+                                        <span className="text">Bài tập</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/teacher/announcements" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">📢</span>
+                                        <span className="text">Thông báo</span>
+                                    </NavLink>
+                                </li>
+                            </>
+                        )}
+                        {user?.role === 'student' && (
+                            <>
+                                <li>
+                                    <NavLink to="/student/classes" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">🏫</span>
+                                        <span className="text">Lớp học</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/student/assignments" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">📝</span>
+                                        <span className="text">Bài tập</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/student/grades" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">📊</span>
+                                        <span className="text">Điểm</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/student/attendance" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">✓</span>
+                                        <span className="text">Điểm danh</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/student/announcements" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">📢</span>
+                                        <span className="text">Thông báo</span>
+                                    </NavLink>
+                                </li>
+                            </>
+                        )}
                     </ul>
                 </nav>
 
@@ -50,6 +113,9 @@ const Layout = () => {
                     </button>
                     <div className="topbar-title">
                         Dashboard
+                    </div>
+                    <div className="topbar-actions">
+                        <NotificationBell />
                     </div>
                 </header>
 
