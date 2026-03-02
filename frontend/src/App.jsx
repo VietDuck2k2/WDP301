@@ -4,6 +4,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Timetable from './pages/Timetable';
+import Dashboard from './pages/admin/Dashboard';
+import Users from './pages/admin/Users';
+import Classes from './pages/admin/Classes';
+import ClassDetail from './pages/admin/ClassDetail';
+import Templates from './pages/admin/Templates';
+import AttendanceAdmin from './pages/admin/AttendanceAdmin';
+import Reports from './pages/admin/Reports';
 import './App.css';
 
 function App() {
@@ -11,36 +18,30 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          
-          {/* Root Redirect to Login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* Protected Routes Wrapper */}
           <Route element={<Layout />}>
-            
-            {/* Admin Routes */}
             <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+              <Route path="/admin/dashboard" element={<Dashboard />} />
+              <Route path="/admin/users" element={<Users />} />
+              <Route path="/admin/classes" element={<Classes />} />
+              <Route path="/admin/classes/:id" element={<ClassDetail />} />
+              <Route path="/admin/templates" element={<Templates />} />
+              <Route path="/admin/attendance" element={<AttendanceAdmin />} />
+              <Route path="/admin/reports" element={<Reports />} />
               <Route path="/admin/timetable" element={<Timetable role="admin" />} />
-              {/* Add more admin routes here */}
             </Route>
 
-            {/* Teacher Routes */}
             <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
               <Route path="/teacher/timetable" element={<Timetable role="teacher" />} />
-              {/* Add more teacher routes here */}
             </Route>
 
-            {/* Student Routes */}
             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
               <Route path="/student/timetable" element={<Timetable role="student" />} />
-              {/* Add more student routes here */}
             </Route>
-            
           </Route>
 
-          {/* Fallback route */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>

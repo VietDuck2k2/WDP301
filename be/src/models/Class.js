@@ -71,7 +71,6 @@ classSchema.virtual('enrolledCount', {
 });
 
 // Index for efficient queries
-classSchema.index({ code: 1 });
 classSchema.index({ status: 1, isActive: 1 });
 classSchema.index({ startDate: 1, endDate: 1 });
 

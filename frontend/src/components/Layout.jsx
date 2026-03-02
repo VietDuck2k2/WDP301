@@ -26,6 +26,46 @@ const Layout = () => {
 
                 <nav className="sidebar-nav">
                     <ul>
+                        {user?.role === 'admin' && (
+                            <>
+                                <li>
+                                    <NavLink to="/admin/dashboard" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">📊</span>
+                                        <span className="text">Dashboard</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/admin/users" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">👥</span>
+                                        <span className="text">Users</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/admin/classes" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">🏫</span>
+                                        <span className="text">Classes</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/admin/templates" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">🧩</span>
+                                        <span className="text">Templates</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/admin/attendance" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">📝</span>
+                                        <span className="text">Attendance</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/admin/reports" className={({isActive}) => isActive ? 'active' : ''}>
+                                        <span className="icon">📈</span>
+                                        <span className="text">Reports</span>
+                                    </NavLink>
+                                </li>
+                            </>
+                        )}
                         <li>
                             <NavLink to={`/${user?.role}/timetable`} className={({isActive}) => isActive ? 'active' : ''}>
                                 <span className="icon">📅</span> 

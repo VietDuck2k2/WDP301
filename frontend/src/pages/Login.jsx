@@ -27,7 +27,11 @@ const Login = () => {
 
         if (result.success) {
             // Redirect based on role
-            navigate(`/${result.role}/timetable`);
+            if (result.role === 'admin') {
+                navigate('/admin/dashboard');
+            } else {
+                navigate(`/${result.role}/timetable`);
+            }
         } else {
             setError(result.message || 'Invalid email or password');
         }

@@ -1,0 +1,188 @@
+.class-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.class-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.class-detail-header h1 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.class-detail-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+}
+
+.class-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.class-detail-stats article {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.class-detail-stats h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.4rem;
+}
+
+.class-detail-stats p {
+  margin: 4px 0 0;
+  color: #64748b;
+}
+
+.class-detail-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tool-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.tool-card h3 {
+  margin: 0 0 10px;
+}
+
+.tool-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.tool-row select {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px;
+  outline: none;
+}
+
+.tool-row button {
+  border: 0;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #fff;
+  padding: 0 14px;
+  font-weight: 600;
+}
+
+.class-members-panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.panel-head h2 {
+  margin: 0;
+}
+
+.panel-head select {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
+  font-size: 0.92rem;
+}
+
+.empty-row {
+  text-align: center;
+  color: #94a3b8;
+  padding: 28px;
+}
+
+.role-pill,
+.status-pill {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.role-pill.teacher { background: #dcfce7; color: #166534; }
+.role-pill.student { background: #dbeafe; color: #1d4ed8; }
+
+.status-pill.active { background: #dcfce7; color: #166534; }
+.status-pill.inactive { background: #f1f5f9; color: #334155; }
+
+.icon-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn.delete:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+@media (max-width: 900px) {
+  .class-detail-tools,
+  .class-detail-stats {
+    grid-template-columns: 1fr;
+  }
+}
