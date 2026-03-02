@@ -64,6 +64,12 @@ async function seed() {
       { firstName: 'Diana', lastName: 'Pham', email: 'student4@ecms.com', password: '123456', role: 'student' },
       { firstName: 'Edward', lastName: 'Hoang', email: 'student5@ecms.com', password: '123456', role: 'student' },
    ]);
+   // Same accounts as seedUsers.js so login works with admin@example.com / password123
+   await User.create([
+      { firstName: 'System', lastName: 'Admin', email: 'admin@example.com', password: 'password123', role: 'admin' },
+      { firstName: 'John', lastName: 'Doe', email: 'teacher@example.com', password: 'password123', role: 'teacher' },
+      { firstName: 'Jane', lastName: 'Smith', email: 'student@example.com', password: 'password123', role: 'student' },
+   ]);
    console.log('👤 Users created');
 
    // ── Classes ─────────────────────────────────────────────────────────────
@@ -259,16 +265,17 @@ async function main() {
    await clearAll();
    await seed();
 
-   console.log('\n✅ Seed complete! Test accounts (password: 123456):');
+   console.log('\n✅ Seed complete! Test accounts:');
    console.log('──────────────────────────────────────────────────');
+   console.log('(password: 123456)');
    console.log('👨‍💼 Admin:    admin@ecms.com');
    console.log('👨‍🏫 Teacher1: teacher1@ecms.com  (IELTS Advanced)');
    console.log('👩‍🏫 Teacher2: teacher2@ecms.com  (Business English)');
-   console.log('👨‍🎓 Student1: student1@ecms.com  (IELTS Advanced)');
-   console.log('👨‍🎓 Student2: student2@ecms.com  (IELTS Advanced)');
-   console.log('👨‍🎓 Student3: student3@ecms.com  (Both classes)');
-   console.log('👩‍🎓 Student4: student4@ecms.com  (Business English)');
-   console.log('👩‍🎓 Student5: student5@ecms.com  (Business English)');
+   console.log('👨‍🎓 Student1–5: student1@ecms.com … student5@ecms.com');
+   console.log('(password: password123)');
+   console.log('👨‍💼 Admin:    admin@example.com');
+   console.log('👨‍🏫 Teacher:  teacher@example.com');
+   console.log('👨‍🎓 Student:  student@example.com');
    console.log('──────────────────────────────────────────────────');
 
    await mongoose.disconnect();
