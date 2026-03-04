@@ -1,22 +1,22 @@
 import axiosInstance from './axios';
 
 export const teacherApi = {
-   // Classes
-   getMyClasses: (params) => axiosInstance.get('/teacher/classes', { params }),
-   getClassById: (id) => axiosInstance.get(`/teacher/classes/${id}`),
-   getClassMembers: (id) => axiosInstance.get(`/teacher/classes/${id}/members`),
-
    // Timetable & Sessions
    getTimetable: (params) => axiosInstance.get('/teacher/timetable', { params }),
    getSessions: (params) => axiosInstance.get('/teacher/sessions', { params }),
    getSessionById: (id) => axiosInstance.get(`/teacher/sessions/${id}`),
-   getClassSessions: (classId, params) => axiosInstance.get(`/teacher/sessions/classes/${classId}`, { params }),
+   getClassSessions: (classId) => axiosInstance.get(`/teacher/sessions/classes/${classId}`),
    updateSession: (id, data) => axiosInstance.put(`/teacher/sessions/${id}`, data),
    addSessionMaterial: (id, data) => axiosInstance.post(`/teacher/sessions/${id}/materials`, data),
 
+   // Classes
+   getClasses: () => axiosInstance.get('/teacher/classes'),
+   getClassById: (id) => axiosInstance.get(`/teacher/classes/${id}`),
+   getClassMembers: (id) => axiosInstance.get(`/teacher/classes/${id}/members`),
+
    // Attendances
    getSessionAttendance: (sessionId) => axiosInstance.get(`/teacher/attendances/sessions/${sessionId}`),
-   bulkMarkAttendance: (sessionId, data) => axiosInstance.post(`/teacher/attendances/sessions/${sessionId}/bulk`, data),
+   postSessionAttendanceBulk: (sessionId, data) => axiosInstance.post(`/teacher/attendances/sessions/${sessionId}/bulk`, data),
    getStudentAttendanceSummary: (studentId) => axiosInstance.get(`/teacher/attendances/students/${studentId}`),
 
    // Assignments
@@ -35,5 +35,5 @@ export const teacherApi = {
    createAnnouncement: (data) => axiosInstance.post('/teacher/announcements', data),
    updateAnnouncement: (id, data) => axiosInstance.put(`/teacher/announcements/${id}`, data),
    deleteAnnouncement: (id) => axiosInstance.delete(`/teacher/announcements/${id}`),
-   togglePinAnnouncement: (id) => axiosInstance.post(`/teacher/announcements/${id}/toggle-pin`),
+   toggleAnnouncementPin: (id) => axiosInstance.post(`/teacher/announcements/${id}/toggle-pin`),
 };

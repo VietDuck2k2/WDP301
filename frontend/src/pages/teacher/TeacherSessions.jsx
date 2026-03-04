@@ -1,105 +1,81 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { teacherApi } from '../../api/teacherApi';
-import '../../pages/PageCommon.css';
+import { Link } from 'react-router-dom';
+
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN') : '-');
 
 export default function TeacherSessions() {
-   const [classes, setClasses] = useState([]);
-   const [sessions, setSessions] = useState([]);
-   const [selectedClassId, setSelectedClassId] = useState('');
-   const [loading, setLoading] = useState(false);
-   const [error, setError] = useState('');
+  const [sessions, setSessions] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [classId, setClassId] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-   useEffect(() => {
-      const load = async () => {
-         try {
-            const res = await teacherApi.getMyClasses();
-            if (res?.success && res.data) setClasses(Array.isArray(res.data) ? res.data : []);
-         } catch (_) {
-            setError('Không tải được danh sách lớp.');
-         }
-      };
-      load();
-   }, []);
+  useEffect(() => {
+    teacherApi.getClasses()
+      .then((res) => { if (res?.success && res.data) setClasses(Array.isArray(res.data) ? res.data : res.data.classes || []); })
+      .catch(() => setClasses([]));
+  }, []);
 
-   useEffect(() => {
-      if (!selectedClassId) {
-         setSessions([]);
-         return;
-      }
-      setLoading(true);
-      setError('');
-      teacherApi
-         .getClassSessions(selectedClassId)
-         .then((res) => {
-            if (res?.success && res.data) setSessions(Array.isArray(res.data) ? res.data : res.data.sessions || []);
-            else setSessions([]);
-         })
-         .catch(() => {
-            setError('Không tải được buổi học.');
-            setSessions([]);
-         })
-         .finally(() => setLoading(false));
-   }, [selectedClassId]);
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    teacherApi.getSessions(classId ? { classId } : {})
+      .then((res) => {
+        if (res?.success && res.data) {
+          const list = res.data.sessions || res.data;
+          setSessions(Array.isArray(list) ? list : []);
+        } else setSessions([]);
+      })
+      .catch((err) => { setError(err.response?.data?.message || 'Tải danh sách thất bại'); setSessions([]); })
+      .finally(() => setLoading(false));
+  }, [classId]);
 
-   const formatDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN') : '');
-   const formatTime = (s, e) => (s && e ? `${s} - ${e}` : '');
-
-   return (
-      <div className="page-common">
-         <h1 className="page-common-title">Buổi học</h1>
-         <div className="page-common-toolbar">
-            <label>
-               Lớp:
-               <select
-                  value={selectedClassId}
-                  onChange={(e) => setSelectedClassId(e.target.value)}
-                  className="page-common-select"
-               >
-                  <option value="">-- Chọn lớp --</option>
-                  {classes.map((c) => (
-                     <option key={c._id} value={c._id}>
-                        {c.name} ({c.code})
-                     </option>
-                  ))}
-               </select>
-            </label>
-         </div>
-         {error && <p className="page-common-error">{error}</p>}
-         {loading && <p className="page-common-loading">Đang tải...</p>}
-         {!loading && sessions.length === 0 && selectedClassId && <p className="page-common-empty">Chưa có buổi học.</p>}
-         {!loading && sessions.length > 0 && (
-            <div className="page-common-card">
-               <table className="page-common-table">
-                  <thead>
-                     <tr>
-                        <th>Buổi</th>
-                        <th>Ngày</th>
-                        <th>Giờ</th>
-                        <th>Phòng</th>
-                        <th>Trạng thái</th>
-                        <th></th>
-                     </tr>
-                  </thead>
-                  <tbody>
-                     {sessions.map((s) => (
-                        <tr key={s._id}>
-                           <td>{s.title || `Session ${s.sessionNumber}`}</td>
-                           <td>{formatDate(s.date)}</td>
-                           <td>{formatTime(s.startTime, s.endTime)}</td>
-                           <td>{s.room || '-'}</td>
-                           <td>{s.status || '-'}</td>
-                           <td>
-                              <Link to={`/teacher/attendance/${s._id}`} className="page-common-link">
-                                 Điểm danh
-                              </Link>
-                           </td>
-                        </tr>
-                     ))}
-                  </tbody>
-               </table>
-            </div>
-         )}
+  return (
+    <div className="page-card">
+      <h1 className="page-title">Buổi học</h1>
+      <div className="toolbar">
+        <select value={classId} onChange={(e) => setClassId(e.target.value)} className="form-select">
+          <option value="">Tất cả lớp</option>
+          {classes.map((c) => (
+            <option key={c._id} value={c._id}>{c.name}</option>
+          ))}
+        </select>
       </div>
-   );
+      {error && <p className="error-msg">{error}</p>}
+      {loading ? <p>Đang tải...</p> : (
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Tiêu đề</th>
+                <th>Lớp</th>
+                <th>Ngày</th>
+                <th>Giờ</th>
+                <th>Phòng</th>
+                <th>Trạng thái</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {sessions.map((s) => (
+                <tr key={s._id}>
+                  <td>{s.title}</td>
+                  <td>{s.class?.name || '-'}</td>
+                  <td>{formatDate(s.date)}</td>
+                  <td>{s.startTime} - {s.endTime}</td>
+                  <td>{s.room || '-'}</td>
+                  <td>{s.status || '-'}</td>
+                  <td>
+                    <Link to={`/teacher/attendances/${s._id}`} className="link">Điểm danh</Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {sessions.length === 0 && <p className="empty">Chưa có buổi học.</p>}
+        </div>
+      )}
+    </div>
+  );
 }

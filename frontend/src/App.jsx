@@ -24,46 +24,36 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          
-          {/* Root Redirect to Login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* Protected Routes Wrapper */}
           <Route element={<Layout />}>
-            
-            {/* Admin Routes */}
             <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
               <Route path="/admin/timetable" element={<Timetable role="admin" />} />
-              {/* Add more admin routes here */}
             </Route>
 
-            {/* Teacher Routes */}
             <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
               <Route path="/teacher/timetable" element={<TeacherTimetable />} />
               <Route path="/teacher/sessions" element={<TeacherSessions />} />
-              <Route path="/teacher/attendance" element={<TeacherAttendance />} />
-              <Route path="/teacher/attendance/:sessionId" element={<TeacherAttendance />} />
+              <Route path="/teacher/attendances" element={<TeacherAttendance />} />
+              <Route path="/teacher/attendances/:sessionId" element={<TeacherAttendance />} />
               <Route path="/teacher/assignments" element={<TeacherAssignments />} />
               <Route path="/teacher/assignments/:id" element={<AssignmentDetail />} />
               <Route path="/teacher/announcements" element={<TeacherAnnouncements />} />
             </Route>
 
-            {/* Student Routes */}
             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
               <Route path="/student/timetable" element={<StudentTimetable />} />
               <Route path="/student/classes" element={<StudentClasses />} />
               <Route path="/student/assignments" element={<StudentAssignments />} />
               <Route path="/student/assignments/:id/submit" element={<AssignmentSubmit />} />
               <Route path="/student/grades" element={<StudentGrades />} />
-              <Route path="/student/attendance" element={<StudentAttendance />} />
+              <Route path="/student/attendances" element={<StudentAttendance />} />
               <Route path="/student/announcements" element={<StudentAnnouncements />} />
+              <Route path="/student/announcements/:classId" element={<StudentAnnouncements />} />
             </Route>
-            
           </Route>
 
-          {/* Fallback route */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>

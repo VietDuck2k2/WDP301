@@ -4,9 +4,27 @@ import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 import './Layout.css';
 
+const teacherNav = [
+  { to: '/teacher/timetable', label: 'TKB', icon: '📅' },
+  { to: '/teacher/sessions', label: 'Buổi học', icon: '📚' },
+  { to: '/teacher/attendances', label: 'Điểm danh', icon: '✓' },
+  { to: '/teacher/assignments', label: 'Bài tập', icon: '📝' },
+  { to: '/teacher/announcements', label: 'Thông báo', icon: '📢' },
+];
+
+const studentNav = [
+  { to: '/student/timetable', label: 'TKB', icon: '📅' },
+  { to: '/student/classes', label: 'Lớp học', icon: '🏫' },
+  { to: '/student/assignments', label: 'Bài tập', icon: '📝' },
+  { to: '/student/grades', label: 'Bảng điểm', icon: '📊' },
+  { to: '/student/attendances', label: 'Điểm danh', icon: '✓' },
+  { to: '/student/announcements', label: 'Thông báo', icon: '📢' },
+];
+
 const Layout = () => {
     const { user, logout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const nav = user?.role === 'teacher' ? teacherNav : user?.role === 'student' ? studentNav : [{ to: `/${user?.role}/timetable`, label: 'TKB', icon: '📅' }];
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -27,74 +45,14 @@ const Layout = () => {
 
                 <nav className="sidebar-nav">
                     <ul>
-                        <li>
-                            <NavLink to={`/${user?.role}/timetable`} className={({isActive}) => isActive ? 'active' : ''}>
-                                <span className="icon">📅</span>
-                                <span className="text">Thời khóa biểu</span>
-                            </NavLink>
-                        </li>
-                        {user?.role === 'teacher' && (
-                            <>
-                                <li>
-                                    <NavLink to="/teacher/sessions" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">📋</span>
-                                        <span className="text">Buổi học</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/teacher/attendance" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">✓</span>
-                                        <span className="text">Điểm danh</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/teacher/assignments" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">📝</span>
-                                        <span className="text">Bài tập</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/teacher/announcements" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">📢</span>
-                                        <span className="text">Thông báo</span>
-                                    </NavLink>
-                                </li>
-                            </>
-                        )}
-                        {user?.role === 'student' && (
-                            <>
-                                <li>
-                                    <NavLink to="/student/classes" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">🏫</span>
-                                        <span className="text">Lớp học</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/student/assignments" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">📝</span>
-                                        <span className="text">Bài tập</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/student/grades" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">📊</span>
-                                        <span className="text">Điểm</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/student/attendance" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">✓</span>
-                                        <span className="text">Điểm danh</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/student/announcements" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">📢</span>
-                                        <span className="text">Thông báo</span>
-                                    </NavLink>
-                                </li>
-                            </>
-                        )}
+                        {nav.map((item) => (
+                            <li key={item.to}>
+                                <NavLink to={item.to} className={({ isActive }) => isActive ? 'active' : ''}>
+                                    <span className="icon">{item.icon}</span> 
+                                    <span className="text">{item.label}</span>
+                                </NavLink>
+                            </li>
+                        ))}
                     </ul>
                 </nav>
 

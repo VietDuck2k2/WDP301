@@ -1,25 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Popover } from '@headlessui/react';
+import { BellIcon } from '@heroicons/react/24/outline';
 import { notificationApi } from '../api/notificationApi';
-import './NotificationBell.css';
 
 export default function NotificationBell() {
    const [data, setData] = useState({ notifications: [], unreadCount: 0 });
-   const [open, setOpen] = useState(false);
-   const [loading, setLoading] = useState(false);
-   const panelRef = useRef(null);
 
    const fetchNotifications = async () => {
       try {
-         const res = await notificationApi.getNotifications({ limit: 10, unreadOnly: false });
+         const res = await notificationApi.getNotifications({ limit: 10 });
          if (res?.success && res.data) {
             setData({
-               notifications: res.data.notifications || [],
-               unreadCount: res.data.unreadCount ?? 0,
+               notifications: res.data.notifications || res.data,
+               unreadCount: res.data.unreadCount ?? (res.data.notifications || res.data).filter((n) => !n.isRead).length,
             });
          }
-      } catch (_) {
-         // Notifications API may not exist yet
-      }
+      } catch (_) {}
    };
 
    useEffect(() => {
@@ -28,17 +24,7 @@ export default function NotificationBell() {
       return () => clearInterval(interval);
    }, []);
 
-   useEffect(() => {
-      if (!open) return;
-      const onOutside = (e) => {
-         if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false);
-      };
-      document.addEventListener('click', onOutside);
-      return () => document.removeEventListener('click', onOutside);
-   }, [open]);
-
    const markAllRead = async () => {
-      setLoading(true);
       try {
          await notificationApi.markAllAsRead();
          setData((prev) => ({
@@ -47,71 +33,44 @@ export default function NotificationBell() {
             notifications: prev.notifications.map((n) => ({ ...n, isRead: true })),
          }));
       } catch (_) {}
-      setLoading(false);
-   };
-
-   const markOneRead = async (id) => {
-      try {
-         await notificationApi.markAsRead(id);
-         setData((prev) => ({
-            ...prev,
-            unreadCount: Math.max(0, prev.unreadCount - 1),
-            notifications: prev.notifications.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
-         }));
-      } catch (_) {}
    };
 
    return (
-      <div className="notification-bell-wrapper" ref={panelRef}>
-         <button
-            type="button"
-            className="notification-bell-btn"
-            onClick={() => setOpen(!open)}
-            aria-label="Thông báo"
-         >
-            <span className="bell-icon">🔔</span>
+      <Popover className="relative">
+         <Popover.Button className="relative rounded-full p-2 hover:bg-gray-100">
+            <BellIcon className="h-6 w-6" />
             {data.unreadCount > 0 && (
-               <span className="notification-bell-badge">
+               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                   {data.unreadCount > 9 ? '9+' : data.unreadCount}
                </span>
             )}
-         </button>
-         {open && (
-            <div className="notification-bell-panel">
-               <div className="notification-bell-panel-header">
-                  <h3 className="notification-bell-panel-title">Thông báo</h3>
-                  {data.unreadCount > 0 && (
-                     <button
-                        type="button"
-                        className="notification-bell-mark-all"
-                        onClick={markAllRead}
-                        disabled={loading}
-                     >
-                        Đọc tất cả
-                     </button>
-                  )}
-               </div>
-               <div className="notification-bell-list">
-                  {data.notifications.length === 0 ? (
-                     <p className="notification-bell-empty">Không có thông báo</p>
-                  ) : (
-                     data.notifications.map((n) => (
-                        <div
-                           key={n._id}
-                           className={`notification-bell-item ${!n.isRead ? 'unread' : ''}`}
-                           onClick={() => !n.isRead && markOneRead(n._id)}
-                        >
-                           <p className="notification-bell-item-title">{n.title}</p>
-                           {n.body && <p className="notification-bell-item-body">{n.body}</p>}
-                           <p className="notification-bell-item-time">
-                              {n.createdAt ? new Date(n.createdAt).toLocaleString('vi-VN') : ''}
-                           </p>
-                        </div>
-                     ))
-                  )}
-               </div>
+         </Popover.Button>
+         <Popover.Panel className="absolute right-0 z-50 mt-2 w-80 rounded-2xl border border-gray-100 bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b p-3">
+               <h3 className="font-semibold">Thông báo</h3>
+               <button type="button" onClick={markAllRead} className="text-xs text-blue-600 hover:underline">
+                  Đọc tất cả
+               </button>
             </div>
-         )}
-      </div>
+            <div className="max-h-80 overflow-y-auto">
+               {data.notifications.length === 0 ? (
+                  <p className="p-4 text-center text-sm text-gray-400">Không có thông báo</p>
+               ) : (
+                  data.notifications.map((n) => (
+                     <div
+                        key={n._id}
+                        className={`border-b p-3 hover:bg-gray-50 ${!n.isRead ? 'bg-blue-50' : ''}`}
+                     >
+                        <p className="text-sm font-medium">{n.title}</p>
+                        <p className="text-xs text-gray-500">{n.body}</p>
+                        <p className="mt-1 text-xs text-gray-400">
+                           {new Date(n.createdAt).toLocaleString('vi-VN')}
+                        </p>
+                     </div>
+                  ))
+               )}
+            </div>
+         </Popover.Panel>
+      </Popover>
    );
 }

@@ -1,119 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { studentApi } from '../../api/studentApi';
 import FileUpload from '../../components/FileUpload';
-import '../../pages/PageCommon.css';
+
+const formatDate = (d) => (d ? new Date(d).toLocaleString('vi-VN') : '-');
 
 export default function AssignmentSubmit() {
-   const { id } = useParams();
-   const navigate = useNavigate();
-   const [assignment, setAssignment] = useState(null);
-   const [existing, setExisting] = useState(null);
-   const [loading, setLoading] = useState(true);
-   const [submitting, setSubmitting] = useState(false);
-   const [error, setError] = useState('');
-   const [form, setForm] = useState({ content: '', attachments: [] });
+  const { id } = useParams();
+  const [assignment, setAssignment] = useState(null);
+  const [mySubmission, setMySubmission] = useState(null);
+  const [content, setContent] = useState('');
+  const [attachments, setAttachments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-   useEffect(() => {
-      if (!id) return;
-      setLoading(true);
-      Promise.all([
-         studentApi.getAssignmentById(id),
-         studentApi.getMySubmissionForAssignment(id),
-      ])
-         .then(([aRes, sRes]) => {
-            if (aRes?.success && aRes.data) setAssignment(aRes.data);
-            if (sRes?.success && sRes.data) setExisting(sRes.data);
-         })
-         .catch(() => setError('Không tải được dữ liệu.'))
-         .finally(() => setLoading(false));
-   }, [id]);
+  useEffect(() => {
+    if (!id) return;
+    studentApi.getAssignmentById(id).then((res) => { if (res?.success && res.data) setAssignment(res.data); });
+    studentApi.getMySubmissionForAssignment(id).then((res) => {
+      if (res?.success && res.data) { setMySubmission(res.data); setContent(res.data.content || ''); setAttachments(res.data.attachments || []); }
+    }).finally(() => setLoading(false));
+  }, [id]);
 
-   const handleSubmit = async (e) => {
-      e.preventDefault();
-      setError('');
-      setSubmitting(true);
-      try {
-         const res = await studentApi.submitAssignment(id, {
-            content: form.content,
-            attachments: form.attachments,
-         });
-         if (res?.success) {
-            setExisting(res.data);
-            alert('Nộp bài thành công!');
-         } else setError(res?.message || 'Nộp bài thất bại.');
-      } catch (_) {
-         setError('Nộp bài thất bại.');
-      }
-      setSubmitting(false);
-   };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    studentApi.submitAssignment(id, { content, attachments })
+      .then((res) => { if (res?.success) { setMySubmission(res.data); setSuccess(true); } else setError(res?.message || 'Nộp bài thất bại'); })
+      .catch((err) => setError(err.response?.data?.message || 'Nộp bài thất bại'))
+      .finally(() => setSubmitting(false));
+  };
 
-   if (loading) return <div className="page-common"><p className="page-common-loading">Đang tải...</p></div>;
-   if (error && !assignment) {
-      return (
-         <div className="page-common">
-            <p className="page-common-error">{error}</p>
-            <button type="button" className="page-common-btn" onClick={() => navigate('/student/assignments')}>
-               Quay lại
-            </button>
-         </div>
-      );
-   }
+  const handleSaveDraft = async () => {
+    setSubmitting(true);
+    setError('');
+    studentApi.saveDraft(id, { content }).then((res) => { if (res?.success) setMySubmission(res.data); }).catch(() => {}).finally(() => setSubmitting(false));
+  };
 
-   const formatDate = (d) => (d ? new Date(d).toLocaleString('vi-VN') : '-');
+  if (loading || !assignment) return <div className="page-card"><p>Đang tải...</p></div>;
 
-   if (existing?.status === 'submitted' || existing?.status === 'graded') {
-      return (
-         <div className="page-common">
-            <h1 className="page-common-title">{assignment?.title}</h1>
-            <div className="page-common-card">
-               <p>Bạn đã nộp bài lúc {formatDate(existing.submittedAt)}.</p>
-               {existing.status === 'graded' && (
-                  <p><strong>Điểm:</strong> {existing.score} / {assignment?.maxScore}. {existing.feedback && `Nhận xét: ${existing.feedback}`}</p>
-               )}
-            </div>
-            <button type="button" className="page-common-btn" onClick={() => navigate('/student/assignments')}>
-               Quay lại
-            </button>
-         </div>
-      );
-   }
-
-   return (
-      <div className="page-common">
-         <h1 className="page-common-title">Nộp bài: {assignment?.title}</h1>
-         <div className="page-common-card" style={{ marginBottom: 24 }}>
-            <p><strong>Hạn nộp:</strong> {formatDate(assignment?.dueDate)}</p>
-            {assignment?.description && <p>{assignment.description}</p>}
-         </div>
-         <div className="page-common-card">
-            <form onSubmit={handleSubmit}>
-               {error && <p className="page-common-error">{error}</p>}
-               <div style={{ marginBottom: 12 }}>
-                  <label>Nội dung / Ghi chú</label>
-                  <textarea
-                     value={form.content}
-                     onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-                     className="page-common-input"
-                     rows={5}
-                     style={{ maxWidth: '100%' }}
-                  />
-               </div>
-               <FileUpload
-                  value={form.attachments}
-                  onChange={(attachments) => setForm((f) => ({ ...f, attachments }))}
-                  label="Tệp đính kèm"
-               />
-               <div className="page-common-toolbar" style={{ marginTop: 16 }}>
-                  <button type="submit" className="page-common-btn page-common-btn-primary" disabled={submitting}>
-                     {submitting ? 'Đang nộp...' : 'Nộp bài'}
-                  </button>
-                  <button type="button" className="page-common-btn" onClick={() => navigate('/student/assignments')}>
-                     Hủy
-                  </button>
-               </div>
-            </form>
-         </div>
-      </div>
-   );
+  return (
+    <div className="page-card">
+      <h1 className="page-title">{assignment.title}</h1>
+      <p className="muted">Lớp: {assignment.class?.name} · Hạn nộp: {formatDate(assignment.dueDate)}</p>
+      <p>{assignment.description}</p>
+      {assignment.instructions && <p><strong>Hướng dẫn:</strong> {assignment.instructions}</p>}
+      {mySubmission?.status === 'graded' && (
+        <div className="result-box">
+          <p>Điểm: {mySubmission.score}/{assignment.maxScore}</p>
+          <p>Nhận xét: {mySubmission.feedback}</p>
+        </div>
+      )}
+      {mySubmission?.status !== 'graded' && (
+        <form onSubmit={handleSubmit} className="form-card">
+          <textarea placeholder="Nội dung bài làm" value={content} onChange={(e) => setContent(e.target.value)} className="form-input" rows={6} />
+          <FileUpload value={attachments} onChange={setAttachments} label="Tệp đính kèm" />
+          {error && <p className="error-msg">{error}</p>}
+          {success && <p className="success-msg">Đã nộp bài thành công.</p>}
+          <div>
+            <button type="submit" className="btn-primary" disabled={submitting}>{submitting ? 'Đang nộp...' : 'Nộp bài'}</button>
+            <button type="button" className="btn-secondary" onClick={handleSaveDraft} disabled={submitting}>Lưu nháp</button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
 }

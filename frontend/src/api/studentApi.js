@@ -2,8 +2,11 @@ import axiosInstance from './axios';
 
 export const studentApi = {
    // Classes
-   getMyClasses: (params) => axiosInstance.get('/student/classes', { params }),
+   getClasses: () => axiosInstance.get('/student/classes'),
    getClassById: (id) => axiosInstance.get(`/student/classes/${id}`),
+
+   // Timetable
+   getTimetable: (params) => axiosInstance.get('/student/timetable', { params }),
 
    // Assignments
    getClassAssignments: (classId) => axiosInstance.get(`/student/assignments/classes/${classId}`),
@@ -23,9 +26,6 @@ export const studentApi = {
    getMyAttendances: (params) => axiosInstance.get('/student/attendances', { params }),
    getMyAttendanceSummary: () => axiosInstance.get('/student/attendances/summary'),
    getMyAttendanceByClass: (classId) => axiosInstance.get(`/student/attendances/classes/${classId}`),
-
-   // Timetable
-   getTimetable: (params) => axiosInstance.get('/student/timetable', { params }),
 
    // Announcements
    getClassAnnouncements: (classId) => axiosInstance.get(`/student/announcements/classes/${classId}`),
