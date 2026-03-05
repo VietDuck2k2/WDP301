@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Popover } from '@headlessui/react';
-import { BellIcon } from '@heroicons/react/24/outline';
+import { BellIcon } from '@heroicons/react/24/solid';
 import { notificationApi } from '../api/notificationApi';
+import './NotificationBell.css';
 
 export default function NotificationBell() {
    const [data, setData] = useState({ notifications: [], unreadCount: 0 });
 
    const fetchNotifications = async () => {
       try {
-         const res = await notificationApi.getNotifications({ limit: 10 });
+         const res = await notificationApi.getNotifications({ limit: 15 });
          if (res?.success && res.data) {
-            setData({
-               notifications: res.data.notifications || res.data,
-               unreadCount: res.data.unreadCount ?? (res.data.notifications || res.data).filter((n) => !n.isRead).length,
-            });
+            const list = res.data.notifications || res.data;
+            const arr = Array.isArray(list) ? list : [];
+            const unread = res.data.unreadCount ?? arr.filter((n) => !n.isRead).length;
+            setData({ notifications: arr, unreadCount: unread });
          }
       } catch (_) {}
    };
@@ -35,37 +36,54 @@ export default function NotificationBell() {
       } catch (_) {}
    };
 
+   const formatTime = (dateStr) => {
+      const d = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - d;
+      const diffM = Math.floor(diffMs / 60000);
+      const diffH = Math.floor(diffMs / 3600000);
+      const diffD = Math.floor(diffMs / 86400000);
+      if (diffM < 1) return 'Vừa xong';
+      if (diffM < 60) return `${diffM} phút trước`;
+      if (diffH < 24) return `${diffH} giờ trước`;
+      if (diffD < 7) return `${diffD} ngày trước`;
+      return d.toLocaleDateString('vi-VN');
+   };
+
    return (
-      <Popover className="relative">
-         <Popover.Button className="relative rounded-full p-2 hover:bg-gray-100">
-            <BellIcon className="h-6 w-6" />
+      <Popover className="notification-bell">
+         <Popover.Button className="notification-bell__btn" aria-label="Xem thông báo">
+            <BellIcon style={{ color: '#0f172a', width: 24, height: 24 }} />
             {data.unreadCount > 0 && (
-               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                  {data.unreadCount > 9 ? '9+' : data.unreadCount}
+               <span className="notification-bell__badge">
+                  {data.unreadCount > 99 ? '99+' : data.unreadCount}
                </span>
             )}
          </Popover.Button>
-         <Popover.Panel className="absolute right-0 z-50 mt-2 w-80 rounded-2xl border border-gray-100 bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b p-3">
-               <h3 className="font-semibold">Thông báo</h3>
-               <button type="button" onClick={markAllRead} className="text-xs text-blue-600 hover:underline">
-                  Đọc tất cả
-               </button>
+         <Popover.Panel className="notification-bell__panel">
+            <div className="notification-bell__header">
+               <h3 className="notification-bell__title">Thông báo</h3>
+               {data.unreadCount > 0 && (
+                  <button type="button" className="notification-bell__mark-all" onClick={markAllRead}>
+                     Đọc tất cả
+                  </button>
+               )}
             </div>
-            <div className="max-h-80 overflow-y-auto">
+            <div className="notification-bell__list">
                {data.notifications.length === 0 ? (
-                  <p className="p-4 text-center text-sm text-gray-400">Không có thông báo</p>
+                  <p className="notification-bell__empty">Không có thông báo</p>
                ) : (
                   data.notifications.map((n) => (
                      <div
                         key={n._id}
-                        className={`border-b p-3 hover:bg-gray-50 ${!n.isRead ? 'bg-blue-50' : ''}`}
+                        className={`notification-bell__item ${!n.isRead ? 'notification-bell__item--unread' : ''}`}
                      >
-                        <p className="text-sm font-medium">{n.title}</p>
-                        <p className="text-xs text-gray-500">{n.body}</p>
-                        <p className="mt-1 text-xs text-gray-400">
-                           {new Date(n.createdAt).toLocaleString('vi-VN')}
-                        </p>
+                        <div className="notification-bell__item-avatar">🔔</div>
+                        <div className="notification-bell__item-body">
+                           <p className="notification-bell__item-title">{n.title}</p>
+                           <p className="notification-bell__item-text">{n.body}</p>
+                           <p className="notification-bell__item-time">{formatTime(n.createdAt)}</p>
+                        </div>
                      </div>
                   ))
                )}

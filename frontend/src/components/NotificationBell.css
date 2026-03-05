@@ -1,0 +1,184 @@
+/* NotificationBell — dropdown kiểu Facebook */
+.notification-bell {
+  position: relative;
+}
+
+/* Nút chuông nổi bật, dễ thấy — viền rõ, icon đen đặc */
+.notification-bell .notification-bell__btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #cbd5e1 !important;
+  background: #fff !important;
+  border-radius: 50%;
+  color: #0f172a !important;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.notification-bell .notification-bell__btn:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.notification-bell__btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+/* Badge số thông báo chưa đọc (kiểu Facebook) */
+.notification-bell__badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e41e3a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 2px solid #fff;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+/* Dropdown panel */
+.notification-bell__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.notification-bell__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e4e6eb;
+  background: #fff;
+}
+
+.notification-bell__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1c1e21;
+}
+
+.notification-bell__mark-all {
+  border: none;
+  background: none;
+  color: #1877f2;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.notification-bell__mark-all:hover {
+  background: #f0f2f5;
+}
+
+.notification-bell__list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-bell__empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: #1a1e21;
+  font-size: 0.9375rem;
+}
+
+/* Mỗi item thông báo */
+.notification-bell__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e4e6eb;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.notification-bell__item:hover {
+  background: #f0f2f5;
+}
+
+.notification-bell__item--unread {
+  background: #e7f3ff;
+}
+
+.notification-bell__item--unread:hover {
+  background: #d6ebff;
+}
+
+.notification-bell__item-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.notification-bell__item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-bell__item-title {
+  margin: 0 0 2px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1c1e21;
+  line-height: 1.3;
+}
+
+.notification-bell__item-text {
+  margin: 0 0 4px;
+  font-size: 0.8125rem;
+  color: #1a1e21;
+  line-height: 1.4;
+}
+
+.notification-bell__item-time {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+@media (max-width: 480px) {
+  .notification-bell__panel {
+    width: 320px;
+    right: -8px;
+  }
+}
