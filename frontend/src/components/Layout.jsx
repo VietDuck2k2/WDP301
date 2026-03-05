@@ -1,11 +1,30 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 import './Layout.css';
+
+const teacherNav = [
+  { to: '/teacher/timetable', label: 'TKB', icon: '📅' },
+  { to: '/teacher/sessions', label: 'Buổi học', icon: '📚' },
+  { to: '/teacher/attendances', label: 'Điểm danh', icon: '✓' },
+  { to: '/teacher/assignments', label: 'Bài tập', icon: '📝' },
+  { to: '/teacher/announcements', label: 'Thông báo', icon: '📢' },
+];
+
+const studentNav = [
+  { to: '/student/timetable', label: 'TKB', icon: '📅' },
+  { to: '/student/classes', label: 'Lớp học', icon: '🏫' },
+  { to: '/student/assignments', label: 'Bài tập', icon: '📝' },
+  { to: '/student/grades', label: 'Bảng điểm', icon: '📊' },
+  { to: '/student/attendances', label: 'Điểm danh', icon: '✓' },
+  { to: '/student/announcements', label: 'Thông báo', icon: '📢' },
+];
 
 const Layout = () => {
     const { user, logout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const nav = user?.role === 'teacher' ? teacherNav : user?.role === 'student' ? studentNav : [{ to: `/${user?.role}/timetable`, label: 'TKB', icon: '📅' }];
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -26,46 +45,6 @@ const Layout = () => {
 
                 <nav className="sidebar-nav">
                     <ul>
-                        {user?.role === 'admin' && (
-                            <>
-                                <li>
-                                    <NavLink to="/admin/dashboard" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">📊</span>
-                                        <span className="text">Dashboard</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/admin/users" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">👥</span>
-                                        <span className="text">Users</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/admin/classes" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">🏫</span>
-                                        <span className="text">Classes</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/admin/templates" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">🧩</span>
-                                        <span className="text">Templates</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/admin/attendance" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">📝</span>
-                                        <span className="text">Attendance</span>
-                                    </NavLink>
-                                </li>
-                                <li>
-                                    <NavLink to="/admin/reports" className={({isActive}) => isActive ? 'active' : ''}>
-                                        <span className="icon">📈</span>
-                                        <span className="text">Reports</span>
-                                    </NavLink>
-                                </li>
-                            </>
-                        )}
                         <li>
                             <NavLink to={`/${user?.role}/timetable`} className={({isActive}) => isActive ? 'active' : ''}>
                                 <span className="icon">📅</span> 
@@ -90,6 +69,9 @@ const Layout = () => {
                     </button>
                     <div className="topbar-title">
                         Dashboard
+                    </div>
+                    <div className="topbar-actions">
+                        <NotificationBell />
                     </div>
                 </header>
 

@@ -4,13 +4,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Timetable from './pages/Timetable';
-import Dashboard from './pages/admin/Dashboard';
-import Users from './pages/admin/Users';
-import Classes from './pages/admin/Classes';
-import ClassDetail from './pages/admin/ClassDetail';
-import Templates from './pages/admin/Templates';
-import AttendanceAdmin from './pages/admin/AttendanceAdmin';
-import Reports from './pages/admin/Reports';
 import './App.css';
 
 function App() {
@@ -35,10 +28,12 @@ function App() {
 
             <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
               <Route path="/teacher/timetable" element={<Timetable role="teacher" />} />
+              {/* Add more teacher routes here */}
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
               <Route path="/student/timetable" element={<Timetable role="student" />} />
+              {/* Add more student routes here */}
             </Route>
           </Route>
 
