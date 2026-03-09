@@ -24,14 +24,17 @@ const sessionSchema = new mongoose.Schema({
       type: Date,
       required: [true, 'Session date is required']
    },
+   slotNumber: {
+      type: Number,
+      min: 1,
+      max: 5,
+   },
    startTime: {
       type: String,
-      required: [true, 'Start time is required'],
       match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Start time must be in HH:MM format']
    },
    endTime: {
       type: String,
-      required: [true, 'End time is required'],
       match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'End time must be in HH:MM format']
    },
    room: {
