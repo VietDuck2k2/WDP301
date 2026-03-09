@@ -3,6 +3,7 @@ const Class = require('../models/Class');
 const ClassMember = require('../models/ClassMember');
 const ScheduleTemplate = require('../models/ScheduleTemplate');
 const ApiError = require('../utils/apiError');
+const { getSlotByNumber } = require('../constants/slots');
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -71,17 +72,29 @@ const createSession = async (sessionData) => {
       throw ApiError.notFound('Class not found');
    }
 
+   // Auto-fill startTime/endTime from slotNumber
+   let data = { ...sessionData };
+   if (data.slotNumber) {
+      const slotDef = getSlotByNumber(Number(data.slotNumber));
+      if (!slotDef) throw ApiError.badRequest(`Slot ${data.slotNumber} không hợp lệ (phải từ 1-5)`);
+      data.startTime = slotDef.startTime;
+      data.endTime = slotDef.endTime;
+   }
+
+   if (!data.startTime || !data.endTime) {
+      throw ApiError.badRequest('startTime hoặc endTime là bắt buộc khi không chọn slot');
+   }
+
    // Check for duplicate session number in class
    const existingSession = await Session.findOne({
-      class: sessionData.class,
-      sessionNumber: sessionData.sessionNumber
+      class: data.class,
+      sessionNumber: data.sessionNumber
    });
-
    if (existingSession) {
       throw ApiError.conflict('Session number already exists for this class');
    }
 
-   const session = await Session.create(sessionData);
+   const session = await Session.create(data);
    return session;
 };
 
@@ -191,7 +204,13 @@ const getWeeklyTimetable = async (filters = {}) => {
    DAY_NAMES.forEach(d => { timetable[d] = []; });
 
    sessions.forEach(s => {
-      const dayName = DAY_NAMES[new Date(s.date).getDay()];
+      // Parse YYYY-MM-DD directly to avoid UTC vs local timezone offset
+      const dateStr = s.date instanceof Date
+         ? s.date.toISOString().split('T')[0]
+         : String(s.date).split('T')[0];
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const dayOfWeek = new Date(year, month - 1, day).getDay(); // local, no UTC shift
+      const dayName = DAY_NAMES[dayOfWeek];
       timetable[dayName].push(s);
    });
 
@@ -236,22 +255,27 @@ const generateSessionsFromTemplate = async (classId, templateId) => {
       const slots = template.schedule.filter(s => s.dayOfWeek === dayOfWeek);
 
       for (const slot of slots) {
-         // Check if session already exists on this date+class
+         // Resolve startTime/endTime from slotNumber
+         const slotDef = getSlotByNumber(slot.slotNumber);
+         if (!slotDef) continue; // skip invalid slot
+
+         // Check if session already exists on this date+class+slot
          const exists = await Session.findOne({
             class: classId,
-            date: new Date(current)
+            date: new Date(current),
+            slotNumber: slot.slotNumber
          });
 
          if (!exists) {
             const session = await Session.create({
                class: classId,
-               title: `Session ${sessionNumber}`,
+               title: `Buổi ${sessionNumber}`,
                sessionNumber,
                date: new Date(current),
-               startTime: slot.startTime,
-               endTime: slot.endTime,
+               slotNumber: slot.slotNumber,
+               startTime: slotDef.startTime,
+               endTime: slotDef.endTime,
                room: slot.room || classData.room || '',
-               teacher: classData.teacher || null,
                status: 'scheduled'
             });
             created.push(session);

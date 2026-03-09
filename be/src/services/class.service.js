@@ -1,5 +1,6 @@
 const Class = require('../models/Class');
 const ClassMember = require('../models/ClassMember');
+const Session = require('../models/Session');
 const ApiError = require('../utils/apiError');
 
 /**
@@ -19,6 +20,8 @@ const getAllClasses = async (filters = {}, userId = null, userRole = null) => {
       const studentClasses = await ClassMember.find({ user: userId, role: 'student', status: 'active' })
          .select('class');
       query._id = { $in: studentClasses.map(cm => cm.class) };
+      // Students should only see active/draft classes, not cancelled/completed
+      query.status = { $in: ['active', 'draft'] };
    }
 
    if (status) query.status = status;
@@ -116,6 +119,21 @@ const updateClass = async (classId, updateData) => {
       throw ApiError.notFound('Class not found');
    }
 
+   // Cascade to sessions if status changed
+   if (updateData.status && classData.status === updateData.status) {
+      if (updateData.status === 'cancelled') {
+         await Session.updateMany(
+            { class: classId, status: { $in: ['scheduled', 'ongoing'] } },
+            { status: 'cancelled' }
+         );
+      } else if (updateData.status === 'completed') {
+         await Session.updateMany(
+            { class: classId, status: { $in: ['scheduled', 'ongoing'] } },
+            { status: 'completed' }
+         );
+      }
+   }
+
    return classData;
 };
 
@@ -132,6 +150,12 @@ const deleteClass = async (classId) => {
    if (!classData) {
       throw ApiError.notFound('Class not found');
    }
+
+   // Cascade to sessions
+   await Session.updateMany(
+      { class: classId, status: { $in: ['scheduled', 'ongoing'] } },
+      { status: 'cancelled' }
+   );
 
    return classData;
 };
