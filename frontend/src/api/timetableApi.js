@@ -27,6 +27,3 @@ export const timetableApi = {
    getStudentTimetable: (params) => axiosInstance.get('/student/timetable', { params }),
 };
 
-export const authApi = {
-   login: (data) => axiosInstance.post('/auth/login', data),
-};

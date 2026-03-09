@@ -151,15 +151,10 @@ const Classes = () => {
     try {
 
       const payload = {
-
         ...createForm,
-
         capacity: Number(createForm.capacity),
-
-        startDate: new Date(createForm.startDate).toISOString(),
-
-        endDate: new Date(createForm.endDate).toISOString(),
-
+        startDate: createForm.startDate,
+        endDate: createForm.endDate,
       };
 
 
@@ -235,15 +230,10 @@ const Classes = () => {
     try {
 
       const payload = {
-
         ...editForm,
-
         capacity: Number(editForm.capacity),
-
-        startDate: new Date(editForm.startDate).toISOString(),
-
-        endDate: new Date(editForm.endDate).toISOString(),
-
+        startDate: editForm.startDate,
+        endDate: editForm.endDate,
       };
 
 
