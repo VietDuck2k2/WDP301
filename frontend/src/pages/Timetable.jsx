@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { timetableApi } from '../api/timetableApi';
+import { SLOT_DEFINITIONS, getSlotByNumber } from '../constants/slots';
 import './Timetable.css';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -35,8 +36,7 @@ const Timetable = ({ role }) => {
     teacherId: '',
     sessionNumber: '',
     date: '',
-    startTime: '',
-    endTime: '',
+    slotNumber: 1,
     room: '',
     status: 'scheduled'
   });
@@ -133,8 +133,7 @@ const Timetable = ({ role }) => {
       teacherId: session.teacher?._id || '',
       sessionNumber: session.sessionNumber || '',
       date: session.date ? new Date(session.date).toISOString().split('T')[0] : '',
-      startTime: session.startTime || '',
-      endTime: session.endTime || '',
+      slotNumber: session.slotNumber || 1,
       room: session.room || '',
       status: session.status || 'scheduled'
     });
@@ -149,8 +148,7 @@ const Timetable = ({ role }) => {
       teacherId: teacherList[0]?._id || '',
       sessionNumber: '',
       date: new Date().toISOString().split('T')[0],
-      startTime: '08:00',
-      endTime: '10:00',
+      slotNumber: 1,
       room: '',
       status: 'scheduled'
     });
@@ -206,26 +204,28 @@ const Timetable = ({ role }) => {
     }
   };
 
-  const renderSessionCard = (session) => (
-    <div 
-      key={session._id} 
-      className={`session-card ${role === 'admin' ? 'clickable' : ''}`}
-      onClick={() => openEditModal(session)}
-    >
-      <div className="session-time">
-        {session.startTime} - {session.endTime}
+  const renderSessionCard = (session) => {
+    const slotDef = session.slotNumber ? getSlotByNumber(session.slotNumber) : null;
+    const timeLabel = slotDef
+      ? `${slotDef.label} · ${slotDef.startTime}–${slotDef.endTime}`
+      : (session.startTime && session.endTime ? `${session.startTime} - ${session.endTime}` : '');
+    return (
+      <div
+        key={session._id}
+        className={`session-card ${role === 'admin' ? 'clickable' : ''}`}
+        onClick={() => openEditModal(session)}
+      >
+        <div className="session-time">{timeLabel}</div>
+        <div className="session-title">{session.title}</div>
+        <div className="session-class">{session.class?.name || 'Unknown Class'}</div>
+        {role !== 'teacher' && session.teacher && (
+          <div className="session-teacher">👤 {session.teacher.firstName} {session.teacher.lastName}</div>
+        )}
+        {session.room && <div className="session-room">📍 {session.room}</div>}
+        <div className={`session-status status-${session.status}`}>{session.status}</div>
       </div>
-      <div className="session-title">{session.title}</div>
-      <div className="session-class">{session.class?.name || 'Unknown Class'}</div>
-      {role !== 'teacher' && session.teacher && (
-        <div className="session-teacher">👤 {session.teacher.firstName} {session.teacher.lastName}</div>
-      )}
-      {session.room && <div className="session-room">📍 {session.room}</div>}
-      <div className={`session-status status-${session.status}`}>
-        {session.status}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="timetable-container">
@@ -317,23 +317,23 @@ const Timetable = ({ role }) => {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Date</label>
+                  <label>Ngày</label>
                   <input type="date" value={sessionForm.date} onChange={e => setSessionForm({...sessionForm, date: e.target.value})} required />
                 </div>
                 <div className="form-group">
-                  <label>Room</label>
+                  <label>Phòng</label>
                   <input type="text" value={sessionForm.room} onChange={e => setSessionForm({...sessionForm, room: e.target.value})} />
                 </div>
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Start Time</label>
-                  <input type="time" value={sessionForm.startTime} onChange={e => setSessionForm({...sessionForm, startTime: e.target.value})} required />
-                </div>
-                <div className="form-group">
-                  <label>End Time</label>
-                  <input type="time" value={sessionForm.endTime} onChange={e => setSessionForm({...sessionForm, endTime: e.target.value})} required />
-                </div>
+              <div className="form-group">
+                <label>Slot thời gian</label>
+                <select value={sessionForm.slotNumber} onChange={e => setSessionForm({...sessionForm, slotNumber: Number(e.target.value)})} required>
+                  {SLOT_DEFINITIONS.map(s => (
+                    <option key={s.slotNumber} value={s.slotNumber}>
+                      {s.label} · {s.startTime}–{s.endTime} ({s.period})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>Status</label>

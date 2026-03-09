@@ -40,12 +40,19 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: res.message || 'Login failed' };
     } catch (error) {
       console.error("Login Error:", error);
-      const msg = error.response?.data?.message || 'Login failed due to an error';
+      const msg =
+        error.response?.data?.message ||
+        (error.response?.status === 401 ? 'Email hoặc mật khẩu không đúng.' : 'Đăng nhập thất bại. Kiểm tra kết nối hoặc thử lại sau.');
       return { success: false, message: msg };
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch (_) {
+      // Still clear local state on network error or 401
+    }
     localStorage.removeItem('token');
     setUser(null);
     window.location.href = '/login';

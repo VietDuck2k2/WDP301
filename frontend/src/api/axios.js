@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get base URL from environment variable or use default
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const axiosInstance = axios.create({
    baseURL,
@@ -10,12 +10,15 @@ const axiosInstance = axios.create({
    },
 });
 
-// Request interceptor: attach token
+// Request interceptor: attach token; for FormData omit Content-Type (browser sets multipart boundary)
 axiosInstance.interceptors.request.use(
    (config) => {
       const token = localStorage.getItem('token');
       if (token) {
          config.headers.Authorization = `Bearer ${token}`;
+      }
+      if (config.data instanceof FormData) {
+         delete config.headers['Content-Type'];
       }
       return config;
    },

@@ -18,6 +18,17 @@ export const adminApi = {
   removeClassMember: (id, memberId) => axiosInstance.delete(`/admin/classes/${id}/members/${memberId}`),
 
   getScheduleTemplates: () => axiosInstance.get('/admin/schedule-templates'),
+  getScheduleTemplateById: (id) => axiosInstance.get(`/admin/schedule-templates/${id}`),
+  createScheduleTemplate: (payload) => axiosInstance.post('/admin/schedule-templates', payload),
+  updateScheduleTemplate: (id, payload) => axiosInstance.put(`/admin/schedule-templates/${id}`, payload),
+  deleteScheduleTemplate: (id) => axiosInstance.delete(`/admin/schedule-templates/${id}`),
+
+  generateSessions: (payload) => axiosInstance.post('/admin/timetable/generate', payload),
+
+  getRooms: () => axiosInstance.get('/admin/rooms'),
+  createRoom: (payload) => axiosInstance.post('/admin/rooms', payload),
+  updateRoom: (id, payload) => axiosInstance.put(`/admin/rooms/${id}`, payload),
+  deleteRoom: (id) => axiosInstance.delete(`/admin/rooms/${id}`),
 
   getAttendances: (params = {}) => axiosInstance.get('/admin/attendances', { params }),
   getSessionAttendance: (sessionId) => axiosInstance.get(`/admin/attendances/sessions/${sessionId}`),
