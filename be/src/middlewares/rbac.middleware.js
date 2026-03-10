@@ -5,17 +5,17 @@ const ApiError = require('../utils/apiError');
  * Check if user has required role(s)
  */
 const requireRole = (...allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return next(ApiError.unauthorized('Authentication required'));
-    }
+   return (req, res, next) => {
+      if (!req.user) {
+         return next(ApiError.unauthorized('Authentication required'));
+      }
 
-    if (!allowedRoles.includes(req.user.role)) {
-      return next(ApiError.forbidden(`Access denied. Required role: ${allowedRoles.join(' or ')}`));
-    }
+      if (!allowedRoles.includes(req.user.role)) {
+         return next(ApiError.forbidden(`Access denied. Required role: ${allowedRoles.join(' or ')}`));
+      }
 
-    next();
-  };
+      next();
+   };
 };
 
 /**
@@ -26,8 +26,8 @@ const requireTeacher = requireRole('teacher', 'admin');
 const requireStudent = requireRole('student', 'teacher', 'admin');
 
 module.exports = {
-  requireRole,
-  requireAdmin,
-  requireTeacher,
-  requireStudent
+   requireRole,
+   requireAdmin,
+   requireTeacher,
+   requireStudent
 };

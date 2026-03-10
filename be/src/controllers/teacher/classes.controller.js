@@ -7,12 +7,12 @@ const ApiResponse = require('../../utils/apiResponse');
  * @access  Private/Teacher
  */
 const getMyClasses = async (req, res, next) => {
-  try {
-    const result = await classService.getAllClasses(req.query, req.user._id, 'teacher');
-    ApiResponse.ok(res, result);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const result = await classService.getAllClasses(req.query, req.user._id, 'teacher');
+      ApiResponse.ok(res, result);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -21,12 +21,12 @@ const getMyClasses = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const getClassById = async (req, res, next) => {
-  try {
-    const classData = await classService.getClassById(req.params.id);
-    ApiResponse.ok(res, classData);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const classData = await classService.getClassById(req.params.id);
+      ApiResponse.ok(res, classData);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -35,16 +35,16 @@ const getClassById = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const getClassMembers = async (req, res, next) => {
-  try {
-    const members = await classService.getClassMembers(req.params.id, 'student');
-    ApiResponse.ok(res, members);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const members = await classService.getClassMembers(req.params.id, 'student');
+      ApiResponse.ok(res, members);
+   } catch (error) {
+      next(error);
+   }
 };
 
 module.exports = {
-  getMyClasses,
-  getClassById,
-  getClassMembers
+   getMyClasses,
+   getClassById,
+   getClassMembers
 };

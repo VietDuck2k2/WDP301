@@ -7,12 +7,12 @@ const ApiResponse = require('../utils/apiResponse');
  * @access  Private
  */
 const uploadFile = async (req, res, next) => {
-  try {
-    const fileData = fileService.saveFile(req.file);
-    ApiResponse.created(res, fileData, 'File uploaded successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const fileData = fileService.saveFile(req.file);
+      ApiResponse.created(res, fileData, 'File uploaded successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -21,12 +21,12 @@ const uploadFile = async (req, res, next) => {
  * @access  Private
  */
 const uploadMultipleFiles = async (req, res, next) => {
-  try {
-    const filesData = fileService.saveFiles(req.files);
-    ApiResponse.created(res, filesData, 'Files uploaded successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const filesData = fileService.saveFiles(req.files);
+      ApiResponse.created(res, filesData, 'Files uploaded successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -35,12 +35,12 @@ const uploadMultipleFiles = async (req, res, next) => {
  * @access  Private
  */
 const deleteFile = async (req, res, next) => {
-  try {
-    const result = fileService.deleteFile(req.params.filename);
-    ApiResponse.ok(res, result);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const result = fileService.deleteFile(req.params.filename);
+      ApiResponse.ok(res, result);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -49,17 +49,17 @@ const deleteFile = async (req, res, next) => {
  * @access  Private
  */
 const getFileInfo = async (req, res, next) => {
-  try {
-    const fileInfo = fileService.getFileInfo(req.params.filename);
-    ApiResponse.ok(res, fileInfo);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const fileInfo = fileService.getFileInfo(req.params.filename);
+      ApiResponse.ok(res, fileInfo);
+   } catch (error) {
+      next(error);
+   }
 };
 
 module.exports = {
-  uploadFile,
-  uploadMultipleFiles,
-  deleteFile,
-  getFileInfo
+   uploadFile,
+   uploadMultipleFiles,
+   deleteFile,
+   getFileInfo
 };

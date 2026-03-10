@@ -7,12 +7,12 @@ const ApiResponse = require('../../utils/apiResponse');
  * @access  Private/Teacher
  */
 const getSessionAttendance = async (req, res, next) => {
-  try {
-    const attendance = await attendanceService.getSessionAttendance(req.params.sessionId);
-    ApiResponse.ok(res, attendance);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const attendance = await attendanceService.getSessionAttendance(req.params.sessionId);
+      ApiResponse.ok(res, attendance);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -21,18 +21,18 @@ const getSessionAttendance = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const markAttendance = async (req, res, next) => {
-  try {
-    const { studentId, status, notes, arrivedAt } = req.body;
-    const attendance = await attendanceService.markAttendance(
-      req.params.sessionId,
-      studentId,
-      { status, notes, arrivedAt },
-      req.user._id
-    );
-    ApiResponse.created(res, attendance, 'Attendance marked successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const { studentId, status, notes, arrivedAt } = req.body;
+      const attendance = await attendanceService.markAttendance(
+         req.params.sessionId,
+         studentId,
+         { status, notes, arrivedAt },
+         req.user._id
+      );
+      ApiResponse.created(res, attendance, 'Attendance marked successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -41,17 +41,17 @@ const markAttendance = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const bulkMarkAttendance = async (req, res, next) => {
-  try {
-    const { attendanceList } = req.body;
-    const results = await attendanceService.bulkMarkAttendance(
-      req.params.sessionId,
-      attendanceList,
-      req.user._id
-    );
-    ApiResponse.ok(res, results, 'Bulk attendance marked');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const { attendanceList } = req.body;
+      const results = await attendanceService.bulkMarkAttendance(
+         req.params.sessionId,
+         attendanceList,
+         req.user._id
+      );
+      ApiResponse.ok(res, results, 'Bulk attendance marked');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -60,20 +60,20 @@ const bulkMarkAttendance = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const getStudentAttendanceSummary = async (req, res, next) => {
-  try {
-    const summary = await attendanceService.getStudentAttendanceSummary(
-      req.params.studentId,
-      req.query.classId
-    );
-    ApiResponse.ok(res, summary);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const summary = await attendanceService.getStudentAttendanceSummary(
+         req.params.studentId,
+         req.query.classId
+      );
+      ApiResponse.ok(res, summary);
+   } catch (error) {
+      next(error);
+   }
 };
 
 module.exports = {
-  getSessionAttendance,
-  markAttendance,
-  bulkMarkAttendance,
-  getStudentAttendanceSummary
+   getSessionAttendance,
+   markAttendance,
+   bulkMarkAttendance,
+   getStudentAttendanceSummary
 };

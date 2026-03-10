@@ -7,15 +7,15 @@ const ApiResponse = require('../../utils/apiResponse');
  * @access  Private/Teacher
  */
 const getMyAnnouncements = async (req, res, next) => {
-  try {
-    const result = await announcementService.getAllAnnouncements({
-      ...req.query,
-      createdBy: req.user._id
-    });
-    ApiResponse.ok(res, result);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const result = await announcementService.getAllAnnouncements({
+         ...req.query,
+         createdBy: req.user._id
+      });
+      ApiResponse.ok(res, result);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -24,12 +24,12 @@ const getMyAnnouncements = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const getAnnouncementById = async (req, res, next) => {
-  try {
-    const announcement = await announcementService.getAnnouncementById(req.params.id);
-    ApiResponse.ok(res, announcement);
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const announcement = await announcementService.getAnnouncementById(req.params.id);
+      ApiResponse.ok(res, announcement);
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -38,12 +38,12 @@ const getAnnouncementById = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const createAnnouncement = async (req, res, next) => {
-  try {
-    const announcement = await announcementService.createAnnouncement(req.body, req.user._id);
-    ApiResponse.created(res, announcement, 'Announcement created successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const announcement = await announcementService.createAnnouncement(req.body, req.user._id);
+      ApiResponse.created(res, announcement, 'Announcement created successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -52,12 +52,12 @@ const createAnnouncement = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const updateAnnouncement = async (req, res, next) => {
-  try {
-    const announcement = await announcementService.updateAnnouncement(req.params.id, req.body);
-    ApiResponse.ok(res, announcement, 'Announcement updated successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const announcement = await announcementService.updateAnnouncement(req.params.id, req.body);
+      ApiResponse.ok(res, announcement, 'Announcement updated successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -66,12 +66,12 @@ const updateAnnouncement = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const deleteAnnouncement = async (req, res, next) => {
-  try {
-    const announcement = await announcementService.deleteAnnouncement(req.params.id);
-    ApiResponse.ok(res, announcement, 'Announcement deleted successfully');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const announcement = await announcementService.deleteAnnouncement(req.params.id);
+      ApiResponse.ok(res, announcement, 'Announcement deleted successfully');
+   } catch (error) {
+      next(error);
+   }
 };
 
 /**
@@ -80,19 +80,19 @@ const deleteAnnouncement = async (req, res, next) => {
  * @access  Private/Teacher
  */
 const togglePin = async (req, res, next) => {
-  try {
-    const announcement = await announcementService.togglePin(req.params.id);
-    ApiResponse.ok(res, announcement, 'Announcement pin status updated');
-  } catch (error) {
-    next(error);
-  }
+   try {
+      const announcement = await announcementService.togglePin(req.params.id);
+      ApiResponse.ok(res, announcement, 'Announcement pin status updated');
+   } catch (error) {
+      next(error);
+   }
 };
 
 module.exports = {
-  getMyAnnouncements,
-  getAnnouncementById,
-  createAnnouncement,
-  updateAnnouncement,
-  deleteAnnouncement,
-  togglePin
+   getMyAnnouncements,
+   getAnnouncementById,
+   createAnnouncement,
+   updateAnnouncement,
+   deleteAnnouncement,
+   togglePin
 };

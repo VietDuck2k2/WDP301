@@ -1,0 +1,250 @@
+.admin-templates-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-templates-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #0f172a;
+}
+
+.admin-templates-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+}
+
+.admin-templates-panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.template-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.template-toolbar input {
+  flex: 1;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 10px;
+  outline: none;
+}
+
+.template-toolbar span {
+  color: #475569;
+  font-weight: 600;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.template-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.template-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.template-card-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.template-card-head small {
+  color: #64748b;
+}
+
+.slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 9px;
+  padding: 8px 10px;
+}
+
+.slot-item .day {
+  color: #334155;
+  font-weight: 600;
+}
+
+.slot-item .time {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.empty-box {
+  border: 1px dashed #cbd5e1;
+  color: #94a3b8;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  .template-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .template-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* New styles for CRUD */
+.admin-templates-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.template-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+.btn-icon:hover { background: #f1f5f9; }
+.btn-icon.delete:hover { background: #fee2e2; border-color: #fca5a5; }
+
+.template-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 8px;
+}
+
+.slot-item .room {
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.slot-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+  margin: 8px 0 4px;
+}
+
+.slot-editor-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.slot-editor-row input,
+.slot-editor-row select {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+}
+
+.modal-card.wide {
+  max-width: 680px;
+  width: 100%;
+}
+
+.btn-secondary.small {
+  padding: 4px 12px;
+  font-size: 0.85rem;
+}
+
+.btn-icon.apply:hover { background: #dbeafe; border-color: #93c5fd; }
+
+.generate-success {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.generate-success p {
+  font-size: 1rem;
+  color: #166534;
+  background: #dcfce7;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.modal-subtitle {
+  color: #475569;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.hint-text {
+  font-size: 0.82rem;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 4px 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.modal-form label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.modal-form select {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.92rem;
+  outline: none;
+  width: 100%;
+}

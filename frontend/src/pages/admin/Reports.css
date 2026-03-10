@@ -1,0 +1,144 @@
+.admin-reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-reports-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #0f172a;
+}
+
+.admin-reports-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.overview-grid article {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.overview-grid h3 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #0f172a;
+}
+
+.overview-grid p {
+  margin: 4px 0;
+  color: #64748b;
+}
+
+.overview-grid small {
+  color: #475569;
+}
+
+.attendance-report-panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.panel-head h2 {
+  margin: 0;
+}
+
+.report-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.report-filters input,
+.report-filters select {
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.meta-row {
+  display: flex;
+  gap: 14px;
+  color: #475569;
+  font-size: 0.92rem;
+  margin-bottom: 10px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
+  font-size: 0.92rem;
+}
+
+.class-name {
+  font-weight: 600;
+}
+
+.class-code {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.empty-row {
+  text-align: center;
+  color: #94a3b8;
+  padding: 30px;
+}
+
+@media (max-width: 1024px) {
+  .overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .panel-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .report-filters {
+    width: 100%;
+    flex-direction: column;
+  }
+}
