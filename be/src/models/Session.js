@@ -61,6 +61,18 @@ const sessionSchema = new mongoose.Schema({
    notes: {
       type: String,
       trim: true
+   },
+   cancelReason: {
+      type: String,
+      trim: true
+   },
+   isMakeup: {
+      type: Boolean,
+      default: false
+   },
+   makeupForSession: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Session'
    }
 }, {
    timestamps: true

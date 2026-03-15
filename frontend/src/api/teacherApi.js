@@ -1,23 +1,26 @@
 import axiosInstance from './axios';
 
 export const teacherApi = {
-   // Timetable & Sessions
+   // Timetable
    getTimetable: (params) => axiosInstance.get('/teacher/timetable', { params }),
+
+   // Classes
+   getMyClasses: () => axiosInstance.get('/teacher/classes'),
+   getClassById: (id) => axiosInstance.get(`/teacher/classes/${id}`),
+   getClassStudents: (classId) => axiosInstance.get(`/teacher/classes/${classId}/students`),
+   getSessionsByClassId: (classId) => axiosInstance.get(`/teacher/classes/${classId}/sessions`),
+
+   // Sessions
    getSessions: (params) => axiosInstance.get('/teacher/sessions', { params }),
    getSessionById: (id) => axiosInstance.get(`/teacher/sessions/${id}`),
    getClassSessions: (classId) => axiosInstance.get(`/teacher/sessions/classes/${classId}`),
    updateSession: (id, data) => axiosInstance.put(`/teacher/sessions/${id}`, data),
    addSessionMaterial: (id, data) => axiosInstance.post(`/teacher/sessions/${id}/materials`, data),
 
-   // Classes
-   getClasses: () => axiosInstance.get('/teacher/classes'),
-   getClassById: (id) => axiosInstance.get(`/teacher/classes/${id}`),
-   getClassMembers: (id) => axiosInstance.get(`/teacher/classes/${id}/members`),
-
    // Attendances
    getSessionAttendance: (sessionId) => axiosInstance.get(`/teacher/attendances/sessions/${sessionId}`),
    postSessionAttendanceBulk: (sessionId, data) => axiosInstance.post(`/teacher/attendances/sessions/${sessionId}/bulk`, data),
-   getStudentAttendanceSummary: (studentId) => axiosInstance.get(`/teacher/attendances/students/${studentId}`),
+   getStudentAttendanceSummary: (studentId, params) => axiosInstance.get(`/teacher/attendances/students/${studentId}`, { params }),
 
    // Assignments
    getAssignments: (params) => axiosInstance.get('/teacher/assignments', { params }),

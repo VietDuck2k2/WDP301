@@ -30,4 +30,13 @@ router.put('/:id', validateObjectId('id'), sessionsController.updateSession);
 // @route   DELETE /api/admin/sessions/:id
 router.delete('/:id', validateObjectId('id'), sessionsController.deleteSession);
 
+// @route   POST /api/admin/sessions/:id/makeup
+router.post(
+   '/:id/makeup',
+   validateObjectId('id'),
+   validate(['date', 'slotNumber']),
+   validateDate('date'),
+   sessionsController.createMakeupSession
+);
+
 module.exports = router;

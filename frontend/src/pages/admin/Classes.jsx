@@ -26,6 +26,8 @@ const defaultForm = {
 
   room: '',
 
+  scheduleTemplate: '',
+
 };
 
 
@@ -63,6 +65,7 @@ const Classes = () => {
   const [loading, setLoading] = useState(false);
 
   const [templates, setTemplates] = useState([]);
+  const [rooms, setRooms] = useState([]);
 
 
 
@@ -126,6 +129,9 @@ const Classes = () => {
     adminApi.getScheduleTemplates().then(res => {
       if (res?.success) setTemplates(res.data || []);
     }).catch(() => {});
+    adminApi.getRooms().then(res => {
+      if (res?.success) setRooms(res.data || []);
+    }).catch(() => {});
   }, []);
 
 
@@ -165,7 +171,8 @@ const Classes = () => {
         endDate: createForm.endDate,
       };
 
-
+      // Don't send empty scheduleTemplate string — BE checks truthiness
+      if (!payload.scheduleTemplate) delete payload.scheduleTemplate;
 
       const res = await adminApi.createClass(payload);
 
@@ -594,11 +601,17 @@ const Classes = () => {
 
                 <input
 
-                  placeholder="Class code"
+                  placeholder="Mã lớp (VD: EBC001)"
 
                   value={createForm.code}
 
-                  onChange={(e) => setCreateForm((prev) => ({ ...prev, code: e.target.value }))}
+                  pattern="[A-Za-z]{3}[0-9]{3}"
+
+                  maxLength={6}
+
+                  title="3 chữ cái in hoa + 3 chữ số (VD: EBC001)"
+
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
 
                   required
 
@@ -652,15 +665,15 @@ const Classes = () => {
 
 
 
-                <input
-
-                  placeholder="Room"
-
+                <select
                   value={createForm.room}
-
                   onChange={(e) => setCreateForm((prev) => ({ ...prev, room: e.target.value }))}
-
-                />
+                >
+                  <option value="">-- Chọn phòng học --</option>
+                  {rooms.map((r) => (
+                    <option key={r._id} value={r.name}>{r.name}{r.location ? ` (${r.location})` : ''}</option>
+                  ))}
+                </select>
 
               </div>
 
@@ -695,6 +708,18 @@ const Classes = () => {
               </div>
 
 
+
+              <select value={createForm.scheduleTemplate || ''} onChange={(e) => setCreateForm((prev) => ({ ...prev, scheduleTemplate: e.target.value }))}>
+
+                <option value="">-- Không dùng mẫu lịch --</option>
+
+                {templates.map((tpl) => (
+
+                  <option key={tpl._id} value={tpl._id}>{tpl.name}</option>
+
+                ))}
+
+              </select>
 
               <div className="modal-actions">
 
@@ -740,11 +765,17 @@ const Classes = () => {
 
                 <input
 
-                  placeholder="Class code"
+                  placeholder="Mã lớp (VD: EBC001)"
 
                   value={editForm.code}
 
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, code: e.target.value }))}
+                  pattern="[A-Za-z]{3}[0-9]{3}"
+
+                  maxLength={6}
+
+                  title="3 chữ cái in hoa + 3 chữ số (VD: EBC001)"
+
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
 
                   required
 
@@ -798,15 +829,15 @@ const Classes = () => {
 
 
 
-                <input
-
-                  placeholder="Room"
-
+                <select
                   value={editForm.room}
-
                   onChange={(e) => setEditForm((prev) => ({ ...prev, room: e.target.value }))}
-
-                />
+                >
+                  <option value="">-- Chọn phòng học --</option>
+                  {rooms.map((r) => (
+                    <option key={r._id} value={r.name}>{r.name}{r.location ? ` (${r.location})` : ''}</option>
+                  ))}
+                </select>
 
               </div>
 

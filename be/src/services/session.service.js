@@ -8,6 +8,43 @@ const { getSlotByNumber } = require('../constants/slots');
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /**
+ * Check if a room is already booked at the same date + slotNumber.
+ * @param {string} room - Room name
+ * @param {Date|string} date - Session date
+ * @param {number} slotNumber - Slot number
+ * @param {string} [excludeSessionId] - Session ID to exclude (for updates)
+ */
+const checkRoomConflict = async (room, date, slotNumber, excludeSessionId = null) => {
+   if (!room) return; // no room assigned → no conflict possible
+
+   const parseLocalZeroHour = (dateInput) => {
+      const dStr = dateInput instanceof Date ? dateInput.toISOString().split('T')[0] : String(dateInput).split('T')[0];
+      const [year, month, day] = dStr.split('-').map(Number);
+      return new Date(year, month - 1, day, 0, 0, 0, 0);
+   };
+
+   const dayStart = parseLocalZeroHour(date);
+   const dayEnd = new Date(dayStart);
+   dayEnd.setHours(23, 59, 59, 999);
+
+   const conflictQuery = {
+      room,
+      slotNumber,
+      date: { $gte: dayStart, $lte: dayEnd }
+   };
+   if (excludeSessionId) conflictQuery._id = { $ne: excludeSessionId };
+
+   const conflict = await Session.findOne(conflictQuery).populate('class', 'name code');
+   if (conflict) {
+      throw ApiError.conflict(
+         `Phòng "${room}" đã được đặt cho lớp ${conflict.class?.name || ''} (${conflict.class?.code || ''}) ` +
+         `vào slot ${slotNumber} ngày ${new Date(date).toLocaleDateString('vi-VN')}.`
+      );
+   }
+};
+
+
+/**
  * Get all sessions with filters
  */
 const getAllSessions = async (filters = {}) => {
@@ -94,6 +131,9 @@ const createSession = async (sessionData) => {
       throw ApiError.conflict('Session number already exists for this class');
    }
 
+   // Check room conflict
+   await checkRoomConflict(data.room, data.date, data.slotNumber);
+
    const session = await Session.create(data);
    return session;
 };
@@ -102,14 +142,91 @@ const createSession = async (sessionData) => {
  * Update session
  */
 const updateSession = async (sessionId, updateData) => {
+   // If room or slot is being changed, check for conflicts
+   const existing = await Session.findById(sessionId);
+   if (!existing) throw ApiError.notFound('Session not found');
+
+   // If session is being cancelled, ensure cancelReason is provided (or at least handled gracefully)
+   if (updateData.status === 'cancelled' && existing.status !== 'cancelled') {
+      // Allow it to pass, but the controller should ideally enforce cancelReason
+   }
+
+   const room = updateData.room !== undefined ? updateData.room : existing.room;
+   const slotNumber = updateData.slotNumber !== undefined ? updateData.slotNumber : existing.slotNumber;
+   const date = updateData.date !== undefined ? updateData.date : existing.date;
+
+   // Only check conflicts if the session is NOT being cancelled
+   if (updateData.status !== 'cancelled') {
+      await checkRoomConflict(room, date, slotNumber, sessionId);
+   }
+
    const session = await Session.findByIdAndUpdate(
       sessionId,
       updateData,
       { new: true, runValidators: true }
    );
 
-   if (!session) {
-      throw ApiError.notFound('Session not found');
+   return session;
+};
+
+/**
+ * Create a Make-up Session based on a cancelled session
+ */
+const createMakeupSession = async (originalSessionId, makeupData) => {
+   const originalSession = await Session.findById(originalSessionId);
+   if (!originalSession) throw ApiError.notFound('Original session not found');
+
+   if (originalSession.status !== 'cancelled') {
+      throw ApiError.badRequest('Buổi học gốc phải ở trạng thái Đã Huỷ mới có thể tạo phụ đạo/học bù.');
+   }
+
+   // Auto-fill startTime/endTime from slotNumber if provided
+   let data = {
+      class: originalSession.class,
+      title: `${originalSession.title} (Học bù)`,
+      sessionNumber: originalSession.sessionNumber, // Keep same semantic session number
+      date: makeupData.date,
+      slotNumber: makeupData.slotNumber,
+      room: makeupData.room,
+      teacher: makeupData.teacherId || originalSession.teacher,
+      status: 'scheduled',
+      isMakeup: true,
+      makeupForSession: originalSession._id
+   };
+
+   if (data.slotNumber) {
+      const slotDef = getSlotByNumber(Number(data.slotNumber));
+      if (!slotDef) throw ApiError.badRequest(`Slot ${data.slotNumber} không hợp lệ`);
+      data.startTime = slotDef.startTime;
+      data.endTime = slotDef.endTime;
+   } else {
+      throw ApiError.badRequest('Vui lòng chọn khung giờ học (slot) cho buổi học bù');
+   }
+
+   // Temporarily modify the unique sessionNumber index check logic by giving makeup sessions a decimal trick or similar
+   // Wait, Session Schema has: sessionSchema.index({ class: 1, sessionNumber: 1 }, { unique: true });
+   // We cannot reuse sessionNumber directly if the original session is NOT deleted.
+   // Instead, let's append a decimal or find the max session number to append to the class timeline
+   const lastSession = await Session.findOne({ class: data.class }).sort({ sessionNumber: -1 });
+   data.sessionNumber = lastSession ? lastSession.sessionNumber + 1 : 1;
+
+   // Keep the title semantic to the original
+   data.title = `Bù cho ${originalSession.title}`;
+
+   // Check room conflict
+   await checkRoomConflict(data.room, data.date, data.slotNumber);
+
+   const session = await Session.create(data);
+
+   // Check if the new makeup session date extends past the class end date, update class if so
+   const mClass = await Class.findById(data.class);
+   const makeupDate = new Date(data.date);
+
+   // Optional logic: we could automatically update the class endDate if makeupDate > class.endDate
+   // For now, let's leave it as is, or we can update it if it exceeds.
+   if (mClass && makeupDate > mClass.endDate) {
+      mClass.endDate = makeupDate;
+      await mClass.save();
    }
 
    return session;
@@ -166,13 +283,17 @@ const getWeeklyTimetable = async (filters = {}) => {
    const { weekStart, classId, teacherId, studentId } = filters;
 
    // Determine week range
-   const startOfWeek = weekStart ? new Date(weekStart) : (() => {
+   const parseLocalZeroHour = (dateInput) => {
+      const dStr = dateInput instanceof Date ? dateInput.toISOString().split('T')[0] : String(dateInput).split('T')[0];
+      const [year, month, day] = dStr.split('-').map(Number);
+      return new Date(year, month - 1, day, 0, 0, 0, 0);
+   };
+
+   const startOfWeek = weekStart ? parseLocalZeroHour(weekStart) : (() => {
       const now = new Date();
       const day = now.getDay(); // 0=Sun
       const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Monday
-      const mon = new Date(now.setDate(diff));
-      mon.setHours(0, 0, 0, 0);
-      return mon;
+      return new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0, 0);
    })();
 
    const endOfWeek = new Date(startOfWeek);
@@ -182,7 +303,20 @@ const getWeeklyTimetable = async (filters = {}) => {
    const query = { date: { $gte: startOfWeek, $lte: endOfWeek } };
 
    if (classId) query.class = classId;
-   if (teacherId) query.teacher = teacherId;
+
+   // Teacher: lookup classes they are assigned to (sessions may not have teacher field set)
+   if (teacherId) {
+      const teacherClasses = await ClassMember.find({
+         user: teacherId,
+         role: 'teacher',
+         status: 'active'
+      }).select('class');
+      // Merge with any existing classId filter
+      const classIds = teacherClasses.map(m => m.class);
+      query.class = classId
+         ? { $in: classIds.filter(id => id.toString() === classId) }
+         : { $in: classIds };
+   }
 
    // Student: lookup their enrolled classes first
    if (studentId) {
@@ -241,6 +375,7 @@ const generateSessionsFromTemplate = async (classId, templateId) => {
    }
 
    const created = [];
+   const roomConflicts = [];
    let sessionNumber = 1;
 
    // Get the highest existing sessionNumber to avoid conflicts
@@ -255,27 +390,55 @@ const generateSessionsFromTemplate = async (classId, templateId) => {
       const slots = template.schedule.filter(s => s.dayOfWeek === dayOfWeek);
 
       for (const slot of slots) {
+         // Fallback for legacy templates missing slotNumber
+         let targetSlotNum = slot.slotNumber;
+         if (!targetSlotNum) {
+            const { getSlotByStartTime } = require('../constants/slots');
+            const matchSlot = getSlotByStartTime(slot.startTime);
+            targetSlotNum = matchSlot ? matchSlot.slotNumber : 1;
+         }
+
          // Resolve startTime/endTime from slotNumber
-         const slotDef = getSlotByNumber(slot.slotNumber);
+         const slotDef = getSlotByNumber(targetSlotNum);
          if (!slotDef) continue; // skip invalid slot
 
          // Check if session already exists on this date+class+slot
          const exists = await Session.findOne({
             class: classId,
             date: new Date(current),
-            slotNumber: slot.slotNumber
+            slotNumber: targetSlotNum
          });
 
          if (!exists) {
+            // Class room takes priority over template slot room
+            const roomName = classData.room || slot.room || '';
+            if (roomName) {
+               const dayStart = new Date(current); dayStart.setHours(0, 0, 0, 0);
+               const dayEnd = new Date(current); dayEnd.setHours(23, 59, 59, 999);
+               const roomConflict = await Session.findOne({
+                  room: roomName,
+                  slotNumber: targetSlotNum,
+                  date: { $gte: dayStart, $lte: dayEnd }
+               }).populate('class', 'name code');
+               if (roomConflict) {
+                  roomConflicts.push(
+                     `Phòng "${roomName}" đã được đặt cho lớp ${roomConflict.class?.name || ''} ` +
+                     `vào slot ${targetSlotNum} ngày ${current.toLocaleDateString('vi-VN')}`
+                  );
+                  sessionNumber++;
+                  continue;
+               }
+            }
+
             const session = await Session.create({
                class: classId,
                title: `Buổi ${sessionNumber}`,
                sessionNumber,
                date: new Date(current),
-               slotNumber: slot.slotNumber,
-               startTime: slotDef.startTime,
-               endTime: slotDef.endTime,
-               room: slot.room || classData.room || '',
+               slotNumber: targetSlotNum,
+               startTime: slot.startTime || slotDef.startTime,
+               endTime: slot.endTime || slotDef.endTime,
+               room: roomName,
                status: 'scheduled'
             });
             created.push(session);
@@ -284,6 +447,18 @@ const generateSessionsFromTemplate = async (classId, templateId) => {
       }
 
       current.setDate(current.getDate() + 1);
+   }
+
+   // If any room conflicts were found, throw a combined error
+   if (roomConflicts.length > 0) {
+      if (created.length > 0) {
+         await Session.deleteMany({ _id: { $in: created.map(s => s._id) } });
+      }
+      throw ApiError.conflict(
+         `Không thể tạo lịch: phòng học bị trùng lịch (${roomConflicts.length} buổi):\n` +
+         roomConflicts.slice(0, 5).join('\n') +
+         (roomConflicts.length > 5 ? `\n... và ${roomConflicts.length - 5} buổi khác.` : '')
+      );
    }
 
    return created;
@@ -336,5 +511,6 @@ module.exports = {
    addMaterial,
    getWeeklyTimetable,
    generateSessionsFromTemplate,
-   autoUpdateStatuses
+   autoUpdateStatuses,
+   createMakeupSession
 };

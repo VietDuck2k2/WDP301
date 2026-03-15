@@ -14,6 +14,7 @@ const Templates = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [rooms, setRooms] = useState([]);
 
   // Modal: Create/Edit Template
   const [modalOpen, setModalOpen] = useState(false);
@@ -29,12 +30,14 @@ const Templates = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [tplRes, classRes] = await Promise.all([
+      const [tplRes, classRes, roomRes] = await Promise.all([
         adminApi.getScheduleTemplates(),
         adminApi.getClasses({ limit: 100 }),
+        adminApi.getRooms(),
       ]);
       if (tplRes?.success) setTemplates(tplRes.data || []);
       if (classRes?.success) setClasses(classRes.data?.classes || []);
+      if (roomRes?.success) setRooms(roomRes.data || []);
     } catch (err) {
       console.error('Lỗi khi tải dữ liệu:', err);
     } finally {
@@ -195,7 +198,12 @@ const Templates = () => {
                       </option>
                     ))}
                   </select>
-                  <input placeholder="Phòng" value={slot.room || ''} onChange={e => updateSlot(idx, 'room', e.target.value)} />
+                  <select value={slot.room || ''} onChange={e => updateSlot(idx, 'room', e.target.value)}>
+                    <option value="">-- Phòng --</option>
+                    {rooms.map((r) => (
+                      <option key={r._id} value={r.name}>{r.name}{r.location ? ` (${r.location})` : ''}</option>
+                    ))}
+                  </select>
                   <button type="button" className="btn-icon delete" onClick={() => removeSlot(idx)} disabled={form.schedule.length === 1}>✕</button>
                 </div>
               ))}

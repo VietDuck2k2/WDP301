@@ -4,6 +4,61 @@ const ClassMember = require('../models/ClassMember');
 const ApiError = require('../utils/apiError');
 
 /**
+ * Verify teacher is assigned to the session's class
+ */
+const verifyTeacherClassMembership = async (sessionId, teacherId) => {
+   const session = await Session.findById(sessionId);
+   if (!session) throw ApiError.notFound('Session not found');
+
+   const membership = await ClassMember.findOne({
+      class: session.class,
+      user: teacherId,
+      role: 'teacher',
+      status: 'active'
+   });
+
+   if (!membership) {
+      throw ApiError.forbidden('Bạn không có quyền xem thông tin buổi học này vì không phải là giáo viên của lớp.');
+   }
+   return session;
+};
+
+/**
+ * Verify teacher attendance permission
+ */
+const verifyTeacherAttendancePermission = async (sessionId, teacherId) => {
+   const session = await verifyTeacherClassMembership(sessionId, teacherId);
+
+   // Verify 24h window
+   if (session.date && session.startTime) {
+      const [hours, minutes] = session.startTime.split(':').map(Number);
+
+      // Parse session date correctly without timezone shift
+      const dStr = session.date instanceof Date ? session.date.toISOString().split('T')[0] : String(session.date).split('T')[0];
+      const parts = dStr.split('-');
+      const sessionStart = parts.length === 3
+         ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), hours, minutes, 0, 0)
+         : new Date(session.date);
+
+      if (parts.length !== 3) {
+         sessionStart.setHours(hours, minutes, 0, 0);
+      }
+
+      const now = new Date();
+      const diffMs = now.getTime() - sessionStart.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+
+      if (diffHours < 0) {
+         throw ApiError.forbidden('Chưa đến giờ điểm danh cho buổi học này.');
+      }
+
+      if (diffHours > 24) {
+         throw ApiError.forbidden('Chỉ được chỉnh sửa điểm danh trong vòng 24 giờ kể từ khi buổi học bắt đầu.');
+      }
+   }
+};
+
+/**
  * Get attendance records with filters
  */
 const getAttendanceRecords = async (filters = {}) => {
@@ -163,5 +218,7 @@ module.exports = {
    getSessionAttendance,
    markAttendance,
    bulkMarkAttendance,
-   getStudentAttendanceSummary
+   getStudentAttendanceSummary,
+   verifyTeacherAttendancePermission,
+   verifyTeacherClassMembership
 };

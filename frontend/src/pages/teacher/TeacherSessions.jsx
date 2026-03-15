@@ -12,7 +12,7 @@ export default function TeacherSessions() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    teacherApi.getClasses()
+    teacherApi.getMyClasses()
       .then((res) => { if (res?.success && res.data) setClasses(Array.isArray(res.data) ? res.data : res.data.classes || []); })
       .catch(() => setClasses([]));
   }, []);

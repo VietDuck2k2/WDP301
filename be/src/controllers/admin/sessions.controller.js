@@ -71,10 +71,25 @@ const deleteSession = async (req, res, next) => {
    }
 };
 
+/**
+ * @route   POST /api/admin/sessions/:id/makeup
+ * @desc    Create a make-up session for a cancelled session
+ * @access  Private/Admin
+ */
+const createMakeupSession = async (req, res, next) => {
+   try {
+      const session = await sessionService.createMakeupSession(req.params.id, req.body);
+      ApiResponse.created(res, session, 'Make-up session created successfully');
+   } catch (error) {
+      next(error);
+   }
+};
+
 module.exports = {
    getAllSessions,
    getSessionById,
    createSession,
    updateSession,
-   deleteSession
+   deleteSession,
+   createMakeupSession
 };

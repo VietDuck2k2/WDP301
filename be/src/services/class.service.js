@@ -109,17 +109,68 @@ const createClass = async (classData) => {
  * Update class
  */
 const updateClass = async (classId, updateData) => {
+   const before = await Class.findById(classId);
+   if (!before) throw ApiError.notFound('Class not found');
+
+   const startDateChanged = updateData.startDate && new Date(updateData.startDate).getTime() !== new Date(before.startDate).getTime();
+   const endDateChanged = updateData.endDate && new Date(updateData.endDate).getTime() !== new Date(before.endDate).getTime();
+   const templateChanged = updateData.scheduleTemplate !== undefined && updateData.scheduleTemplate !== (before.scheduleTemplate ? before.scheduleTemplate.toString() : '');
+
+   const needsRegeneration = startDateChanged || endDateChanged || templateChanged;
+
+   // If room is being changed, check conflicts on scheduled/ongoing sessions
+   if (updateData.room && updateData.room !== before.room) {
+      const newRoom = updateData.room;
+
+      const statusesToCheck = needsRegeneration ? ['ongoing'] : ['scheduled', 'ongoing'];
+
+      if (statusesToCheck.length > 0) {
+         const sessionsToCheck = await Session.find({
+            class: classId,
+            status: { $in: statusesToCheck }
+         });
+
+         const conflicts = [];
+         for (const s of sessionsToCheck) {
+            const dayStart = new Date(s.date); dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(s.date); dayEnd.setHours(23, 59, 59, 999);
+            const conflict = await Session.findOne({
+               _id: { $ne: s._id },
+               room: newRoom,
+               slotNumber: s.slotNumber,
+               date: { $gte: dayStart, $lte: dayEnd }
+            }).populate('class', 'name code');
+            if (conflict) {
+               conflicts.push(
+                  `Phòng "${newRoom}" đã được đặt cho lớp ${conflict.class?.name || ''} ` +
+                  `vào slot ${s.slotNumber} ngày ${new Date(s.date).toLocaleDateString('vi-VN')}`
+               );
+            }
+         }
+         if (conflicts.length > 0) {
+            throw ApiError.conflict(
+               `Không thể đổi phòng: bị trùng lịch (${conflicts.length} buổi):\n` +
+               conflicts.slice(0, 5).join('\n') +
+               (conflicts.length > 5 ? `\n... và ${conflicts.length - 5} buổi khác.` : '')
+            );
+         }
+
+         // No conflicts — cascade room update
+         await Session.updateMany(
+            { class: classId, status: { $in: statusesToCheck } },
+            { room: newRoom }
+         );
+      }
+   }
+
    const classData = await Class.findByIdAndUpdate(
       classId,
-      updateData,
+      // Filter out empty scheduleTemplate to avoid BSONObjectId casting error
+      updateData.scheduleTemplate === '' ? { ...updateData, scheduleTemplate: null } : updateData,
       { new: true, runValidators: true }
    );
 
-   if (!classData) {
-      throw ApiError.notFound('Class not found');
-   }
-
-   // Cascade to sessions if status changed
+   // Cascade status changes to sessions
    if (updateData.status && classData.status === updateData.status) {
       if (updateData.status === 'cancelled') {
          await Session.updateMany(
@@ -138,7 +189,7 @@ const updateClass = async (classId, updateData) => {
 };
 
 /**
- * Delete class (soft delete)
+ * Delete class (soft delete + cascade hard-delete sessions & members)
  */
 const deleteClass = async (classId) => {
    const classData = await Class.findByIdAndUpdate(
@@ -151,11 +202,11 @@ const deleteClass = async (classId) => {
       throw ApiError.notFound('Class not found');
    }
 
-   // Cascade to sessions
-   await Session.updateMany(
-      { class: classId, status: { $in: ['scheduled', 'ongoing'] } },
-      { status: 'cancelled' }
-   );
+   // Hard-delete all sessions so they disappear from timetables
+   await Session.deleteMany({ class: classId });
+
+   // Hard-delete all class member enrollments
+   await ClassMember.deleteMany({ class: classId });
 
    return classData;
 };
@@ -252,7 +303,7 @@ const getClassMembers = async (classId, role = null) => {
 const removeMember = async (classId, userId) => {
    const member = await ClassMember.findOneAndUpdate(
       { class: classId, user: userId, status: 'active' },
-      { status: 'inactive' },
+      { status: 'dropped' },
       { new: true }
    );
 

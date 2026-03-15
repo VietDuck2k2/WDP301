@@ -1,4 +1,5 @@
 const adminAttendanceService = require('../../services/adminAttendance.service');
+const Session = require('../../models/Session');
 const ApiResponse = require('../../utils/apiResponse');
 
 /**
@@ -9,6 +10,22 @@ const getAllAttendances = async (req, res, next) => {
    try {
       const result = await adminAttendanceService.getAllAttendances(req.query);
       ApiResponse.ok(res, result);
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
+ * @route   GET /api/admin/attendances/sessions/class/:classId
+ * @access  Private/Admin
+ */
+const getSessionsByClassId = async (req, res, next) => {
+   try {
+      const { classId } = req.params;
+      const sessions = await Session.find({ class: classId })
+         .sort({ date: 1, startTime: 1 });
+
+      ApiResponse.ok(res, sessions);
    } catch (error) {
       next(error);
    }
@@ -57,6 +74,26 @@ const updateAttendance = async (req, res, next) => {
 };
 
 /**
+ * @route   POST /api/admin/attendances/sessions/:sessionId/bulk
+ * @access  Private/Admin
+ */
+const bulkMarkAttendance = async (req, res, next) => {
+   try {
+      // By using adminAttendanceService which merges from generic attendanceService
+      // we bypass teacher verification since admin doesn't need to be in the class
+      const { attendanceList } = req.body;
+      const result = await adminAttendanceService.bulkMarkAttendance(
+         req.params.sessionId,
+         attendanceList,
+         req.user._id // Admin who marked it
+      );
+      ApiResponse.ok(res, result, 'Attendance marked successfully');
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
  * @route   DELETE /api/admin/attendances/:id
  * @access  Private/Admin
  */
@@ -71,8 +108,10 @@ const deleteAttendance = async (req, res, next) => {
 
 module.exports = {
    getAllAttendances,
+   getSessionsByClassId,
    getSessionAttendance,
    getStudentAttendanceSummary,
    updateAttendance,
+   bulkMarkAttendance,
    deleteAttendance
 };

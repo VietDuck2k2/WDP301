@@ -16,7 +16,7 @@ export default function TeacherAssignments() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    teacherApi.getClasses()
+    teacherApi.getMyClasses()
       .then((res) => { if (res?.success && res.data) setClasses(Array.isArray(res.data) ? res.data : []); })
       .catch(() => setClasses([]));
   }, []);

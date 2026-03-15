@@ -1,88 +1,58 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import adminApi from '../../api/adminApi';
 import './AttendanceAdmin.css';
 
-const statusOptions = ['present', 'absent', 'late', 'excused'];
+const statusOptions = [
+  { value: 'present', label: 'Có mặt' },
+  { value: 'absent', label: 'Vắng' },
+  { value: 'late', label: 'Muộn' },
+  { value: 'excused', label: 'Có phép' },
+];
 
 const AttendanceAdmin = () => {
-  const [records, setRecords] = useState([]);
-  const [filters, setFilters] = useState({ classId: '', status: '', page: 1, limit: 50 });
-  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 50 });
-  const [loading, setLoading] = useState(false);
+  const { classId } = useParams();
+  const navigate = useNavigate();
 
+  const [classes, setClasses] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
   const [sessionDetail, setSessionDetail] = useState(null);
   const [detailRows, setDetailRows] = useState([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [savingStudentId, setSavingStudentId] = useState('');
 
-  const fetchAttendances = async (params = filters) => {
-    setLoading(true);
-    try {
-      const res = await adminApi.getAttendances(params);
-      if (res?.success && res?.data) {
-        setRecords(res.data.records || []);
-        setPagination(res.data.pagination || { page: 1, pages: 1, total: 0, limit: 50 });
-      }
-    } catch (error) {
-      console.error('Failed to fetch attendances:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fetch classes on load
   useEffect(() => {
-    const debounce = setTimeout(() => fetchAttendances(filters), 250);
-    return () => clearTimeout(debounce);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+    adminApi.getClasses({ limit: 200 }).then(res => {
+      if (res?.success) setClasses(res.data?.classes || []);
+    }).catch(() => {});
+  }, []);
 
-  const groupedSessions = useMemo(() => {
-    const map = new Map();
-
-    records.forEach((item) => {
-      const sessionId = item.session?._id;
-      if (!sessionId) return;
-
-      if (!map.has(sessionId)) {
-        map.set(sessionId, {
-          sessionId,
-          title: item.session?.title || '-',
-          date: item.session?.date || null,
-          startTime: item.session?.startTime || '-',
-          markedBy: item.markedBy ? `${item.markedBy.firstName || ''} ${item.markedBy.lastName || ''}`.trim() : '-',
-          total: 0,
-        });
-      }
-
-      map.get(sessionId).total += 1;
-    });
-
-    return Array.from(map.values());
-  }, [records]);
-
-  const handlePageChange = (newPage) => {
-    setFilters((prev) => ({ ...prev, page: newPage }));
-  };
+  // Fetch sessions when classId changes
+  useEffect(() => {
+    if (!classId) return;
+    setLoading(true);
+    adminApi.getSessionsByClassId(classId)
+      .then(res => {
+        if (res?.success) setSessions(res.data || []);
+      })
+      .finally(() => setLoading(false));
+  }, [classId]);
 
   const openSessionDetail = async (session) => {
     setSessionDetail(session);
     setDetailLoading(true);
     try {
-      const [sessionRes, listRes] = await Promise.all([
-        adminApi.getSessionAttendance(session.sessionId),
-        adminApi.getAttendances({ sessionId: session.sessionId, page: 1, limit: 200 }),
-      ]);
-
-      const attendanceMap = new Map((listRes?.data?.records || []).map((r) => [r.student?._id, r]));
-      const rows = (sessionRes?.data || []).map((row) => ({
-        ...row,
-        attendanceId: attendanceMap.get(row.student?._id)?._id || null,
-      }));
-
-      setDetailRows(rows);
+      // In Admin mode, we want the FULL student list for that class, merged with attendance records
+      const attendanceRes = await adminApi.getSessionAttendance(session._id);
+      
+      if (attendanceRes?.success) {
+         setDetailRows(attendanceRes.data || []);
+      }
     } catch (error) {
       console.error('Failed to get session attendance detail:', error);
-      alert(error?.response?.data?.message || 'Cannot load session detail');
     } finally {
       setDetailLoading(false);
     }
@@ -90,124 +60,170 @@ const AttendanceAdmin = () => {
 
   const handleInlineStatusChange = async (studentId, nextStatus) => {
     const target = detailRows.find((r) => r.student?._id === studentId);
-    const prevStatus = target?.status;
+    if (!target) return;
 
-    setDetailRows((prev) => prev.map((r) => (r.student?._id === studentId ? { ...r, status: nextStatus } : r)));
-
-    if (!target?.attendanceId) {
-      alert('Chưa có record điểm danh cho học sinh này nên chưa cập nhật trực tiếp được.');
-      setDetailRows((prev) => prev.map((r) => (r.student?._id === studentId ? { ...r, status: prevStatus } : r)));
-      return;
-    }
+    const prevStatus = target.status;
+    
+    // Optimistic update
+    setDetailRows(prev => prev.map(r => r.student?._id === studentId ? { ...r, status: nextStatus } : r));
 
     setSavingStudentId(studentId);
     try {
-      await adminApi.updateAttendance(target.attendanceId, { status: nextStatus });
-      fetchAttendances(filters);
+      // If student already has attendanceId, update it. 
+      // If not, we might need a "bulk update" or "create record" logic.
+      // Based on our controllers, adminApi.updateAttendance usually takes recordId.
+      // If record doesn't exist, we send a bulk update for the session.
+      
+      const payload = {
+         attendanceList: detailRows.map(r => ({
+            studentId: r.student._id,
+            status: r.student._id === studentId ? nextStatus : (r.status || 'present'),
+            notes: r.notes || ''
+         }))
+      };
+
+      // Since updateAttendance is usually for single records, for Admin we'll leverage the Teacher bulk API logic or similar if available for Admin
+      // However, usually center systems let Admin edit the session's overall attendance.
+      // Assuming existing backend 'updateAttendance' updates specific record.
+      
+      if (target._id) {
+         await adminApi.updateAttendance(target._id, { status: nextStatus });
+      } else {
+         // Create a bulk update context if this record isn't initially created (same behavior as teacher)
+         await adminApi.postSessionAttendanceBulk(sessionDetail._id, payload);
+      }
     } catch (error) {
-      setDetailRows((prev) => prev.map((r) => (r.student?._id === studentId ? { ...r, status: prevStatus } : r)));
-      alert(error?.response?.data?.message || 'Update attendance failed');
+      setDetailRows(prev => prev.map(r => r.student?._id === studentId ? { ...r, status: prevStatus } : r));
+      alert(error?.response?.data?.message || 'Update failed');
     } finally {
       setSavingStudentId('');
     }
   };
 
+  const isToday = (dateStr) => {
+     if (!dateStr) return false;
+     const d = new Date(dateStr);
+     const today = new Date();
+     return d.getDate() === today.getDate() && 
+            d.getMonth() === today.getMonth() && 
+            d.getFullYear() === today.getFullYear();
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  if (!classId) {
+     return (
+        <div className="admin-attendance-page">
+           <section className="admin-attendance-header">
+              <h1>Quản lý Điểm danh</h1>
+              <p>Chọn một lớp học để xem và điều chỉnh điểm danh của các buổi học.</p>
+           </section>
+           <section className="admin-attendance-panel">
+              <div className="class-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                 {classes.map(c => (
+                    <div key={c._id} className="class-card clickable" onClick={() => navigate(`/admin/attendance/class/${c._id}`)}>
+                       <div className="class-card-header">
+                          <h3>{c.name}</h3>
+                          <span className="code">{c.code}</span>
+                       </div>
+                       <div className="class-card-body">
+                          <p>Trạng thái: <span className={`status-badge ${c.status}`}>{c.status === 'active' ? 'Hoạt động' : 'Đã đóng'}</span></p>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+              {classes.length === 0 && <p className="empty-msg">Chưa có lớp học nào.</p>}
+           </section>
+        </div>
+     );
+  }
+
   return (
     <div className="admin-attendance-page">
       <section className="admin-attendance-header">
-        <div>
-          <h1>Attendance Management</h1>
-          <p>Click a session row to open student statuses and edit inline.</p>
-        </div>
+         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button className="btn-secondary" onClick={() => navigate('/admin/attendance')}>← Quay lại</button>
+            <h1>Danh sách Buổi học</h1>
+         </div>
       </section>
 
       <section className="admin-attendance-panel">
-        <div className="filter-row">
-          <input
-            type="text"
-            placeholder="Filter by classId"
-            value={filters.classId}
-            onChange={(e) => setFilters((prev) => ({ ...prev, classId: e.target.value, page: 1 }))}
-          />
-
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value, page: 1 }))}
-          >
-            <option value="">All status</option>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Session</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Teacher</th>
-                <th>Students</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading && groupedSessions.length === 0 && (
+        {loading ? <p>Đang tải buổi học...</p> : (
+            <div className="table-wrapper">
+            <table>
+                <thead>
                 <tr>
-                  <td colSpan="5" className="empty-row">No attendance records found.</td>
+                    <th>Buổi học</th>
+                    <th>Ngày</th>
+                    <th>Giờ</th>
+                    <th>Phòng</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
                 </tr>
-              )}
-
-              {groupedSessions.map((session) => (
-                <tr key={session.sessionId} className="click-row" onClick={() => openSessionDetail(session)}>
-                  <td>{session.title}</td>
-                  <td>{session.date ? new Date(session.date).toLocaleDateString() : '-'}</td>
-                  <td>{session.startTime || '-'}</td>
-                  <td>{session.markedBy || '-'}</td>
-                  <td>{session.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="pagination-row">
-          <span>Total: {pagination.total}</span>
-          <div className="pagination-actions">
-            <button type="button" disabled={pagination.page <= 1} onClick={() => handlePageChange(pagination.page - 1)}>Prev</button>
-            <span>{pagination.page} / {pagination.pages || 1}</span>
-            <button type="button" disabled={pagination.page >= (pagination.pages || 1)} onClick={() => handlePageChange(pagination.page + 1)}>Next</button>
-          </div>
-        </div>
+                </thead>
+                <tbody>
+                {sessions.map((s) => (
+                    <tr key={s._id} className={isToday(s.date) ? 'row-today' : ''}>
+                    <td>
+                        {s.title}
+                        {isToday(s.date) && <span className="today-badge">HÔM NAY</span>}
+                    </td>
+                    <td>{formatDate(s.date)}</td>
+                    <td>{s.startTime} - {s.endTime}</td>
+                    <td>{s.room?.name || s.room || '-'}</td>
+                    <td>
+                        <span className={`status-badge ${s.status || 'upcoming'}`}>
+                            {s.status === 'completed' ? 'Hoàn thành' : 'Sắp tới'}
+                        </span>
+                    </td>
+                    <td>
+                        <button className="btn-primary-sm" onClick={() => openSessionDetail(s)}>
+                             Điểm danh / Sửa
+                        </button>
+                    </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+            {sessions.length === 0 && <p className="empty-row">Lớp này chưa có buổi học nào.</p>}
+            </div>
+        )}
       </section>
 
       {sessionDetail && (
         <div className="modal-overlay" role="presentation" onClick={() => setSessionDetail(null)}>
           <div className="modal-card wide" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <h2>{sessionDetail.title} — Student Attendance</h2>
-            <p className="modal-subtitle">{sessionDetail.date ? new Date(sessionDetail.date).toLocaleDateString() : '-'}</p>
+            <h2>{sessionDetail.title} — Danh sách Điểm danh</h2>
+            <div className="modal-meta">
+               <span>Ngày: {formatDate(sessionDetail.date)}</span>
+               <span>Giờ: {sessionDetail.startTime}-{sessionDetail.endTime}</span>
+            </div>
 
             <div className="table-wrapper">
-              <table>
+              <table className="modal-table">
                 <thead>
                   <tr>
-                    <th>Student</th>
-                    <th>Email</th>
-                    <th>Status</th>
+                    <th>Sinh viên</th>
+                    <th>Số điện thoại</th>
+                    <th>Trạng thái</th>
+                    <th>Ghi chú</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {!detailLoading && detailRows.length === 0 && (
-                    <tr>
-                      <td colSpan="3" className="empty-row">No student attendance data.</td>
-                    </tr>
-                  )}
-
-                  {detailRows.map((row, idx) => (
-                    <tr key={`${row.student?._id || idx}-${idx}`}>
-                      <td>{row.student?.firstName} {row.student?.lastName}</td>
-                      <td>{row.student?.email || '-'}</td>
+                  {detailLoading ? (
+                    <tr><td colSpan="4">Đang tải danh sách...</td></tr>
+                  ) : detailRows.map((row) => (
+                    <tr key={row.student?._id}>
+                      <td>
+                         <div className="student-info">
+                            <strong>{row.student?.firstName} {row.student?.lastName}</strong>
+                            <span className="student-code">{row.student?.code}</span>
+                         </div>
+                      </td>
+                      <td>{row.student?.phoneNumber || '-'}</td>
                       <td>
                         <select
                           className="inline-status-select"
@@ -215,19 +231,23 @@ const AttendanceAdmin = () => {
                           disabled={savingStudentId === row.student?._id}
                           onChange={(e) => handleInlineStatusChange(row.student?._id, e.target.value)}
                         >
-                          {statusOptions.map((status) => (
-                            <option key={status} value={status}>{status}</option>
+                          {statusOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
                           ))}
                         </select>
                       </td>
+                      <td>{row.notes || '-'}</td>
                     </tr>
                   ))}
+                  {!detailLoading && detailRows.length === 0 && (
+                     <tr><td colSpan="4" className="empty-row">Không tìm thấy sinh viên nào trong buổi học này.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
 
             <div className="modal-actions">
-              <button type="button" className="secondary" onClick={() => setSessionDetail(null)}>Close</button>
+              <button type="button" className="btn-secondary" onClick={() => setSessionDetail(null)}>Đóng</button>
             </div>
           </div>
         </div>

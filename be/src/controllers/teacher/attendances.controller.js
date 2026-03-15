@@ -8,6 +8,9 @@ const ApiResponse = require('../../utils/apiResponse');
  */
 const getSessionAttendance = async (req, res, next) => {
    try {
+      // Teacher must be assigned to the class of this session to view it
+      await attendanceService.verifyTeacherClassMembership(req.params.sessionId, req.user._id);
+
       const attendance = await attendanceService.getSessionAttendance(req.params.sessionId);
       ApiResponse.ok(res, attendance);
    } catch (error) {
@@ -22,6 +25,7 @@ const getSessionAttendance = async (req, res, next) => {
  */
 const markAttendance = async (req, res, next) => {
    try {
+      await attendanceService.verifyTeacherAttendancePermission(req.params.sessionId, req.user._id);
       const { studentId, status, notes, arrivedAt } = req.body;
       const attendance = await attendanceService.markAttendance(
          req.params.sessionId,
@@ -42,6 +46,7 @@ const markAttendance = async (req, res, next) => {
  */
 const bulkMarkAttendance = async (req, res, next) => {
    try {
+      await attendanceService.verifyTeacherAttendancePermission(req.params.sessionId, req.user._id);
       const { attendanceList } = req.body;
       const results = await attendanceService.bulkMarkAttendance(
          req.params.sessionId,

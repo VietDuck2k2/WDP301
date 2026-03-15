@@ -31,8 +31,10 @@ export const adminApi = {
   deleteRoom: (id) => axiosInstance.delete(`/admin/rooms/${id}`),
 
   getAttendances: (params = {}) => axiosInstance.get('/admin/attendances', { params }),
+  getSessionsByClassId: (classId) => axiosInstance.get(`/admin/attendances/sessions/class/${classId}`),
   getSessionAttendance: (sessionId) => axiosInstance.get(`/admin/attendances/sessions/${sessionId}`),
   updateAttendance: (id, payload) => axiosInstance.put(`/admin/attendances/${id}`, payload),
+  postSessionAttendanceBulk: (sessionId, payload) => axiosInstance.post(`/admin/attendances/sessions/${sessionId}/bulk`, payload),
 
   getReportOverview: () => axiosInstance.get('/admin/reports/overview'),
   getAttendanceReport: (params = {}) => axiosInstance.get('/admin/reports/attendance', { params }),

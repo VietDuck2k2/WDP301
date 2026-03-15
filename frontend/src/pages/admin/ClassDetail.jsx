@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import adminApi from '../../api/adminApi';
+import Timetable from '../Timetable';
 import './ClassDetail.css';
 
 const ClassDetail = () => {
@@ -186,6 +187,15 @@ const ClassDetail = () => {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="class-timetable-panel">
+         <div className="panel-head">
+            <h2>Lịch học của Lớp</h2>
+         </div>
+         <div style={{ marginTop: '20px' }}>
+            <Timetable role="admin" fixedClassId={id} />
+         </div>
       </section>
 
       {/* Generate TKB Modal */}

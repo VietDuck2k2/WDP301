@@ -1,4 +1,5 @@
 const classService = require('../../services/class.service');
+const sessionService = require('../../services/session.service');
 const ApiResponse = require('../../utils/apiResponse');
 
 /**
@@ -31,17 +32,33 @@ const getClassById = async (req, res, next) => {
 
 /**
  * @route   POST /api/admin/classes
- * @desc    Create new class
+ * @desc    Create new class (auto-generates sessions if scheduleTemplate is provided)
  * @access  Private/Admin
  */
 const createClass = async (req, res, next) => {
    try {
       const classData = await classService.createClass(req.body);
+
+      // Auto-generate sessions from template if provided
+      if (req.body.scheduleTemplate) {
+         try {
+            await sessionService.generateSessionsFromTemplate(
+               classData._id.toString(),
+               req.body.scheduleTemplate
+            );
+         } catch (genErr) {
+            // FATAL: rollback class creation so DB stays consistent
+            await classData.deleteOne();
+            return next(genErr);
+         }
+      }
+
       ApiResponse.created(res, classData, 'Class created successfully');
    } catch (error) {
       next(error);
    }
 };
+
 
 /**
  * @route   PUT /api/admin/classes/:id
@@ -50,7 +67,37 @@ const createClass = async (req, res, next) => {
  */
 const updateClass = async (req, res, next) => {
    try {
+      const before = await classService.getClassById(req.params.id);
+
       const classData = await classService.updateClass(req.params.id, req.body);
+
+      // Determine if schedule dates or template changed to regenerate sessions
+      const startDateChanged = req.body.startDate && new Date(req.body.startDate).getTime() !== new Date(before.startDate).getTime();
+      const endDateChanged = req.body.endDate && new Date(req.body.endDate).getTime() !== new Date(before.endDate).getTime();
+
+      let templateChanged = false;
+      if (req.body.scheduleTemplate !== undefined) {
+         const oldTemplateStr = before.scheduleTemplate?._id?.toString() || before.scheduleTemplate?.toString() || '';
+         templateChanged = req.body.scheduleTemplate !== oldTemplateStr;
+      }
+
+      if (startDateChanged || endDateChanged || templateChanged) {
+         const Session = require('../../models/Session');
+         // Delete all 'scheduled' sessions because schedule has changed
+         await Session.deleteMany({ class: req.params.id, status: 'scheduled' });
+
+         const templateToUse = req.body.scheduleTemplate || (before.scheduleTemplate ? before.scheduleTemplate._id || before.scheduleTemplate : null);
+         if (templateToUse) {
+            try {
+               await sessionService.generateSessionsFromTemplate(req.params.id, templateToUse);
+            } catch (genErr) {
+               // If generation fails (e.g. room conflict on NEW dates), just pass error
+               // the class itself is already updated safely.
+               return next(genErr);
+            }
+         }
+      }
+
       ApiResponse.ok(res, classData, 'Class updated successfully');
    } catch (error) {
       next(error);

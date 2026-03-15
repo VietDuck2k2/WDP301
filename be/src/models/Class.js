@@ -11,7 +11,8 @@ const classSchema = new mongoose.Schema({
       required: [true, 'Class code is required'],
       unique: true,
       uppercase: true,
-      trim: true
+      trim: true,
+      match: [/^[A-Z]{3}\d{3}$/, 'Class code must be 3 uppercase letters followed by 3 digits (e.g. EBC001)']
    },
    description: {
       type: String,

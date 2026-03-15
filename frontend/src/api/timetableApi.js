@@ -9,6 +9,7 @@ export const timetableApi = {
    createSession: (data) => axiosInstance.post('/admin/sessions', data),
    updateSession: (id, data) => axiosInstance.put(`/admin/sessions/${id}`, data),
    deleteSession: (id) => axiosInstance.delete(`/admin/sessions/${id}`),
+   createMakeupSession: (id, data) => axiosInstance.post(`/admin/sessions/${id}/makeup`, data),
 
    // Admin - Schedule Templates
    getTemplates: () => axiosInstance.get('/admin/schedule-templates'),
@@ -19,6 +20,8 @@ export const timetableApi = {
    // Admin - Global Data Fetch (for dropdowns)
    getAdminClasses: () => axiosInstance.get('/admin/classes'),
    getAdminTeachers: () => axiosInstance.get('/admin/users/role/teacher'),
+   getRooms: () => axiosInstance.get('/admin/rooms'),
+   getAvailableRooms: (params) => axiosInstance.get('/admin/rooms/available', { params }),
 
    // Teacher APIs
    getTeacherTimetable: (params) => axiosInstance.get('/teacher/timetable', { params }),

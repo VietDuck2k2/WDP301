@@ -11,6 +11,9 @@ router.use(authenticate, requireAdmin);
 // @route   GET /api/admin/attendances
 router.get('/', attendanceController.getAllAttendances);
 
+// @route   GET /api/admin/attendances/sessions/class/:classId
+router.get('/sessions/class/:classId', validateObjectId('classId'), attendanceController.getSessionsByClassId);
+
 // @route   GET /api/admin/attendances/sessions/:sessionId
 router.get('/sessions/:sessionId', validateObjectId('sessionId'), attendanceController.getSessionAttendance);
 
@@ -19,6 +22,9 @@ router.get('/students/:studentId', validateObjectId('studentId'), attendanceCont
 
 // @route   PUT /api/admin/attendances/:id
 router.put('/:id', validateObjectId('id'), attendanceController.updateAttendance);
+
+// @route   POST /api/admin/attendances/sessions/:sessionId/bulk
+router.post('/sessions/:sessionId/bulk', validateObjectId('sessionId'), attendanceController.bulkMarkAttendance);
 
 // @route   DELETE /api/admin/attendances/:id
 router.delete('/:id', validateObjectId('id'), attendanceController.deleteAttendance);

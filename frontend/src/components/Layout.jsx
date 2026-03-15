@@ -16,6 +16,7 @@ const adminNav = [
 
 const teacherNav = [
   { to: '/teacher/timetable', label: 'TKB', icon: '📅' },
+  { to: '/teacher/classes', label: 'Lớp học', icon: '🏫' },
   { to: '/teacher/sessions', label: 'Buổi học', icon: '📚' },
   { to: '/teacher/attendances', label: 'Điểm danh', icon: '✓' },
   { to: '/teacher/assignments', label: 'Bài tập', icon: '📝' },

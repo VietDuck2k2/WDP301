@@ -15,7 +15,7 @@ export default function TeacherAnnouncements() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    teacherApi.getClasses().then((res) => { if (res?.success && res.data) setClasses(Array.isArray(res.data) ? res.data : []); });
+    teacherApi.getMyClasses().then((res) => { if (res?.success && res.data) setClasses(Array.isArray(res.data) ? res.data : []); });
   }, []);
 
   useEffect(() => {

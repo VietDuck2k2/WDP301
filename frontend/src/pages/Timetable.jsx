@@ -8,25 +8,34 @@ const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satu
 
 const getMonday = (d) => {
   const date = new Date(d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1); 
-  return new Date(date.setDate(diff));
+  const day = date.getDay(); // 0=Sun, 1=Mon, ...
+  const diff = (day === 0) ? -6 : 1 - day; // go back to Monday
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
 };
 
-const Timetable = ({ role }) => {
+const Timetable = ({ role, fixedClassId }) => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(getMonday(new Date()));
   const [timetableData, setTimetableData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [activeDayTab, setActiveDayTab] = useState(DAY_NAMES[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]);
+
+  const todayStr = React.useMemo(() => {
+    const t = new Date();
+    return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  }, []);
 
   // Admin specific filters
-  const [targetClassId, setTargetClassId] = useState('');
+  const [targetClassId, setTargetClassId] = useState(fixedClassId || '');
   const [targetTeacherId, setTargetTeacherId] = useState('');
 
   // Modals state
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+  const [isMakeupModalOpen, setIsMakeupModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
 
   // Form states
@@ -38,7 +47,15 @@ const Timetable = ({ role }) => {
     date: '',
     slotNumber: 1,
     room: '',
-    status: 'scheduled'
+    status: 'scheduled',
+    cancelReason: ''
+  });
+
+  const [makeupForm, setMakeupForm] = useState({
+    date: '',
+    slotNumber: 1,
+    room: '',
+    teacherId: ''
   });
 
   const [generateForm, setGenerateForm] = useState({
@@ -52,12 +69,17 @@ const Timetable = ({ role }) => {
   const [classList, setClassList] = useState([]);
   const [teacherList, setTeacherList] = useState([]);
   const [templateList, setTemplateList] = useState([]);
+  const [availableRooms, setAvailableRooms] = useState([]);
 
   const fetchTimetable = async () => {
     setLoading(true);
     setError('');
     try {
-      const formattedDate = currentDate.toISOString().split('T')[0];
+      // Format as local YYYY-MM-DD (avoid UTC shift from toISOString on +07:00)
+      const y = currentDate.getFullYear();
+      const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(currentDate.getDate()).padStart(2, '0');
+      const formattedDate = `${y}-${m}-${dd}`;
       const params = { weekStart: formattedDate };
       
       if (role === 'admin') {
@@ -105,6 +127,29 @@ const Timetable = ({ role }) => {
   };
 
   useEffect(() => {
+    if (isSessionModalOpen && sessionForm.date && sessionForm.slotNumber) {
+      timetableApi.getAvailableRooms({
+        date: sessionForm.date,
+        slotNumber: sessionForm.slotNumber,
+        excludeSessionId: editingSession ? editingSession._id : undefined
+      }).then(res => {
+        if (res.success) setAvailableRooms(res.data);
+      }).catch(err => console.error(err));
+    }
+  }, [isSessionModalOpen, sessionForm.date, sessionForm.slotNumber, editingSession]);
+
+  useEffect(() => {
+    if (isMakeupModalOpen && makeupForm.date && makeupForm.slotNumber) {
+      timetableApi.getAvailableRooms({
+        date: makeupForm.date,
+        slotNumber: makeupForm.slotNumber
+      }).then(res => {
+        if (res.success) setAvailableRooms(res.data);
+      }).catch(err => console.error(err));
+    }
+  }, [isMakeupModalOpen, makeupForm.date, makeupForm.slotNumber]);
+
+  useEffect(() => {
     fetchTimetable();
   }, [currentDate, role, targetClassId, targetTeacherId]);
 
@@ -135,22 +180,35 @@ const Timetable = ({ role }) => {
       date: session.date ? new Date(session.date).toISOString().split('T')[0] : '',
       slotNumber: session.slotNumber || 1,
       room: session.room || '',
-      status: session.status || 'scheduled'
+      status: session.status || 'scheduled',
+      cancelReason: session.cancelReason || ''
     });
     setIsSessionModalOpen(true);
+  };
+
+  const openMakeupModal = () => {
+    setMakeupForm({
+      date: new Date().toISOString().split('T')[0],
+      slotNumber: editingSession?.slotNumber || 1,
+      room: editingSession?.room || '',
+      teacherId: editingSession?.teacher?._id || ''
+    });
+    setIsSessionModalOpen(false);
+    setIsMakeupModalOpen(true);
   };
 
   const openCreateModal = () => {
     setEditingSession(null);
     setSessionForm({
       title: '',
-      class: classList[0]?._id || '',
+      class: fixedClassId || targetClassId || classList[0]?._id || '',
       teacherId: teacherList[0]?._id || '',
       sessionNumber: '',
       date: new Date().toISOString().split('T')[0],
       slotNumber: 1,
       room: '',
-      status: 'scheduled'
+      status: 'scheduled',
+      cancelReason: ''
     });
     setIsSessionModalOpen(true);
   };
@@ -159,10 +217,17 @@ const Timetable = ({ role }) => {
     e.preventDefault();
     try {
       let res;
+      const slotDef = getSlotByNumber(sessionForm.slotNumber) || {};
+      const payload = {
+        ...sessionForm,
+        startTime: slotDef.startTime || '',
+        endTime: slotDef.endTime || ''
+      };
+
       if (editingSession) {
-        res = await timetableApi.updateSession(editingSession._id, sessionForm);
+        res = await timetableApi.updateSession(editingSession._id, payload);
       } else {
-        res = await timetableApi.createSession(sessionForm);
+        res = await timetableApi.createSession(payload);
       }
       
       if (res.success) {
@@ -187,6 +252,22 @@ const Timetable = ({ role }) => {
       }
     } catch (err) {
       alert('Error deleting session');
+    }
+  };
+
+  const handleCreateMakeup = async (e) => {
+    e.preventDefault();
+    if (!editingSession) return;
+    try {
+      const res = await timetableApi.createMakeupSession(editingSession._id, makeupForm);
+      if (res.success) {
+        setIsMakeupModalOpen(false);
+        fetchTimetable();
+        alert('Make-up session created successfully');
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.details?.join(', ') || err.response?.data?.message || 'Error creating make-up session';
+      alert(errorMsg);
     }
   };
 
@@ -222,7 +303,10 @@ const Timetable = ({ role }) => {
           <div className="session-teacher">👤 {session.teacher.firstName} {session.teacher.lastName}</div>
         )}
         {session.room && <div className="session-room">📍 {session.room}</div>}
-        <div className={`session-status status-${session.status}`}>{session.status}</div>
+        <div className="session-badges">
+           <div className={`session-status status-${session.status}`}>{session.status}</div>
+           {session.isMakeup && <div className="session-makeup-badge">Học bù</div>}
+        </div>
       </div>
     );
   };
@@ -248,7 +332,7 @@ const Timetable = ({ role }) => {
         </div>
       </div>
 
-      {role === 'admin' && (
+      {role === 'admin' && !fixedClassId && (
         <div className="admin-filters">
            <input 
               type="text" 
@@ -268,21 +352,49 @@ const Timetable = ({ role }) => {
 
       {error && <div className="error-alert">{error}</div>}
 
-      <div className="timetable-grid">
+      <div className="day-tabs-mobile">
         {DAY_NAMES.map(day => (
-          <div key={day} className="day-column">
-            <div className="day-header">{day}</div>
-            <div className="day-content">
-              {loading ? (
-                 <div className="loading-placeholder">Loading...</div>
-              ) : timetableData?.timetable[day]?.length > 0 ? (
-                timetableData.timetable[day].map(renderSessionCard)
-              ) : (
-                <div className="empty-day">-</div>
-              )}
-            </div>
-          </div>
+          <button 
+             key={day} 
+             className={`tab-btn ${activeDayTab === day ? 'active' : ''}`}
+             onClick={() => setActiveDayTab(day)}
+          >
+             {day.substring(0,3)}
+          </button>
         ))}
+      </div>
+
+      <div className="timetable-grid">
+        {DAY_NAMES.map((day, index) => {
+          const isEmpty = !timetableData?.timetable[day] || timetableData.timetable[day].length === 0;
+
+          // Calculate specific date string for this column
+          const dObj = new Date(currentDate);
+          dObj.setDate(currentDate.getDate() + index);
+          const colDateStr = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
+          
+          const isToday = colDateStr === todayStr;
+
+          return (
+             <div key={day} className={`day-column ${isToday ? 'is-today' : ''} ${activeDayTab !== day ? 'hidden-on-mobile' : ''}`}>
+               <div className="day-header">
+                  {day} <br/> 
+                  <span className="date-subtext">{colDateStr.slice(5).replace('-','/')}</span>
+                  {isToday && <span className="today-badge">Hôm nay</span>}
+               </div>
+               
+               <div className="day-content">
+                 {loading ? (
+                    <div className="loading-placeholder">Đang tải...</div>
+                 ) : !isEmpty ? (
+                   timetableData.timetable[day].map(renderSessionCard)
+                 ) : (
+                   <div className="empty-day">Trống</div>
+                 )}
+               </div>
+             </div>
+          );
+        })}
       </div>
 
       {/* Session Modal */}
@@ -298,7 +410,12 @@ const Timetable = ({ role }) => {
               <div className="form-row">
                 <div className="form-group">
                   <label>Class</label>
-                  <select value={sessionForm.class} onChange={e => setSessionForm({...sessionForm, class: e.target.value})} required>
+                  <select 
+                    value={sessionForm.class} 
+                    onChange={e => setSessionForm({...sessionForm, class: e.target.value})} 
+                    required
+                    disabled={!!fixedClassId}
+                  >
                     <option value="">Select Class</option>
                     {classList.map(c => <option key={c._id} value={c._id}>{c.name} ({c.code})</option>)}
                   </select>
@@ -322,7 +439,13 @@ const Timetable = ({ role }) => {
                 </div>
                 <div className="form-group">
                   <label>Phòng</label>
-                  <input type="text" value={sessionForm.room} onChange={e => setSessionForm({...sessionForm, room: e.target.value})} />
+                  <select value={sessionForm.room} onChange={e => setSessionForm({...sessionForm, room: e.target.value})}>
+                    <option value="">-- Chọn phòng --</option>
+                    {editingSession && editingSession.room && !availableRooms.find(r => r.name === editingSession.room) && (
+                       <option value={editingSession.room}>{editingSession.room} (Đang chọn)</option>
+                    )}
+                    {availableRooms.map(r => <option key={r._id} value={r.name}>{r.name} {r.capacity ? `(${r.capacity} chỗ)` : ''}</option>)}
+                  </select>
                 </div>
               </div>
               <div className="form-group">
@@ -344,9 +467,18 @@ const Timetable = ({ role }) => {
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
+              {sessionForm.status === 'cancelled' && (
+                <div className="form-group">
+                  <label>Lý do huỷ</label>
+                  <input type="text" value={sessionForm.cancelReason} onChange={e => setSessionForm({...sessionForm, cancelReason: e.target.value})} placeholder="VD: Nghỉ lễ, Giáo viên ốm..." />
+                </div>
+              )}
               <div className="modal-actions">
                 {editingSession && (
                   <button type="button" className="btn-danger" onClick={handleDeleteSession}>Delete</button>
+                )}
+                {editingSession && editingSession.status === 'cancelled' && (
+                  <button type="button" className="btn-secondary" onClick={openMakeupModal} style={{marginLeft: '10px'}}>+ Tạo buổi học bù</button>
                 )}
                 <div className="right-actions">
                   <button type="button" onClick={() => setIsSessionModalOpen(false)}>Cancel</button>
@@ -391,8 +523,56 @@ const Timetable = ({ role }) => {
               </div>
               <p className="hint-text">If dates are empty, class start/end dates will be used.</p>
               <div className="modal-actions">
-                <button type="button" onClick={() => setIsGenerateModalOpen(true)}>Cancel</button>
+                <button type="button" onClick={() => setIsGenerateModalOpen(false)}>Cancel</button>
                 <button type="submit" className="btn-primary">Generate</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Make-up Session Modal */}
+      {isMakeupModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Tạo Buổi Học Bù</h3>
+            <p className="modal-subtitle">Bù cho: {editingSession?.title} - {editingSession?.class?.name}</p>
+            <form onSubmit={handleCreateMakeup}>
+              <div className="form-group">
+                <label>Giáo viên dạy bù</label>
+                <select value={makeupForm.teacherId} onChange={e => setMakeupForm({...makeupForm, teacherId: e.target.value})} required>
+                  <option value="">Select Teacher</option>
+                  {teacherList.map(t => <option key={t._id} value={t._id}>{t.firstName} {t.lastName}</option>)}
+                </select>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Ngày học bù</label>
+                  <input type="date" value={makeupForm.date} onChange={e => setMakeupForm({...makeupForm, date: e.target.value})} required />
+                </div>
+                <div className="form-group">
+                  <label>Phòng học</label>
+                  <select value={makeupForm.room} onChange={e => setMakeupForm({...makeupForm, room: e.target.value})}>
+                    <option value="">-- Chọn phòng --</option>
+                    {availableRooms.map(r => <option key={r._id} value={r.name}>{r.name} {r.capacity ? `(${r.capacity} chỗ)` : ''}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Slot thời gian</label>
+                <select value={makeupForm.slotNumber} onChange={e => setMakeupForm({...makeupForm, slotNumber: Number(e.target.value)})} required>
+                  {SLOT_DEFINITIONS.map(s => (
+                    <option key={s.slotNumber} value={s.slotNumber}>
+                      {s.label} · {s.startTime}–{s.endTime} ({s.period})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="modal-actions">
+                <div className="right-actions">
+                  <button type="button" onClick={() => setIsMakeupModalOpen(false)}>Cancel</button>
+                  <button type="submit" className="btn-primary">Tạo lịch</button>
+                </div>
               </div>
             </form>
           </div>

@@ -14,6 +14,8 @@ import AttendanceAdmin from './pages/admin/AttendanceAdmin';
 import Reports from './pages/admin/Reports';
 
 import TeacherTimetable from './pages/teacher/TeacherTimetable';
+import TeacherClasses from './pages/teacher/TeacherClasses';
+import TeacherClassDetail from './pages/teacher/TeacherClassDetail';
 import TeacherSessions from './pages/teacher/TeacherSessions';
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import TeacherAssignments from './pages/teacher/TeacherAssignments';
@@ -47,18 +49,23 @@ function App() {
               <Route path="/admin/templates" element={<Templates />} />
               <Route path="/admin/rooms" element={<Rooms />} />
               <Route path="/admin/attendance" element={<AttendanceAdmin />} />
+              <Route path="/admin/attendance/class/:classId" element={<AttendanceAdmin />} />
               <Route path="/admin/reports" element={<Reports />} />
               <Route path="/admin/timetable" element={<Dashboard />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
               <Route path="/teacher/timetable" element={<TeacherTimetable />} />
+              <Route path="/teacher/classes" element={<TeacherClasses />} />
+              <Route path="/teacher/classes/:id" element={<TeacherClassDetail />} />
               <Route path="/teacher/sessions" element={<TeacherSessions />} />
               <Route path="/teacher/attendances" element={<TeacherAttendance />} />
+              <Route path="/teacher/attendances/class/:classId" element={<TeacherAttendance />} />
+              <Route path="/teacher/attendances/session/:sessionId" element={<TeacherAttendance />} />
               <Route path="/teacher/assignments" element={<TeacherAssignments />} />
               <Route path="/teacher/assignments/:id" element={<AssignmentDetail />} />
               <Route path="/teacher/announcements" element={<TeacherAnnouncements />} />
-              </Route>
+            </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
               <Route path="/student/timetable" element={<StudentTimetable />} />
