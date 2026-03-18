@@ -16,6 +16,10 @@ const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
  */
 const checkRoomConflict = async (room, date, slotNumber, excludeSessionId = null) => {
    if (!room) return; // no room assigned → no conflict possible
+   if (slotNumber === undefined || slotNumber === null || slotNumber === '') return;
+
+   const normalizedSlotNumber = Number(slotNumber);
+   if (!Number.isFinite(normalizedSlotNumber)) return;
 
    const parseLocalZeroHour = (dateInput) => {
       const dStr = dateInput instanceof Date ? dateInput.toISOString().split('T')[0] : String(dateInput).split('T')[0];
@@ -29,8 +33,9 @@ const checkRoomConflict = async (room, date, slotNumber, excludeSessionId = null
 
    const conflictQuery = {
       room,
-      slotNumber,
-      date: { $gte: dayStart, $lte: dayEnd }
+      slotNumber: normalizedSlotNumber,
+      date: { $gte: dayStart, $lte: dayEnd },
+      status: { $ne: 'cancelled' }
    };
    if (excludeSessionId) conflictQuery._id = { $ne: excludeSessionId };
 
@@ -246,6 +251,64 @@ const deleteSession = async (sessionId) => {
 };
 
 /**
+ * Bulk-assign a room to sessions of a class.
+ * By default only assigns sessions that currently have empty room.
+ * If overwrite=true, assigns for all sessions of that class.
+ *
+ * @param {string} classId
+ * @param {string} room
+ * @param {Object} [options]
+ * @param {boolean} [options.overwrite=false]
+ */
+const bulkAssignRoomToClassSessions = async (classId, room, options = {}) => {
+   const { overwrite = false } = options;
+
+   const classData = await Class.findById(classId);
+   if (!classData) throw ApiError.notFound('Class not found');
+
+   if (!room || !String(room).trim()) {
+      throw ApiError.badRequest('room is required');
+   }
+
+   const query = { class: classId };
+   if (!overwrite) {
+      query.$or = [{ room: { $exists: false } }, { room: '' }, { room: null }];
+   }
+
+   const sessions = await Session.find(query).select('_id date slotNumber room class');
+
+   if (sessions.length === 0) {
+      return { updatedCount: 0 };
+   }
+
+   // Pre-check conflicts for every candidate session.
+   // If any conflict exists, do NOT update anything.
+   const conflicts = [];
+   for (const s of sessions) {
+      try {
+         await checkRoomConflict(room, s.date, s.slotNumber, s._id);
+      } catch (err) {
+         if (err?.statusCode === 409) {
+            conflicts.push(err.message);
+         } else {
+            throw err;
+         }
+      }
+   }
+
+   if (conflicts.length > 0) {
+      throw ApiError.conflict(
+         `Không thể gán phòng hàng loạt: phòng "${room}" bị trùng lịch (${conflicts.length} buổi).\n` +
+         conflicts.slice(0, 5).join('\n') +
+         (conflicts.length > 5 ? `\n... và ${conflicts.length - 5} buổi khác.` : '')
+      );
+   }
+
+   const result = await Session.updateMany(query, { room: String(room).trim() });
+   return { updatedCount: result.modifiedCount ?? result.nModified ?? 0 };
+};
+
+/**
  * Get sessions for a class
  */
 const getClassSessions = async (classId) => {
@@ -410,8 +473,8 @@ const generateSessionsFromTemplate = async (classId, templateId) => {
          });
 
          if (!exists) {
-            // Class room takes priority over template slot room
-            const roomName = classData.room || slot.room || '';
+            // Create sessions without room; room can be assigned later in admin UI
+            const roomName = '';
             if (roomName) {
                const dayStart = new Date(current); dayStart.setHours(0, 0, 0, 0);
                const dayEnd = new Date(current); dayEnd.setHours(23, 59, 59, 999);
@@ -507,6 +570,7 @@ module.exports = {
    createSession,
    updateSession,
    deleteSession,
+   bulkAssignRoomToClassSessions,
    getClassSessions,
    addMaterial,
    getWeeklyTimetable,

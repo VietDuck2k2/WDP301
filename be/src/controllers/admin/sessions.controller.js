@@ -85,11 +85,28 @@ const createMakeupSession = async (req, res, next) => {
    }
 };
 
+/**
+ * @route   POST /api/admin/sessions/bulk-room
+ * @desc    Bulk assign room for a class's sessions
+ * @access  Private/Admin
+ * @body    { classId, room, overwrite? }
+ */
+const bulkAssignRoom = async (req, res, next) => {
+   try {
+      const { classId, room, overwrite } = req.body;
+      const result = await sessionService.bulkAssignRoomToClassSessions(classId, room, { overwrite: !!overwrite });
+      ApiResponse.ok(res, result, `Updated ${result.updatedCount} sessions`);
+   } catch (error) {
+      next(error);
+   }
+};
+
 module.exports = {
    getAllSessions,
    getSessionById,
    createSession,
    updateSession,
    deleteSession,
-   createMakeupSession
+   createMakeupSession,
+   bulkAssignRoom
 };

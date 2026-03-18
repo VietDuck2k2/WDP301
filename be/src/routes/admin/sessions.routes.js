@@ -11,6 +11,13 @@ router.use(authenticate, requireAdmin);
 // @route   GET /api/admin/sessions
 router.get('/', sessionsController.getAllSessions);
 
+// @route   POST /api/admin/sessions/bulk-room
+router.post(
+   '/bulk-room',
+   validate(['classId', 'room']),
+   sessionsController.bulkAssignRoom
+);
+
 // @route   GET /api/admin/sessions/:id
 router.get('/:id', validateObjectId('id'), sessionsController.getSessionById);
 

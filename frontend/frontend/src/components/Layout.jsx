@@ -8,6 +8,7 @@ const adminNav = [
   { to: '/admin/dashboard', label: 'Tổng quan', icon: '📊' },
   { to: '/admin/users', label: 'Người dùng', icon: '👥' },
   { to: '/admin/classes', label: 'Lớp học', icon: '🏫' },
+  { to: '/admin/session-rooms', label: 'Gán phòng lịch học', icon: '🏷️' },
   { to: '/admin/rooms', label: 'Phòng học', icon: '🚪' },
   { to: '/admin/templates', label: 'Mẫu lịch học', icon: '🧩' },
   { to: '/admin/attendance', label: 'Điểm danh', icon: '📝' },

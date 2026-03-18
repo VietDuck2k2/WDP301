@@ -6,10 +6,12 @@ export const timetableApi = {
    generateSessions: (data) => axiosInstance.post('/admin/timetable/generate', data),
 
    // Admin - Session CRUD
+   getSessions: (params) => axiosInstance.get('/admin/sessions', { params }),
    createSession: (data) => axiosInstance.post('/admin/sessions', data),
    updateSession: (id, data) => axiosInstance.put(`/admin/sessions/${id}`, data),
    deleteSession: (id) => axiosInstance.delete(`/admin/sessions/${id}`),
    createMakeupSession: (id, data) => axiosInstance.post(`/admin/sessions/${id}/makeup`, data),
+   bulkAssignRoom: (data) => axiosInstance.post('/admin/sessions/bulk-room', data),
 
    // Admin - Schedule Templates
    getTemplates: () => axiosInstance.get('/admin/schedule-templates'),

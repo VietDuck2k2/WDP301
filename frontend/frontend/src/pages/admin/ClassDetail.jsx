@@ -111,9 +111,14 @@ const ClassDetail = () => {
             <h1>{classData?.name || 'Chi tiết lớp học'}</h1>
             <p>{classData?.code || '-'} • {classData?.level || '-'} • {classData?.status || '-'}</p>
           </div>
-          <button className="btn-primary" onClick={() => { setGenerateForm({ templateId: '' }); setGenerateResult(null); setGenerateOpen(true); }}>
-            📅 Phát sinh Lịch học
-          </button>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button className="btn-secondary" type="button" onClick={() => navigate(`/admin/classes/${id}/rooms`)}>
+              🏫 Gán phòng lịch học
+            </button>
+            <button className="btn-primary" onClick={() => { setGenerateForm({ templateId: '' }); setGenerateResult(null); setGenerateOpen(true); }}>
+              📅 Phát sinh Lịch học
+            </button>
+          </div>
         </div>
       </section>
 

@@ -8,6 +8,7 @@ import Dashboard from './pages/admin/Dashboard';
 import Users from './pages/admin/Users';
 import Classes from './pages/admin/Classes';
 import ClassDetail from './pages/admin/ClassDetail';
+import SessionRooms from './pages/admin/SessionRooms';
 import Templates from './pages/admin/Templates';
 import Rooms from './pages/admin/Rooms';
 import AttendanceAdmin from './pages/admin/AttendanceAdmin';
@@ -46,6 +47,8 @@ function App() {
               <Route path="/admin/users" element={<Users />} />
               <Route path="/admin/classes" element={<Classes />} />
               <Route path="/admin/classes/:id" element={<ClassDetail />} />
+              <Route path="/admin/classes/:id/rooms" element={<SessionRooms />} />
+              <Route path="/admin/session-rooms" element={<SessionRooms />} />
               <Route path="/admin/templates" element={<Templates />} />
               <Route path="/admin/rooms" element={<Rooms />} />
               <Route path="/admin/attendance" element={<AttendanceAdmin />} />

@@ -24,8 +24,6 @@ const defaultForm = {
 
   endDate: '',
 
-  room: '',
-
   scheduleTemplate: '',
 
 };
@@ -65,7 +63,6 @@ const Classes = () => {
   const [loading, setLoading] = useState(false);
 
   const [templates, setTemplates] = useState([]);
-  const [rooms, setRooms] = useState([]);
 
 
 
@@ -128,9 +125,6 @@ const Classes = () => {
   useEffect(() => {
     adminApi.getScheduleTemplates().then(res => {
       if (res?.success) setTemplates(res.data || []);
-    }).catch(() => {});
-    adminApi.getRooms().then(res => {
-      if (res?.success) setRooms(res.data || []);
     }).catch(() => {});
   }, []);
 
@@ -221,8 +215,6 @@ const Classes = () => {
       startDate: toDateInput(item.startDate),
 
       endDate: toDateInput(item.endDate),
-
-      room: item.room || '',
 
       status: item.status || 'draft',
 
@@ -321,7 +313,7 @@ const Classes = () => {
 
           <h1>Class Management</h1>
 
-          <p>Manage classes, levels, schedule period, and rooms</p>
+          <p>Manage classes, levels, and schedule period</p>
 
         </div>
 
@@ -453,7 +445,6 @@ const Classes = () => {
 
                   </td>
 
-                  <td>{item.room || '-'}</td>
 
                   <td><span className={`status-pill ${item.status}`}>{item.status}</span></td>
 
@@ -665,16 +656,6 @@ const Classes = () => {
 
 
 
-                <select
-                  value={createForm.room}
-                  onChange={(e) => setCreateForm((prev) => ({ ...prev, room: e.target.value }))}
-                >
-                  <option value="">-- Chọn phòng học --</option>
-                  {rooms.map((r) => (
-                    <option key={r._id} value={r.name}>{r.name}{r.location ? ` (${r.location})` : ''}</option>
-                  ))}
-                </select>
-
               </div>
 
 
@@ -828,16 +809,6 @@ const Classes = () => {
                 />
 
 
-
-                <select
-                  value={editForm.room}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, room: e.target.value }))}
-                >
-                  <option value="">-- Chọn phòng học --</option>
-                  {rooms.map((r) => (
-                    <option key={r._id} value={r.name}>{r.name}{r.location ? ` (${r.location})` : ''}</option>
-                  ))}
-                </select>
 
               </div>
 
