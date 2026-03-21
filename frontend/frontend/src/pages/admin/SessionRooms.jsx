@@ -105,7 +105,16 @@ const SessionRooms = () => {
 
       const failed = results.filter((r) => r.status === 'rejected');
       if (failed.length > 0) {
-        alert(`Có ${failed.length}/${ids.length} buổi lưu thất bại. Kiểm tra trùng phòng hoặc dữ liệu.`);
+        const messages = failed.map((item) => {
+          const err = item.reason;
+          return err?.response?.data?.message || err?.message || 'Lưu phòng thất bại';
+        });
+        const uniqueMessages = Array.from(new Set(messages));
+        alert(
+          `Có ${failed.length}/${ids.length} buổi lưu thất bại.\n` +
+          uniqueMessages.slice(0, 6).join('\n') +
+          (uniqueMessages.length > 6 ? `\n... và ${uniqueMessages.length - 6} lỗi khác.` : '')
+        );
       }
 
       await fetchSessions(classId);

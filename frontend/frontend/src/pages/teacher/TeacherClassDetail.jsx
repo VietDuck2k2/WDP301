@@ -77,7 +77,6 @@ export default function TeacherClassDetail() {
             <thead>
               <tr>
                 <th>Họ và Tên</th>
-                <th>Mã SV</th>
                 <th>Email</th>
                 <th>SĐT</th>
               </tr>
@@ -86,9 +85,8 @@ export default function TeacherClassDetail() {
               {students.map(s => (
                 <tr key={s._id}>
                   <td>{s.firstName} {s.lastName}</td>
-                  <td>{s.code || '-'}</td>
                   <td>{s.email}</td>
-                  <td>{s.phoneNumber || '-'}</td>
+                  <td>{s.phone || s.phoneNumber || '-'}</td>
                 </tr>
               ))}
             </tbody>

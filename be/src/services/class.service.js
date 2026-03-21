@@ -291,7 +291,7 @@ const getClassMembers = async (classId, role = null) => {
    if (role) query.role = role;
 
    const members = await ClassMember.find(query)
-      .populate('user', 'firstName lastName email avatar role')
+      .populate('user', 'firstName lastName email phone avatar role')
       .sort({ enrolledAt: -1 });
 
    return members;

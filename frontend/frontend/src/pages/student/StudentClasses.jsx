@@ -32,7 +32,6 @@ export default function StudentClasses() {
               <p className="muted">Mã: {c.code} · {c.room}</p>
               <p>Khai giảng: {formatDate(c.startDate)} · Kết thúc: {formatDate(c.endDate)}</p>
               <Link to={`/student/assignments?classId=${c._id}`} className="link">Xem bài tập</Link>
-              <Link to={`/student/announcements/${c._id}`} className="link">Thông báo</Link>
             </div>
           ))}
           {classes.length === 0 && <p className="empty">Chưa đăng ký lớp nào.</p>}

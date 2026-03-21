@@ -183,8 +183,13 @@ const Classes = () => {
     } catch (error) {
 
       console.error('Create class failed:', error);
-
-      alert(error?.response?.data?.message || 'Create class failed');
+      const status = error?.response?.status;
+      const msg = error?.response?.data?.message || '';
+      if (status === 409 && /class code|code/i.test(msg)) {
+        alert('Mã lớp này đã tồn tại rồi.');
+      } else {
+        alert(msg || 'Create class failed');
+      }
 
     } finally {
 

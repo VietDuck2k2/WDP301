@@ -55,14 +55,14 @@ async function clearAll() {
 async function seed() {
    // ── Users ──────────────────────────────────────────────────────────────
    const [admin, teacher1, teacher2, ...students] = await User.create([
-      { firstName: 'System', lastName: 'Admin', email: 'admin@ecms.com', password: '123456', role: 'admin' },
-      { firstName: 'John', lastName: 'Smith', email: 'teacher1@ecms.com', password: '123456', role: 'teacher' },
-      { firstName: 'Emily', lastName: 'Clark', email: 'teacher2@ecms.com', password: '123456', role: 'teacher' },
-      { firstName: 'Alice', lastName: 'Nguyen', email: 'student1@ecms.com', password: '123456', role: 'student' },
-      { firstName: 'Bob', lastName: 'Tran', email: 'student2@ecms.com', password: '123456', role: 'student' },
-      { firstName: 'Charlie', lastName: 'Le', email: 'student3@ecms.com', password: '123456', role: 'student' },
-      { firstName: 'Diana', lastName: 'Pham', email: 'student4@ecms.com', password: '123456', role: 'student' },
-      { firstName: 'Edward', lastName: 'Hoang', email: 'student5@ecms.com', password: '123456', role: 'student' },
+      { firstName: 'System', lastName: 'Admin', email: 'admin@ecms.com', password: '123456', role: 'admin', phone: '0901000001' },
+      { firstName: 'John', lastName: 'Smith', email: 'teacher1@ecms.com', password: '123456', role: 'teacher', phone: '0901000002' },
+      { firstName: 'Emily', lastName: 'Clark', email: 'teacher2@ecms.com', password: '123456', role: 'teacher', phone: '0901000003' },
+      { firstName: 'Alice', lastName: 'Nguyen', email: 'student1@ecms.com', password: '123456', role: 'student', phone: '0901000004' },
+      { firstName: 'Bob', lastName: 'Tran', email: 'student2@ecms.com', password: '123456', role: 'student', phone: '0901000005' },
+      { firstName: 'Charlie', lastName: 'Le', email: 'student3@ecms.com', password: '123456', role: 'student', phone: '0901000006' },
+      { firstName: 'Diana', lastName: 'Pham', email: 'student4@ecms.com', password: '123456', role: 'student', phone: '0901000007' },
+      { firstName: 'Edward', lastName: 'Hoang', email: 'student5@ecms.com', password: '123456', role: 'student', phone: '0901000008' },
    ]);
    console.log('👤 Users created');
 

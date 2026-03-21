@@ -109,7 +109,7 @@ const deleteUser = async (userId) => {
  */
 const getUsersByRole = async (role) => {
    const users = await User.find({ role, isActive: true })
-      .select('firstName lastName email')
+      .select('firstName lastName email phone')
       .sort({ firstName: 1 });
 
    return users;

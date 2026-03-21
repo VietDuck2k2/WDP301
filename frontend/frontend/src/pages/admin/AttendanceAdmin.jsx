@@ -223,7 +223,7 @@ const AttendanceAdmin = () => {
                             <span className="student-code">{row.student?.code}</span>
                          </div>
                       </td>
-                      <td>{row.student?.phoneNumber || '-'}</td>
+                      <td>{row.student?.phone || row.student?.phoneNumber || '-'}</td>
                       <td>
                         <select
                           className="inline-status-select"
