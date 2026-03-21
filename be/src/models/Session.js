@@ -83,6 +83,23 @@ sessionSchema.index({ class: 1, sessionNumber: 1 }, { unique: true });
 sessionSchema.index({ class: 1, date: 1 });
 sessionSchema.index({ teacher: 1, date: 1 });
 
+// [IMPROVEMENT] Unique compound index to prevent race-condition double-booking of a room.
+// Applies only when: room is not empty AND session is not cancelled.
+// This is enforced at the DB level to guard against concurrent requests.
+// sparse:true ensures rows with empty room are excluded from uniqueness check.
+sessionSchema.index(
+   { room: 1, date: 1, slotNumber: 1 },
+   {
+      unique: true,
+      sparse: true,
+      partialFilterExpression: {
+         room: { $exists: true, $ne: '' },
+         status: { $ne: 'cancelled' }
+      },
+      name: 'room_date_slot_unique'
+   }
+);
+
 const Session = mongoose.model('Session', sessionSchema);
 
 module.exports = Session;

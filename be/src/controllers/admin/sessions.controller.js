@@ -95,7 +95,13 @@ const bulkAssignRoom = async (req, res, next) => {
    try {
       const { classId, room, overwrite } = req.body;
       const result = await sessionService.bulkAssignRoomToClassSessions(classId, room, { overwrite: !!overwrite });
-      ApiResponse.ok(res, result, `Updated ${result.updatedCount} sessions`);
+      // [IMPROVEMENT] Return the full result so client can see which sessions had conflicts
+      const status = result.conflictedSessions?.length > 0 ? 207 : 200;
+      res.status(status).json({
+         success: true,
+         data: result,
+         message: result.message
+      });
    } catch (error) {
       next(error);
    }

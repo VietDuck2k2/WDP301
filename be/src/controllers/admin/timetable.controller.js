@@ -24,8 +24,9 @@ const getTimetable = async (req, res, next) => {
  */
 const generateSessions = async (req, res, next) => {
    try {
-      const { classId, templateId } = req.body;
-      const sessions = await sessionService.generateSessionsFromTemplate(classId, templateId);
+      // [IMPROVEMENT] Accept optional 'room' param to pre-assign room during generation
+      const { classId, templateId, room } = req.body;
+      const sessions = await sessionService.generateSessionsFromTemplate(classId, templateId, room || '');
       ApiResponse.created(res, sessions, `${sessions.length} sessions generated successfully`);
    } catch (error) {
       next(error);

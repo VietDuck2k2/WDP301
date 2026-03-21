@@ -42,9 +42,11 @@ const createClass = async (req, res, next) => {
       // Auto-generate sessions from template if provided
       if (req.body.scheduleTemplate) {
          try {
+            // [IMPROVEMENT] Forward optional defaultRoom so Admin can assign room at class creation time
             await sessionService.generateSessionsFromTemplate(
                classData._id.toString(),
-               req.body.scheduleTemplate
+               req.body.scheduleTemplate,
+               req.body.defaultRoom || ''
             );
          } catch (genErr) {
             // FATAL: rollback class creation so DB stays consistent
@@ -89,10 +91,13 @@ const updateClass = async (req, res, next) => {
          const templateToUse = req.body.scheduleTemplate || (before.scheduleTemplate ? before.scheduleTemplate._id || before.scheduleTemplate : null);
          if (templateToUse) {
             try {
-               await sessionService.generateSessionsFromTemplate(req.params.id, templateToUse);
+               // [IMPROVEMENT] Forward optional defaultRoom on update too
+               await sessionService.generateSessionsFromTemplate(
+                  req.params.id,
+                  templateToUse,
+                  req.body.defaultRoom || ''
+               );
             } catch (genErr) {
-               // If generation fails (e.g. room conflict on NEW dates), just pass error
-               // the class itself is already updated safely.
                return next(genErr);
             }
          }
