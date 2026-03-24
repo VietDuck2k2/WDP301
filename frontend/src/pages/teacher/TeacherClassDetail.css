@@ -8,7 +8,7 @@
 
 .teacher-session-grid-table {
   width: 100%;
-  min-width: 900px;
+  min-width: 600px;
   border-collapse: collapse;
   background: #fff;
 }
@@ -16,7 +16,7 @@
 .teacher-session-grid-table th,
 .teacher-session-grid-table td {
   border: 1px solid #e5e7eb;
-  padding: 8px 6px;
+  padding: 6px 5px;
   text-align: center;
   font-size: 13px;
   white-space: nowrap;
@@ -30,74 +30,84 @@
   background: #f8fafc;
 }
 
-/* Fixed widths for sticky left columns */
+/* ── Compact widths for sticky left columns ── */
 .teacher-col-email {
-  width: 220px;
-  min-width: 220px;
-  text-align: left !important;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  text-align: center !important;
 }
 .teacher-col-name {
-  width: 220px;
-  min-width: 220px;
-  text-align: left !important;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  text-align: center !important;
 }
 .teacher-col-rate {
-  width: 200px;
-  min-width: 200px;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
 }
 
+/* ── Sticky positioning ── */
 .teacher-col-sticky {
   position: sticky;
   background: #f8fafc;
   z-index: 2;
 }
 
-.teacher-col-name {
-  left: 220px;
-  z-index: 3;
-}
+/* Header sticky offsets */
 .teacher-col-email {
   left: 0;
   z-index: 3;
 }
+.teacher-col-name {
+  left: 150px; /* email width */
+  z-index: 3;
+}
 .teacher-col-rate {
-  left: 440px;
+  left: 270px; /* email + name = 150 + 120 */
   z-index: 3;
 }
 
-.teacher-col-name-cell,
-.teacher-col-email-cell,
-.teacher-col-rate-cell {
-  background: #f8fafc;
-  z-index: 1;
-}
-
-.teacher-col-name-cell {
-  position: sticky;
-  left: 220px;
-  z-index: 3;
-  text-align: left;
-  font-weight: 700;
-  width: 220px;
-  min-width: 220px;
-}
+/* Body cell sticky positioning & styling */
 .teacher-col-email-cell {
   position: sticky;
   left: 0;
   z-index: 3;
-  text-align: left;
-  width: 220px;
-  min-width: 220px;
+  text-align: center;
+  background: #f8fafc;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.teacher-col-name-cell {
+  position: sticky;
+  left: 150px;
+  z-index: 3;
+  text-align: center;
+  font-weight: 700;
+  background: #f8fafc;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .teacher-col-rate-cell {
   position: sticky;
-  left: 440px;
+  left: 270px;
   z-index: 3;
   font-weight: 700;
-  width: 200px;
-  min-width: 200px;
+  background: #f8fafc;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
 }
 
+/* ── Session cells ── */
 .teacher-att-cell {
   font-weight: 900;
 }
@@ -111,10 +121,10 @@
 }
 
 .teacher-col-session {
-  min-width: 48px;
+  min-width: 36px;
+  width: 36px;
 }
 
 .muted {
   color: #64748b;
 }
-

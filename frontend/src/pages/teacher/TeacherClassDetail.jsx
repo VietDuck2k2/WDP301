@@ -195,7 +195,7 @@ export default function TeacherClassDetail() {
                   <tr>
                     <th className="teacher-col-sticky teacher-col-email">Mail</th>
                     <th className="teacher-col-sticky teacher-col-name">Tên</th>
-                    <th className="teacher-col-sticky teacher-col-rate">tình trạng điểm danh</th>
+                    <th className="teacher-col-sticky teacher-col-rate">Vắng %</th>
                     {sessionsOrdered.map((_, idx) => (
                       <th key={`s-col-${idx}`} className="teacher-col-session">
                         S{idx + 1}
