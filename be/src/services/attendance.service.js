@@ -201,13 +201,11 @@ const getStudentAttendanceSummary = async (studentId, classId = null) => {
    const summary = {
       total: records.length,
       present: records.filter(r => r.status === 'present').length,
-      absent: records.filter(r => r.status === 'absent').length,
-      late: records.filter(r => r.status === 'late').length,
-      excused: records.filter(r => r.status === 'excused').length
+      absent: records.filter(r => r.status === 'absent').length
    };
 
    summary.attendanceRate = summary.total > 0
-      ? ((summary.present + summary.late) / summary.total * 100).toFixed(2)
+      ? (summary.present / summary.total * 100).toFixed(2)
       : 0;
 
    return summary;

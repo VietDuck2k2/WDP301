@@ -1,5 +1,6 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import adminApi from '../../api/adminApi';
+import { timetableApi } from '../../api/timetableApi';
 import './Rooms.css';
 
 const EMPTY_FORM = { name: '', capacity: 30, location: '', description: '' };
@@ -7,6 +8,18 @@ const EMPTY_FORM = { name: '', capacity: 30, location: '', description: '' };
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [weekStart, setWeekStart] = useState(() => {
+    const d = new Date();
+    const day = d.getDay(); // 0=Sun
+    const diff = day === 0 ? -6 : 1 - day; // Monday
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+  const [timetableLoading, setTimetableLoading] = useState(false);
+  const [timetableData, setTimetableData] = useState(null);
+
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -25,6 +38,37 @@ const Rooms = () => {
   }, []);
 
   useEffect(() => { fetchRooms(); }, [fetchRooms]);
+
+  const toYYYYMMDD = useMemo(() => {
+    return (d) => {
+      if (!d) return '';
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+  }, []);
+
+  const dayOrder = useMemo(() => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], []);
+  const slotNumbers = useMemo(() => [1, 2, 3, 4, 5], []);
+
+  const fetchTimetable = useCallback(async () => {
+    if (!weekStart) return;
+    setTimetableLoading(true);
+    try {
+      const res = await timetableApi.getAdminTimetable({ weekStart: toYYYYMMDD(weekStart) });
+      if (res?.success) setTimetableData(res.data || null);
+    } catch (e) {
+      console.error(e);
+      setTimetableData(null);
+    } finally {
+      setTimetableLoading(false);
+    }
+  }, [toYYYYMMDD, weekStart]);
+
+  useEffect(() => {
+    fetchTimetable();
+  }, [fetchTimetable]);
 
   const openCreate = () => { setEditingId(null); setForm(EMPTY_FORM); setModalOpen(true); };
   const openEdit = (room) => { setEditingId(room._id); setForm({ name: room.name, capacity: room.capacity, location: room.location || '', description: room.description || '' }); setModalOpen(true); };
@@ -45,6 +89,35 @@ const Rooms = () => {
     }
   };
 
+  const roomUsage = useMemo(() => {
+    // roomUsage.get(roomName).get(dayName) = Set(slotNumber)
+    const usage = new Map();
+    const timetable = timetableData?.timetable || {};
+    for (const dayName of Object.keys(timetable)) {
+      const list = timetable[dayName] || [];
+      for (const s of list) {
+        if (!s?.room) continue;
+        if (s.status === 'cancelled') continue;
+        const roomName = String(s.room);
+        const slot = Number(s.slotNumber);
+        if (!Number.isFinite(slot)) continue;
+        if (!usage.has(roomName)) usage.set(roomName, new Map());
+        const dayMap = usage.get(roomName);
+        if (!dayMap.has(dayName)) dayMap.set(dayName, new Set());
+        dayMap.get(dayName).add(slot);
+      }
+    }
+    return usage;
+  }, [timetableData]);
+
+  const weekLabel = useMemo(() => {
+    const start = new Date(weekStart);
+    const end = new Date(weekStart);
+    end.setDate(end.getDate() + 6);
+    const fmt = (d) => `${d.getDate()}/${d.getMonth() + 1}`;
+    return `${fmt(start)} - ${fmt(end)}`;
+  }, [weekStart]);
+
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Xóa phòng "${name}"?`)) return;
     try {
@@ -59,34 +132,98 @@ const Rooms = () => {
     <div className="admin-rooms-page">
       <section className="admin-rooms-header">
         <div>
-          <h1>Quản lý Phòng học</h1>
-          <p>Danh sách các phòng học tại trung tâm</p>
+          <h1>Lịch phòng theo tuần</h1>
+          <p>Mỗi ô đánh dấu ✓ nếu phòng có buổi học đúng ngày và slot</p>
         </div>
-        <button className="btn-primary" onClick={openCreate}>+ Thêm phòng</button>
+        <div className="rooms-header-actions">
+          <button className="btn-primary" onClick={openCreate}>
+            + Thêm phòng
+          </button>
+          <div className="rooms-week-label-inline">{weekLabel}</div>
+        </div>
       </section>
 
       <section className="rooms-panel">
+        <div className="rooms-week-controls">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              const n = new Date(weekStart);
+              n.setDate(n.getDate() - 7);
+              setWeekStart(n);
+            }}
+          >
+            ← Tuần trước
+          </button>
+          <div className="rooms-week-label">{weekLabel}</div>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              const n = new Date(weekStart);
+              n.setDate(n.getDate() + 7);
+              setWeekStart(n);
+            }}
+          >
+            Tuần sau →
+          </button>
+        </div>
+
         {loading && <div className="empty-box">Đang tải...</div>}
         {!loading && rooms.length === 0 && <div className="empty-box">Chưa có phòng học nào.</div>}
-        <div className="rooms-grid">
-          {rooms.map(room => (
-            <article className="room-card" key={room._id}>
-              <div className="room-card-head">
-                <span className="room-icon">🏫</span>
-                <div className="room-name">{room.name}</div>
-                <div className="room-actions">
-                  <button className="btn-icon edit" title="Sửa" onClick={() => openEdit(room)}>✏️</button>
-                  <button className="btn-icon delete" title="Xóa" onClick={() => handleDelete(room._id, room.name)}>🗑️</button>
-                </div>
+
+        {!loading && rooms.length > 0 && (
+          <>
+            {timetableLoading && <div className="empty-box">Đang tải lịch phòng...</div>}
+            {!timetableLoading && (
+              <div className="rooms-table-wrapper">
+                <table className="rooms-table">
+                  <thead>
+                    <tr>
+                      <th className="rooms-table-col-room" rowSpan={2}>Room</th>
+                      {dayOrder.map((day) => (
+                        <th key={day} colSpan={slotNumbers.length} className="rooms-table-col-day">
+                          {day}
+                        </th>
+                      ))}
+                    </tr>
+                    <tr>
+                      {dayOrder.flatMap((dayName) =>
+                        slotNumbers.map((slot) => (
+                          <th key={`${dayName}-${slot}`} className="rooms-table-col-slot">
+                            Slot {slot}
+                          </th>
+                        ))
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rooms.map((room) => (
+                      <tr key={room._id}>
+                        <td className="rooms-table-cell-room">{room.name}</td>
+                        {dayOrder.flatMap((dayName) =>
+                          slotNumbers.map((slot) => {
+                            const dayMap = roomUsage.get(String(room.name));
+                            const used = dayMap?.get(dayName)?.has(slot);
+                            return (
+                              <td
+                                key={`${room._id}-${dayName}-${slot}`}
+                                className={`rooms-table-cell ${used ? 'used' : ''}`}
+                              >
+                                {used ? '✓' : '-'}
+                              </td>
+                            );
+                          })
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="room-info">
-                <span>👥 Sức chứa: <strong>{room.capacity}</strong></span>
-                {room.location && <span>📍 {room.location}</span>}
-                {room.description && <p className="room-desc">{room.description}</p>}
-              </div>
-            </article>
-          ))}
-        </div>
+            )}
+          </>
+        )}
       </section>
 
       {modalOpen && (

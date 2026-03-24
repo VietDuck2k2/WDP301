@@ -2,6 +2,7 @@ const Session = require('../models/Session');
 const Class = require('../models/Class');
 const ClassMember = require('../models/ClassMember');
 const ScheduleTemplate = require('../models/ScheduleTemplate');
+const Attendance = require('../models/Attendance');
 const ApiError = require('../utils/apiError');
 const { getSlotByNumber } = require('../constants/slots');
 
@@ -448,6 +449,20 @@ const getWeeklyTimetable = async (filters = {}) => {
       .populate('teacher', 'firstName lastName email')
       .sort({ date: 1, startTime: 1 });
 
+   // Student timetable: attach attendance status per session card
+   let attendanceMap = new Map();
+   if (studentId && sessions.length > 0) {
+      const sessionIds = sessions.map(s => s._id);
+      const attendanceRows = await Attendance.find({
+         student: studentId,
+         session: { $in: sessionIds }
+      }).select('session status');
+
+      attendanceMap = new Map(
+         attendanceRows.map(row => [row.session.toString(), row.status])
+      );
+   }
+
    // Group by day name
    const timetable = {};
    DAY_NAMES.forEach(d => { timetable[d] = []; });
@@ -460,7 +475,12 @@ const getWeeklyTimetable = async (filters = {}) => {
       const [year, month, day] = dateStr.split('-').map(Number);
       const dayOfWeek = new Date(year, month - 1, day).getDay(); // local, no UTC shift
       const dayName = DAY_NAMES[dayOfWeek];
-      timetable[dayName].push(s);
+
+      const sessionObj = s.toObject ? s.toObject() : s;
+      if (studentId) {
+         sessionObj.attendanceStatus = attendanceMap.get(String(s._id)) || null;
+      }
+      timetable[dayName].push(sessionObj);
    });
 
    return {

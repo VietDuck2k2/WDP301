@@ -164,8 +164,6 @@ function TeacherClassSessions({ classId, navigate }) {
 const STATUS_OPTIONS = [
   { value: 'present', label: 'Có mặt' },
   { value: 'absent', label: 'Vắng' },
-  { value: 'late', label: 'Muộn' },
-  { value: 'excused', label: 'Có phép' },
 ];
 
 export default function TeacherAttendance() {
@@ -298,15 +296,35 @@ export default function TeacherAttendance() {
                     <tr key={id}>
                       <td>{item.student.firstName} {item.student.lastName}</td>
                       <td>
-                        <select
-                          className="form-select"
-                          value={attendance[id]?.status || 'present'}
-                          onChange={(e) => setAttendance((prev) => ({ ...prev, [id]: { ...prev[id], status: e.target.value } }))}
-                          disabled={!isEditable}
-                          style={!isEditable ? { backgroundColor: '#f1f5f9', opacity: 0.8 } : {}}
-                        >
-                          {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        </select>
+                        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                          {STATUS_OPTIONS.map((o) => (
+                            <label
+                              key={o.value}
+                              style={{
+                                display: 'flex',
+                                gap: '6px',
+                                alignItems: 'center',
+                                opacity: !isEditable ? 0.8 : 1,
+                                cursor: !isEditable ? 'not-allowed' : 'pointer',
+                              }}
+                            >
+                              <input
+                                type="radio"
+                                name={`teacher-att-status-${id}`}
+                                value={o.value}
+                                checked={(attendance[id]?.status || 'present') === o.value}
+                                onChange={() =>
+                                  setAttendance((prev) => ({
+                                    ...prev,
+                                    [id]: { ...prev[id], status: o.value },
+                                  }))
+                                }
+                                disabled={!isEditable}
+                              />
+                              <span>{o.label}</span>
+                            </label>
+                          ))}
+                        </div>
                       </td>
                       <td>
                         <input

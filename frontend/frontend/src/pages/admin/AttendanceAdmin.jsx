@@ -6,8 +6,6 @@ import './AttendanceAdmin.css';
 const statusOptions = [
   { value: 'present', label: 'Có mặt' },
   { value: 'absent', label: 'Vắng' },
-  { value: 'late', label: 'Muộn' },
-  { value: 'excused', label: 'Có phép' },
 ];
 
 const AttendanceAdmin = () => {
@@ -225,16 +223,30 @@ const AttendanceAdmin = () => {
                       </td>
                       <td>{row.student?.phone || row.student?.phoneNumber || '-'}</td>
                       <td>
-                        <select
-                          className="inline-status-select"
-                          value={row.status || 'absent'}
-                          disabled={savingStudentId === row.student?._id}
-                          onChange={(e) => handleInlineStatusChange(row.student?._id, e.target.value)}
-                        >
+                        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
                           {statusOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            <label
+                              key={opt.value}
+                              style={{
+                                display: 'flex',
+                                gap: '6px',
+                                alignItems: 'center',
+                                opacity: savingStudentId === row.student?._id ? 0.8 : 1,
+                                cursor: savingStudentId === row.student?._id ? 'not-allowed' : 'pointer',
+                              }}
+                            >
+                              <input
+                                type="radio"
+                                name={`admin-att-status-${row.student?._id}`}
+                                value={opt.value}
+                                checked={(row.status || 'absent') === opt.value}
+                                disabled={savingStudentId === row.student?._id}
+                                onChange={() => handleInlineStatusChange(row.student?._id, opt.value)}
+                              />
+                              <span>{opt.label}</span>
+                            </label>
                           ))}
-                        </select>
+                        </div>
                       </td>
                       <td>{row.notes || '-'}</td>
                     </tr>

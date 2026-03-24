@@ -1,0 +1,120 @@
+.teacher-session-grid-wrap {
+  margin-top: 10px;
+}
+
+.teacher-session-grid-table-wrap {
+  overflow-x: auto;
+}
+
+.teacher-session-grid-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.teacher-session-grid-table th,
+.teacher-session-grid-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 6px;
+  text-align: center;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.teacher-session-grid-table thead th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+/* Fixed widths for sticky left columns */
+.teacher-col-email {
+  width: 220px;
+  min-width: 220px;
+  text-align: left !important;
+}
+.teacher-col-name {
+  width: 220px;
+  min-width: 220px;
+  text-align: left !important;
+}
+.teacher-col-rate {
+  width: 200px;
+  min-width: 200px;
+}
+
+.teacher-col-sticky {
+  position: sticky;
+  background: #f8fafc;
+  z-index: 2;
+}
+
+.teacher-col-name {
+  left: 220px;
+  z-index: 3;
+}
+.teacher-col-email {
+  left: 0;
+  z-index: 3;
+}
+.teacher-col-rate {
+  left: 440px;
+  z-index: 3;
+}
+
+.teacher-col-name-cell,
+.teacher-col-email-cell,
+.teacher-col-rate-cell {
+  background: #f8fafc;
+  z-index: 1;
+}
+
+.teacher-col-name-cell {
+  position: sticky;
+  left: 220px;
+  z-index: 3;
+  text-align: left;
+  font-weight: 700;
+  width: 220px;
+  min-width: 220px;
+}
+.teacher-col-email-cell {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  text-align: left;
+  width: 220px;
+  min-width: 220px;
+}
+.teacher-col-rate-cell {
+  position: sticky;
+  left: 440px;
+  z-index: 3;
+  font-weight: 700;
+  width: 200px;
+  min-width: 200px;
+}
+
+.teacher-att-cell {
+  font-weight: 900;
+}
+
+.teacher-att-cell.present {
+  color: #16a34a;
+}
+
+.teacher-att-cell.absent {
+  color: #dc2626;
+}
+
+.teacher-col-session {
+  min-width: 48px;
+}
+
+.muted {
+  color: #64748b;
+}
+

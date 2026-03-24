@@ -138,7 +138,7 @@ async function seed() {
    console.log('📅 Sessions created');
 
    // ── Attendance (past sessions only) ─────────────────────────────────────
-   const attendanceStatuses = ['present', 'present', 'present', 'late', 'absent'];
+   const attendanceStatuses = ['present', 'present', 'present', 'absent', 'absent'];
    const classAStudents = [students[0], students[1], students[2]];
    const classBStudents = [students[2], students[3], students[4]];
    const pastSessionsA = sessionsA.filter(s => s.status === 'completed');

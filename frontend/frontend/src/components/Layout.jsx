@@ -12,13 +12,11 @@ const adminNav = [
   { to: '/admin/rooms', label: 'Phòng học', icon: '🚪' },
   { to: '/admin/templates', label: 'Mẫu lịch học', icon: '🧩' },
   { to: '/admin/attendance', label: 'Điểm danh', icon: '📝' },
-  { to: '/admin/reports', label: 'Báo cáo', icon: '📈' },
 ];
 
 const teacherNav = [
   { to: '/teacher/timetable', label: 'TKB', icon: '📅' },
   { to: '/teacher/classes', label: 'Lớp học', icon: '🏫' },
-  { to: '/teacher/sessions', label: 'Buổi học', icon: '📚' },
   { to: '/teacher/attendances', label: 'Điểm danh', icon: '✓' },
   { to: '/teacher/assignments', label: 'Bài tập', icon: '📝' },
   { to: '/teacher/announcements', label: 'Thông báo', icon: '📢' },
