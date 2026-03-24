@@ -291,7 +291,7 @@ const getClassMembers = async (classId, role = null) => {
    if (role) query.role = role;
 
    const members = await ClassMember.find(query)
-      .populate('user', 'firstName lastName email avatar role')
+      .populate('user', 'firstName lastName email phone avatar role')
       .sort({ enrolledAt: -1 });
 
    return members;
@@ -301,11 +301,22 @@ const getClassMembers = async (classId, role = null) => {
  * Remove member from class (soft-deactivate)
  */
 const removeMember = async (classId, userId) => {
-   const member = await ClassMember.findOneAndUpdate(
-      { class: classId, user: userId, status: 'active' },
+   // Support both inputs:
+   // - memberId (ClassMember._id) from UI tables
+   // - userId (User._id) from direct API usage
+   let member = await ClassMember.findOneAndUpdate(
+      { _id: userId, class: classId, status: 'active' },
       { status: 'dropped' },
       { new: true }
    );
+
+   if (!member) {
+      member = await ClassMember.findOneAndUpdate(
+         { class: classId, user: userId, status: 'active' },
+         { status: 'dropped' },
+         { new: true }
+      );
+   }
 
    if (!member) {
       throw ApiError.notFound('Class member not found');

@@ -17,6 +17,7 @@ const SessionRooms = () => {
   const [rooms, setRooms] = useState([]);
 
   const [classId, setClassId] = useState(id || '');
+  const [classSearch, setClassSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessions, setSessions] = useState([]);
 
@@ -41,6 +42,12 @@ const SessionRooms = () => {
     };
     load();
   }, []);
+
+  const filteredClasses = useMemo(() => {
+    const q = classSearch.trim().toLowerCase();
+    if (!q) return classes;
+    return classes.filter((c) => String(c.name || '').toLowerCase().includes(q));
+  }, [classes, classSearch]);
 
   const roomOptions = useMemo(() => {
     const list = rooms.map((r) => ({ id: r._id, name: r.name }));
@@ -105,7 +112,16 @@ const SessionRooms = () => {
 
       const failed = results.filter((r) => r.status === 'rejected');
       if (failed.length > 0) {
-        alert(`Có ${failed.length}/${ids.length} buổi lưu thất bại. Kiểm tra trùng phòng hoặc dữ liệu.`);
+        const messages = failed.map((item) => {
+          const err = item.reason;
+          return err?.response?.data?.message || err?.message || 'Lưu phòng thất bại';
+        });
+        const uniqueMessages = Array.from(new Set(messages));
+        alert(
+          `Có ${failed.length}/${ids.length} buổi lưu thất bại.\n` +
+          uniqueMessages.slice(0, 6).join('\n') +
+          (uniqueMessages.length > 6 ? `\n... và ${uniqueMessages.length - 6} lỗi khác.` : '')
+        );
       }
 
       await fetchSessions(classId);
@@ -131,8 +147,25 @@ const SessionRooms = () => {
 
       {!classId && (
         <section className="class-cards">
-          {classes.length === 0 && <div className="empty-box">Chưa có lớp nào.</div>}
-          {classes.map((c) => (
+          <div className="class-cards-header">
+            <label className="class-cards-search-label">Tìm theo tên lớp</label>
+            <input
+              className="class-cards-search"
+              type="text"
+              placeholder="Ví dụ: IELTS Advanced..."
+              value={classSearch}
+              onChange={(e) => setClassSearch(e.target.value)}
+            />
+          </div>
+
+          {filteredClasses.length === 0 && classes.length === 0 && (
+            <div className="empty-box">Chưa có lớp nào.</div>
+          )}
+          {filteredClasses.length === 0 && classes.length > 0 && (
+            <div className="empty-box">Không tìm thấy lớp phù hợp.</div>
+          )}
+
+          {filteredClasses.map((c) => (
             <button
               type="button"
               key={c._id}

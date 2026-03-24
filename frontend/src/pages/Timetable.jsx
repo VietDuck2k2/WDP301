@@ -5,6 +5,10 @@ import { SLOT_DEFINITIONS, getSlotByNumber } from '../constants/slots';
 import './Timetable.css';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const ATTENDANCE_LABEL = {
+  present: 'Present',
+  absent: 'Absent',
+};
 
 const getMonday = (d) => {
   const date = new Date(d);
@@ -305,6 +309,11 @@ const Timetable = ({ role, fixedClassId }) => {
         {session.room && <div className="session-room">📍 {session.room}</div>}
         <div className="session-badges">
            <div className={`session-status status-${session.status}`}>{session.status}</div>
+           {role === 'student' && session.attendanceStatus && (
+             <div className={`attendance-status att-${session.attendanceStatus}`}>
+               {ATTENDANCE_LABEL[session.attendanceStatus] || session.attendanceStatus}
+             </div>
+           )}
            {session.isMakeup && <div className="session-makeup-badge">Học bù</div>}
         </div>
       </div>

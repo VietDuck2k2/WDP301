@@ -135,7 +135,9 @@ const ClassDetail = () => {
             <select value={selectedTeacherId} onChange={e => setSelectedTeacherId(e.target.value)}>
               <option value="">Chọn giáo viên</option>
               {teacherOptions.map(t => (
-                <option key={t._id} value={t._id}>{t.firstName} {t.lastName} ({t.email})</option>
+                <option key={t._id} value={t._id}>
+                  {t.firstName} {t.lastName} ({t.email}){t.phone ? ` - ${t.phone}` : ''}
+                </option>
               ))}
             </select>
             <button type="button" onClick={handleAssignTeacher}>Gán</button>
@@ -170,17 +172,18 @@ const ClassDetail = () => {
           <table>
             <thead>
               <tr>
-                <th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Trạng thái</th><th>Ngày tham gia</th><th>Hành động</th>
+                <th>Họ tên</th><th>Email</th><th>SĐT</th><th>Vai trò</th><th>Trạng thái</th><th>Ngày tham gia</th><th>Hành động</th>
               </tr>
             </thead>
             <tbody>
               {!loading && members.length === 0 && (
-                <tr><td colSpan="6" className="empty-row">Chưa có thành viên nào.</td></tr>
+                <tr><td colSpan="7" className="empty-row">Chưa có thành viên nào.</td></tr>
               )}
               {members.map(member => (
                 <tr key={member._id}>
                   <td>{member.user?.firstName} {member.user?.lastName}</td>
                   <td>{member.user?.email || '-'}</td>
+                  <td>{member.user?.phone || member.user?.phoneNumber || '-'}</td>
                   <td><span className={`role-pill ${member.role}`}>{member.role === 'teacher' ? 'Giáo viên' : 'Học sinh'}</span></td>
                   <td><span className={`status-pill ${member.status}`}>{member.status}</span></td>
                   <td>{member.enrolledAt ? new Date(member.enrolledAt).toLocaleDateString('vi-VN') : '-'}</td>

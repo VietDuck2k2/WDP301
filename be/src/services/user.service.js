@@ -7,10 +7,18 @@ const ApiError = require('../utils/apiError');
 const getAllUsers = async (filters = {}) => {
    const { role, isActive, search, page = 1, limit = 20 } = filters;
 
-   const query = {};
+   // By default, admin list shows active users only.
+   // Soft-deleted users (isActive=false) are hidden unless explicitly requested.
+   const query = { isActive: true };
 
    if (role) query.role = role;
-   if (isActive !== undefined) query.isActive = isActive;
+   if (isActive !== undefined && isActive !== '') {
+      if (typeof isActive === 'boolean') {
+         query.isActive = isActive;
+      } else if (typeof isActive === 'string') {
+         query.isActive = isActive.toLowerCase() === 'true';
+      }
+   }
    if (search) {
       query.$or = [
          { firstName: new RegExp(search, 'i') },
@@ -109,7 +117,7 @@ const deleteUser = async (userId) => {
  */
 const getUsersByRole = async (role) => {
    const users = await User.find({ role, isActive: true })
-      .select('firstName lastName email')
+      .select('firstName lastName email phone')
       .sort({ firstName: 1 });
 
    return users;

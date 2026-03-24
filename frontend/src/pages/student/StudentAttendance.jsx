@@ -4,9 +4,7 @@ import { studentApi } from '../../api/studentApi';
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN') : '-');
 const STATUS_LABEL = { 
   present: 'Có mặt', 
-  absent: 'Vắng', 
-  late: 'Muộn', 
-  excused: 'Có phép' 
+  absent: 'Vắng'
 };
 
 export default function StudentAttendance() {

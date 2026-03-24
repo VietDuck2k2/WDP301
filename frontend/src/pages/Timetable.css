@@ -386,8 +386,34 @@
     font-weight: 600;
     text-transform: capitalize;
     text-align: center;
-    align-self: flex-start;
+    align-self: center;
     margin-top: 2px;
+}
+
+.session-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.attendance-status {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    
+}
+
+.attendance-status.att-present {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.attendance-status.att-absent {
+    background-color: #fee2e2;
+    color: #991b1b;
 }
 
 .status-scheduled {

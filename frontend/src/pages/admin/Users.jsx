@@ -84,7 +84,7 @@ const Users = () => {
     setEditForm({
       firstName: user.firstName || '',
       lastName: user.lastName || '',
-      phone: user.phone || '',
+      phone: user.phone || user.phoneNumber || '',
       isActive: Boolean(user.isActive),
     });
   };
@@ -184,7 +184,7 @@ const Users = () => {
                   <td>{user.firstName} {user.lastName}</td>
                   <td>{user.email}</td>
                   <td><span className={`role-pill ${user.role}`}>{user.role}</span></td>
-                  <td>{user.phone || '-'}</td>
+                  <td>{user.phone || user.phoneNumber || '-'}</td>
                   <td>
                     <span className={`status-pill ${user.isActive ? 'active' : 'inactive'}`}>
                       {user.isActive ? 'Active' : 'Inactive'}

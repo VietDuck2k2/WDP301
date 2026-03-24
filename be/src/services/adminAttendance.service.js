@@ -24,7 +24,7 @@ const getAllAttendances = async (filters = {}) => {
    const [records, total] = await Promise.all([
       Attendance.find(query)
          .populate('session', 'title date startTime endTime')
-         .populate('student', 'firstName lastName email')
+         .populate('student', 'firstName lastName email phone')
          .populate('markedBy', 'firstName lastName')
          .sort({ markedAt: -1 })
          .skip(skip)

@@ -88,7 +88,7 @@ const getClassStudents = async (req, res, next) => {
          class: classId,
          role: 'student',
          status: 'active'
-      }).populate('user', 'firstName lastName email phoneNumber code avatar');
+      }).populate('user', 'firstName lastName email phone code avatar');
 
       const students = rawMembers.map(m => m.user);
       ApiResponse.ok(res, students);

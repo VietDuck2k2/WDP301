@@ -72,7 +72,7 @@ const getAttendanceRecords = async (filters = {}) => {
 
    const records = await Attendance.find(query)
       .populate('session', 'title date')
-      .populate('student', 'firstName lastName email')
+      .populate('student', 'firstName lastName email phone')
       .populate('markedBy', 'firstName lastName')
       .sort({ markedAt: -1 });
 
@@ -94,11 +94,11 @@ const getSessionAttendance = async (sessionId) => {
       class: session.class._id,
       role: 'student',
       status: 'active'
-   }).populate('user', 'firstName lastName email');
+   }).populate('user', 'firstName lastName email phone');
 
    // Get attendance records for this session
    const attendanceRecords = await Attendance.find({ session: sessionId })
-      .populate('student', 'firstName lastName email');
+      .populate('student', 'firstName lastName email phone');
 
    // Merge data
    const attendance = classMembers.map(member => {
@@ -201,13 +201,11 @@ const getStudentAttendanceSummary = async (studentId, classId = null) => {
    const summary = {
       total: records.length,
       present: records.filter(r => r.status === 'present').length,
-      absent: records.filter(r => r.status === 'absent').length,
-      late: records.filter(r => r.status === 'late').length,
-      excused: records.filter(r => r.status === 'excused').length
+      absent: records.filter(r => r.status === 'absent').length
    };
 
    summary.attendanceRate = summary.total > 0
-      ? ((summary.present + summary.late) / summary.total * 100).toFixed(2)
+      ? (summary.present / summary.total * 100).toFixed(2)
       : 0;
 
    return summary;
