@@ -107,19 +107,18 @@ const ClassDetail = () => {
       <section className="class-detail-header">
         <button type="button" className="back-btn" onClick={() => navigate('/admin/classes')}>← Quay lại</button>
         <div className="header-main">
-          <div>
-            <h1>{classData?.name || 'Chi tiết lớp học'}</h1>
-            <p>{classData?.code || '-'} • {classData?.level || '-'} • {classData?.status || '-'}</p>
-          </div>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button className="btn-secondary" type="button" onClick={() => navigate(`/admin/classes/${id}/rooms`)}>
-              🏫 Gán phòng lịch học
-            </button>
-            <button className="btn-primary" onClick={() => { setGenerateForm({ templateId: '' }); setGenerateResult(null); setGenerateOpen(true); }}>
-              📅 Phát sinh Lịch học
-            </button>
-          </div>
+          <h1>{classData?.name || 'Chi tiết lớp học'}</h1>
+          <p>{classData?.code || '-'} • {classData?.level || '-'} • {classData?.status || '-'}</p>
         </div>
+      </section>
+
+      <section className="class-detail-actions">
+        <button className="btn-secondary" type="button" onClick={() => navigate(`/admin/classes/${id}/rooms`)}>
+          🏫 Gán phòng lịch học
+        </button>
+        <button className="btn-primary" onClick={() => { setGenerateForm({ templateId: '' }); setGenerateResult(null); setGenerateOpen(true); }}>
+          📅 Phát sinh Lịch học
+        </button>
       </section>
 
       <section className="class-detail-stats">
@@ -172,7 +171,7 @@ const ClassDetail = () => {
           <table>
             <thead>
               <tr>
-                <th>Họ tên</th><th>Email</th><th>SĐT</th><th>Vai trò</th><th>Trạng thái</th><th>Ngày tham gia</th><th>Hành động</th>
+                <th>Họ tên</th><th>Email</th><th>SĐT</th><th className="center-cell">Vai trò</th><th className="center-cell">Trạng thái</th><th>Ngày tham gia</th><th className="center-cell">Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -184,10 +183,10 @@ const ClassDetail = () => {
                   <td>{member.user?.firstName} {member.user?.lastName}</td>
                   <td>{member.user?.email || '-'}</td>
                   <td>{member.user?.phone || member.user?.phoneNumber || '-'}</td>
-                  <td><span className={`role-pill ${member.role}`}>{member.role === 'teacher' ? 'Giáo viên' : 'Học sinh'}</span></td>
-                  <td><span className={`status-pill ${member.status}`}>{member.status}</span></td>
+                  <td className="center-cell"><span className={`role-pill ${member.role}`}>{member.role === 'teacher' ? 'Giáo viên' : 'Học sinh'}</span></td>
+                  <td className="center-cell"><span className={`status-pill ${member.status}`}>{member.status}</span></td>
                   <td>{member.enrolledAt ? new Date(member.enrolledAt).toLocaleDateString('vi-VN') : '-'}</td>
-                  <td>
+                  <td className="center-cell">
                     <button type="button" className="icon-btn delete" title="Xóa" aria-label="Xóa thành viên" onClick={() => handleRemoveMember(member._id)}>🗑️</button>
                   </td>
                 </tr>
