@@ -14,4 +14,7 @@ router.get('/', classesController.getMyClasses);
 // @route   GET /api/student/classes/:id
 router.get('/:id', validateObjectId('id'), classesController.getClassById);
 
+// @route   GET /api/student/classes/:id/students
+router.get('/:id/students', validateObjectId('id'), classesController.getClassStudents);
+
 module.exports = router;

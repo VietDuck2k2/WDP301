@@ -24,6 +24,7 @@ import TeacherAnnouncements from './pages/teacher/TeacherAnnouncements';
 
 import StudentTimetable from './pages/student/StudentTimetable';
 import StudentClasses from './pages/student/StudentClasses';
+import StudentClassStudents from './pages/student/StudentClassStudents';
 import StudentAssignments from './pages/student/StudentAssignments';
 import AssignmentSubmit from './pages/student/AssignmentSubmit';
 import StudentGrades from './pages/student/StudentGrades';
@@ -71,6 +72,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
               <Route path="/student/timetable" element={<StudentTimetable />} />
               <Route path="/student/classes" element={<StudentClasses />} />
+              <Route path="/student/classes/:classId/students" element={<StudentClassStudents />} />
               <Route path="/student/assignments" element={<StudentAssignments />} />
               <Route path="/student/assignments/:id/submit" element={<AssignmentSubmit />} />
               <Route path="/student/grades" element={<StudentGrades />} />

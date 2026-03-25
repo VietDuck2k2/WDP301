@@ -4,6 +4,7 @@ export const studentApi = {
    // Classes
    getClasses: () => axiosInstance.get('/student/classes'),
    getClassById: (id) => axiosInstance.get(`/student/classes/${id}`),
+   getClassStudents: (classId) => axiosInstance.get(`/student/classes/${classId}/students`),
 
    // Timetable
    getTimetable: (params) => axiosInstance.get('/student/timetable', { params }),
