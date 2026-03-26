@@ -66,7 +66,7 @@ const getUserById = async (userId) => {
  * Create new user (admin only)
  */
 const createUser = async (userData) => {
-   const existingUser = await User.findOne({ email: userData.email });
+   const existingUser = await User.findOne({ email: userData.email, isActive: true });
    if (existingUser) {
       throw ApiError.conflict('Email already registered');
    }
@@ -82,6 +82,14 @@ const updateUser = async (userId, updateData) => {
    // Prevent password update through this method
    delete updateData.password;
 
+   // If email is being changed, check uniqueness
+   if (updateData.email) {
+      const existing = await User.findOne({ email: updateData.email, _id: { $ne: userId }, isActive: true });
+      if (existing) {
+         throw ApiError.conflict('Email already registered by another user');
+      }
+   }
+
    const user = await User.findByIdAndUpdate(
       userId,
       updateData,
@@ -91,6 +99,25 @@ const updateUser = async (userId, updateData) => {
    if (!user) {
       throw ApiError.notFound('User not found');
    }
+
+   return user;
+};
+
+/**
+ * Admin reset password (uses .save() to trigger bcrypt pre-hook)
+ */
+const adminResetPassword = async (userId, newPassword) => {
+   if (!newPassword || newPassword.length < 6) {
+      throw ApiError.badRequest('Password must be at least 6 characters');
+   }
+
+   const user = await User.findById(userId);
+   if (!user) {
+      throw ApiError.notFound('User not found');
+   }
+
+   user.password = newPassword;
+   await user.save();
 
    return user;
 };
@@ -128,6 +155,7 @@ module.exports = {
    getUserById,
    createUser,
    updateUser,
+   adminResetPassword,
    deleteUser,
    getUsersByRole
 };

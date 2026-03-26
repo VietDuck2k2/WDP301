@@ -22,8 +22,17 @@ const Users = () => {
   const [savingCreate, setSavingCreate] = useState(false);
 
   const [editingUser, setEditingUser] = useState(null);
-  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', phone: '', isActive: true });
+  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', phone: '', isActive: true, newPassword: '' });
   const [savingEdit, setSavingEdit] = useState(false);
+
+  // Import modal state
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importPreview, setImportPreview] = useState(null);
+  const [importResult, setImportResult] = useState(null);
+  const [defaultPassword, setDefaultPassword] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
 
   const fetchUsers = async (nextFilters = filters) => {
     setLoading(true);
@@ -84,8 +93,10 @@ const Users = () => {
     setEditForm({
       firstName: user.firstName || '',
       lastName: user.lastName || '',
+      email: user.email || '',
       phone: user.phone || user.phoneNumber || '',
       isActive: Boolean(user.isActive),
+      newPassword: '',
     });
   };
 
@@ -95,7 +106,15 @@ const Users = () => {
 
     setSavingEdit(true);
     try {
-      const res = await adminApi.updateUser(editingUser._id, editForm);
+      // Update profile fields (including email)
+      const { newPassword, ...profileData } = editForm;
+      const res = await adminApi.updateUser(editingUser._id, profileData);
+
+      // If password was provided, reset it separately
+      if (newPassword && newPassword.trim().length > 0) {
+        await adminApi.resetPassword(editingUser._id, newPassword.trim());
+      }
+
       if (res?.success) {
         setEditingUser(null);
         fetchUsers(filters);
@@ -123,6 +142,78 @@ const Users = () => {
     }
   };
 
+  // ---- Import handlers ----
+  const downloadTemplate = async () => {
+    try {
+      const res = await adminApi.downloadImportTemplate();
+      const url = window.URL.createObjectURL(new Blob([res]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'student_import_template.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download template failed:', error);
+      alert('Tải template thất bại');
+    }
+  };
+
+  const handlePreviewImport = async (file) => {
+    setImportFile(file);
+    setImportPreview(null);
+    setImportResult(null);
+    setPreviewing(true);
+    try {
+      const res = await adminApi.previewImport(file);
+      if (res?.success && res?.data) {
+        setImportPreview(res.data);
+        // Auto-fill default password hint
+        const firstReady = res.data.rows?.find(r => r.status === 'ready');
+        if (firstReady) {
+          setDefaultPassword(firstReady.email.split('@')[0] + '123');
+        }
+      }
+    } catch (error) {
+      console.error('Preview import failed:', error);
+      alert(error?.response?.data?.message || 'Preview thất bại');
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
+  const handleExecuteImport = async () => {
+    if (!importPreview) return;
+    const readyRows = importPreview.rows.filter(r => r.status === 'ready');
+    if (readyRows.length === 0) return;
+
+    setImporting(true);
+    try {
+      const res = await adminApi.executeImport({
+        rows: readyRows,
+        defaultPassword: defaultPassword || null
+      });
+      if (res?.success && res?.data) {
+        setImportResult(res.data);
+        fetchUsers(filters);
+      }
+    } catch (error) {
+      console.error('Execute import failed:', error);
+      alert(error?.response?.data?.message || 'Import thất bại');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const closeImportModal = () => {
+    setIsImportOpen(false);
+    setImportFile(null);
+    setImportPreview(null);
+    setImportResult(null);
+    setDefaultPassword('');
+  };
+
   return (
     <div className="admin-users-page">
       <section className="admin-users-header">
@@ -130,7 +221,11 @@ const Users = () => {
           <h1>User Management</h1>
           <p>Manage students, teachers, and admin accounts</p>
         </div>
-        <button type="button" title="Create User" aria-label="Create User" onClick={() => setIsCreateOpen(true)}>+</button>
+        <div className="header-actions">
+          <button type="button" className="btn-template" title="Tải Template Excel" onClick={downloadTemplate}>📥 Template</button>
+          <button type="button" className="btn-import" title="Import từ Excel" onClick={() => setIsImportOpen(true)}>📤 Import</button>
+          <button type="button" title="Create User" aria-label="Create User" onClick={() => setIsCreateOpen(true)}>+</button>
+        </div>
       </section>
 
       <section className="admin-users-stats">
@@ -301,26 +396,48 @@ const Users = () => {
       {editingUser && (
         <div className="modal-overlay" role="presentation" onClick={() => setEditingUser(null)}>
           <div className="modal-card" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <h2>Edit User</h2>
+            <h2>Chỉnh sửa tài khoản</h2>
             <form className="modal-form" onSubmit={handleEdit}>
               <div className="double-grid">
                 <input
-                  placeholder="First name"
+                  placeholder="Tên"
                   value={editForm.firstName}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, firstName: e.target.value }))}
                   required
                 />
                 <input
-                  placeholder="Last name"
+                  placeholder="Họ"
                   value={editForm.lastName}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, lastName: e.target.value }))}
                   required
                 />
               </div>
+
+              <label className="field-label">Email</label>
               <input
-                placeholder="Phone"
+                type="email"
+                placeholder="Email"
+                value={editForm.email}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                required
+              />
+
+              <input
+                placeholder="Số điện thoại"
                 value={editForm.phone}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+              />
+
+              <hr className="form-divider" />
+
+              <label className="field-label">Đổi mật khẩu <span className="hint">(để trống nếu không đổi)</span></label>
+              <input
+                type="text"
+                placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"
+                value={editForm.newPassword}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                minLength={editForm.newPassword ? 6 : undefined}
+                autoComplete="off"
               />
 
               <label className="check-row">
@@ -329,14 +446,143 @@ const Users = () => {
                   checked={editForm.isActive}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, isActive: e.target.checked }))}
                 />
-                Active account
+                Tài khoản hoạt động
               </label>
 
               <div className="modal-actions">
-                <button type="button" className="secondary" onClick={() => setEditingUser(null)}>Cancel</button>
-                <button type="submit" disabled={savingEdit}>{savingEdit ? 'Saving...' : 'Save Changes'}</button>
+                <button type="button" className="secondary" onClick={() => setEditingUser(null)}>Hủy</button>
+                <button type="submit" disabled={savingEdit}>{savingEdit ? 'Đang lưu...' : 'Lưu thay đổi'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isImportOpen && (
+        <div className="modal-overlay" role="presentation" onClick={closeImportModal}>
+          <div className="modal-card import-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <h2>📤 Import Học Sinh từ Excel</h2>
+
+            {!importResult ? (
+              <>
+                {/* File picker */}
+                <div className="import-upload-area">
+                  <label className="file-picker-label">
+                    <input
+                      type="file"
+                      accept=".xlsx"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handlePreviewImport(file);
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                    <span className="file-picker-btn">
+                      {importFile ? importFile.name : 'Chọn file Excel (.xlsx)'}
+                    </span>
+                  </label>
+                  {previewing && <p className="import-hint">Đang đọc file...</p>}
+                </div>
+
+                {/* Preview table */}
+                {importPreview && (
+                  <>
+                    <div className="import-summary">
+                      <span className="import-count ready">✅ {importPreview.summary.valid} sẵn sàng</span>
+                      <span className="import-count error">❌ {importPreview.summary.invalid} lỗi</span>
+                      <span>Tổng: {importPreview.summary.total}</span>
+                    </div>
+
+                    <div className="import-table-wrapper">
+                      <table className="import-preview-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Email</th>
+                            <th>Họ</th>
+                            <th>Tên</th>
+                            <th>Trạng thái</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {importPreview.rows.map((row, idx) => (
+                            <tr key={idx} className={row.status === 'error' ? 'row-error' : 'row-ready'}>
+                              <td>{row.rowIndex}</td>
+                              <td>{row.email || <em>-</em>}</td>
+                              <td>{row.lastName || <em>-</em>}</td>
+                              <td>{row.firstName || <em>-</em>}</td>
+                              <td>
+                                {row.status === 'ready'
+                                  ? <span className="status-ready">✅ Sẵn sàng</span>
+                                  : <span className="status-error" title={row.errors.join(', ')}>❌ {row.errors[0]}</span>
+                                }
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Default password */}
+                    <div className="import-password-row">
+                      <label>Mật khẩu mặc định:</label>
+                      <input
+                        type="text"
+                        value={defaultPassword}
+                        onChange={(e) => setDefaultPassword(e.target.value)}
+                        placeholder="emailPrefix + 123"
+                      />
+                    </div>
+
+                    <div className="modal-actions">
+                      <button type="button" className="secondary" onClick={closeImportModal}>Hủy</button>
+                      <button
+                        type="button"
+                        disabled={importing || importPreview.summary.valid === 0}
+                        onClick={handleExecuteImport}
+                      >
+                        {importing ? 'Đang import...' : `Import ${importPreview.summary.valid} học sinh`}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {!importPreview && !previewing && (
+                  <div className="modal-actions">
+                    <button type="button" className="secondary" onClick={closeImportModal}>Đóng</button>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Result screen */
+              <div className="import-result">
+                <div className="import-result-summary">
+                  <div className="result-card success">
+                    <h3>{importResult.summary.success}</h3>
+                    <p>Tạo thành công</p>
+                  </div>
+                  <div className="result-card failure">
+                    <h3>{importResult.summary.failed}</h3>
+                    <p>Thất bại</p>
+                  </div>
+                </div>
+
+                {importResult.failed.length > 0 && (
+                  <div className="import-failed-list">
+                    <h4>Chi tiết lỗi:</h4>
+                    <ul>
+                      {importResult.failed.map((f, i) => (
+                        <li key={i}><strong>{f.email}</strong>: {f.reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="modal-actions">
+                  <button type="button" onClick={closeImportModal}>Đóng</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

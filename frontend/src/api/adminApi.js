@@ -6,6 +6,18 @@ export const adminApi = {
   createUser: (payload) => axiosInstance.post('/admin/users', payload),
   updateUser: (id, payload) => axiosInstance.put(`/admin/users/${id}`, payload),
   deleteUser: (id) => axiosInstance.delete(`/admin/users/${id}`),
+  resetPassword: (id, newPassword) => axiosInstance.put(`/admin/users/${id}/reset-password`, { newPassword }),
+
+  // Bulk Student Import
+  downloadImportTemplate: () => axiosInstance.get('/admin/users/import/template', { responseType: 'blob' }),
+  previewImport: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axiosInstance.post('/admin/users/import/preview', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  executeImport: (payload) => axiosInstance.post('/admin/users/import/execute', payload),
 
   getClasses: (params = {}) => axiosInstance.get('/admin/classes', { params }),
   createClass: (payload) => axiosInstance.post('/admin/classes', payload),

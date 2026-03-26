@@ -21,7 +21,7 @@
   color: #64748b;
 }
 
-.admin-users-header button {
+.admin-users-header .header-actions button:last-child {
   border: 0;
   border-radius: 10px;
   background: #0ea5e9;
@@ -282,4 +282,209 @@ tbody td {
   .double-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Header action buttons ── */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-template,
+.btn-import {
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.btn-template:hover { background: #f0fdf4; border-color: #86efac; }
+.btn-import:hover   { background: #eff6ff; border-color: #93c5fd; }
+
+/* ── Import modal ── */
+.import-modal {
+  max-width: 720px;
+}
+
+.import-upload-area {
+  margin-bottom: 14px;
+}
+
+.file-picker-label {
+  display: block;
+  cursor: pointer;
+}
+
+.file-picker-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 22px;
+  color: #475569;
+  font-weight: 500;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.file-picker-btn:hover {
+  border-color: #0ea5e9;
+  background: #f0f9ff;
+}
+
+.import-hint {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+/* Summary badges */
+.import-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.import-count.ready { color: #16a34a; font-weight: 600; }
+.import-count.error  { color: #dc2626; font-weight: 600; }
+
+/* Preview table */
+.import-table-wrapper {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.import-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.import-preview-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 1;
+}
+
+.import-preview-table tbody tr.row-error {
+  background: #fef2f2;
+}
+
+.import-preview-table tbody tr.row-ready:nth-child(even) {
+  background: #f8fafc;
+}
+
+.status-ready { color: #16a34a; font-weight: 600; font-size: 0.82rem; }
+.status-error  { color: #dc2626; font-weight: 600; font-size: 0.82rem; }
+
+/* Password row */
+.import-password-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.import-password-row label {
+  color: #334155;
+  font-weight: 500;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.import-password-row input {
+  flex: 1;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+/* Result screen */
+.import-result-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.result-card {
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.result-card h3 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.result-card p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.result-card.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.result-card.failure {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.import-failed-list {
+  margin-bottom: 12px;
+}
+
+.import-failed-list h4 {
+  margin: 0 0 6px;
+  color: #b91c1c;
+}
+
+.import-failed-list ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #334155;
+  font-size: 0.88rem;
+}
+
+.import-failed-list li {
+  margin-bottom: 4px;
+}
+
+/* Edit modal field styles */
+.modal-form .field-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 4px;
+  margin-top: 6px;
+}
+
+.modal-form .field-label .hint {
+  font-weight: 400;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.modal-form .form-divider {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 12px 0 6px;
 }

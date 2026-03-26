@@ -1,4 +1,5 @@
 const userService = require('../../services/user.service');
+const importService = require('../../services/import.service');
 const ApiResponse = require('../../utils/apiResponse');
 
 /**
@@ -85,11 +86,76 @@ const getUsersByRole = async (req, res, next) => {
    }
 };
 
+/**
+ * @route   GET /api/admin/users/import/template
+ * @desc    Download Excel template for bulk student import
+ * @access  Private/Admin
+ */
+const downloadImportTemplate = async (req, res, next) => {
+   try {
+      const buffer = importService.generateTemplate();
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=student_import_template.xlsx');
+      res.send(buffer);
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
+ * @route   POST /api/admin/users/import/preview
+ * @desc    Upload Excel file and preview parsed/validated rows
+ * @access  Private/Admin
+ */
+const previewImport = async (req, res, next) => {
+   try {
+      if (!req.file) {
+         return next(require('../../utils/apiError').badRequest('Vui lòng chọn file Excel'));
+      }
+      const result = await importService.parseAndValidate(req.file.buffer);
+      ApiResponse.ok(res, result, 'Preview thành công');
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
+ * @route   POST /api/admin/users/import/execute
+ * @desc    Execute bulk import of student accounts
+ * @access  Private/Admin
+ */
+const executeBulkImport = async (req, res, next) => {
+   try {
+      const { rows, defaultPassword } = req.body;
+      if (!rows || !Array.isArray(rows) || rows.length === 0) {
+         return next(require('../../utils/apiError').badRequest('Không có dữ liệu để import'));
+      }
+      const result = await importService.executeImport(rows, defaultPassword || null);
+      ApiResponse.ok(res, result, `Import hoàn tất: ${result.summary.success} thành công, ${result.summary.failed} lỗi`);
+   } catch (error) {
+      next(error);
+   }
+};
+
+const adminResetPassword = async (req, res, next) => {
+   try {
+      const { newPassword } = req.body;
+      await userService.adminResetPassword(req.params.id, newPassword);
+      ApiResponse.ok(res, null, 'Password reset successfully');
+   } catch (error) {
+      next(error);
+   }
+};
+
 module.exports = {
    getAllUsers,
    getUserById,
    createUser,
    updateUser,
    deleteUser,
-   getUsersByRole
+   getUsersByRole,
+   downloadImportTemplate,
+   previewImport,
+   executeBulkImport,
+   adminResetPassword
 };
