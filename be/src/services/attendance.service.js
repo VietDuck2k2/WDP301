@@ -10,6 +10,13 @@ const verifyTeacherClassMembership = async (sessionId, teacherId) => {
    const session = await Session.findById(sessionId);
    if (!session) throw ApiError.notFound('Session not found');
 
+   // New rule: teacher can access if either:
+   // - they are assigned to the class (ClassMember), OR
+   // - they are assigned to THIS session via session.teacher (per-session assignment)
+   if (session.teacher && session.teacher.toString() === teacherId.toString()) {
+      return session;
+   }
+
    const membership = await ClassMember.findOne({
       class: session.class,
       user: teacherId,
@@ -18,7 +25,7 @@ const verifyTeacherClassMembership = async (sessionId, teacherId) => {
    });
 
    if (!membership) {
-      throw ApiError.forbidden('Bạn không có quyền xem thông tin buổi học này vì không phải là giáo viên của lớp.');
+      throw ApiError.forbidden('Bạn không có quyền xem thông tin buổi học này.');
    }
    return session;
 };

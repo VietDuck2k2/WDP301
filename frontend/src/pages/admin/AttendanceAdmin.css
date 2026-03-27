@@ -240,6 +240,26 @@ tbody td {
   color: #64748b;
 }
 
+.radio-group {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.row-future {
+  opacity: 0.55;
+}
+
+.future-alert {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .filter-row {
     grid-template-columns: 1fr;

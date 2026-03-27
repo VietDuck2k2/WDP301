@@ -262,6 +262,20 @@ const assignTeacher = async (classId, teacherId) => {
       throw ApiError.notFound('Class not found');
    }
 
+   // Ensure each class has ONLY ONE active teacher:
+   // deactivate other active teacher members before assigning the new one
+   await ClassMember.updateMany(
+      { class: classId, role: 'teacher', status: 'active', user: { $ne: teacherId } },
+      { status: 'dropped' }
+   );
+
+   // Ensure sessions of this class point to the newly assigned teacher
+   // so timetables can display the correct teacher name.
+   await Session.updateMany(
+      { class: classId },
+      { teacher: teacherId }
+   );
+
    // Check if already assigned
    const existing = await ClassMember.findOne({ class: classId, user: teacherId, role: 'teacher' });
    if (existing && existing.status === 'active') {

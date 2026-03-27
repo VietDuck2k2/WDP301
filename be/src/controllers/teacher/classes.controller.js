@@ -20,8 +20,19 @@ const getMyClasses = async (req, res, next) => {
          status: 'active'
       }).populate('class');
 
-      // Filter out any potential nulls if a class was deleted but membership wasn't cleaned up
-      const classes = memberships.map(m => m.class).filter(c => c);
+      const memberClasses = memberships.map(m => m.class).filter(c => c);
+
+      // Also include classes where teacher is assigned to any session (per-session assignment)
+      const sessionClassIds = await Session.find({ teacher: teacherId })
+         .distinct('class');
+
+      const extraClasses = await ClassType.find({ _id: { $in: sessionClassIds } });
+
+      const classMap = new Map();
+      [...memberClasses, ...extraClasses].forEach((c) => {
+         if (c?._id) classMap.set(c._id.toString(), c);
+      });
+      const classes = Array.from(classMap.values());
       ApiResponse.ok(res, classes);
    } catch (error) {
       next(error);
@@ -38,13 +49,13 @@ const getClassById = async (req, res, next) => {
       const { classId } = req.params;
       const teacherId = req.user._id;
 
-      // Security check: Verify the teacher is assigned to this class
+      // Security check: allow if teacher is class member OR has any session in this class
       const isTeacher = await ClassMember.exists({
          class: classId,
          user: teacherId,
          role: 'teacher',
          status: 'active'
-      });
+      }) || await Session.exists({ class: classId, teacher: teacherId });
 
       if (!isTeacher) {
          throw ApiError.forbidden('Bạn không có quyền xem thông tin lớp này.');
@@ -72,13 +83,13 @@ const getClassStudents = async (req, res, next) => {
       const { classId } = req.params;
       const teacherId = req.user._id;
 
-      // Security check: Verify the teacher is assigned to this class
+      // Security check: allow if teacher is class member OR has any session in this class
       const isTeacher = await ClassMember.exists({
          class: classId,
          user: teacherId,
          role: 'teacher',
          status: 'active'
-      });
+      }) || await Session.exists({ class: classId, teacher: teacherId });
 
       if (!isTeacher) {
          throw ApiError.forbidden('Chỉ giáo viên của lớp mới được xem danh sách học sinh.');
@@ -107,18 +118,20 @@ const getSessionsByClassId = async (req, res, next) => {
       const { classId } = req.params;
       const teacherId = req.user._id;
 
+      // For per-session teacher assignment: only return sessions taught by this teacher
+      // (If teacher is also class member, they still only see their sessions here)
       const isTeacher = await ClassMember.exists({
          class: classId,
          user: teacherId,
          role: 'teacher',
          status: 'active'
-      });
+      }) || await Session.exists({ class: classId, teacher: teacherId });
 
       if (!isTeacher) {
          throw ApiError.forbidden('Bạn không có quyền xem buổi học của lớp này.');
       }
 
-      const sessions = await Session.find({ class: classId })
+      const sessions = await Session.find({ class: classId, teacher: teacherId })
          .sort({ date: 1, startTime: 1 });
 
       ApiResponse.ok(res, sessions);

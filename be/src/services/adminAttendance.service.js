@@ -1,6 +1,8 @@
 const Attendance = require('../models/Attendance');
 const attendanceService = require('./attendance.service');
 const ApiError = require('../utils/apiError');
+const Session = require('../models/Session');
+const ClassMember = require('../models/ClassMember');
 
 /**
  * Get all attendance records (admin only, with filters)
@@ -72,6 +74,39 @@ const deleteAttendance = async (attendanceId) => {
 
 module.exports = {
    ...require('./attendance.service'),
+   // Admin view: do NOT default missing records to "absent".
+   // This allows "tương lai / chưa điểm danh" to stay blank and still be editable.
+   getSessionAttendance: async (sessionId) => {
+      const session = await Session.findById(sessionId).populate('class');
+      if (!session) throw ApiError.notFound('Session not found');
+
+      const classMembers = await ClassMember.find({
+         class: session.class._id,
+         role: 'student',
+         status: 'active'
+      }).populate('user', 'firstName lastName email phone code');
+
+      const attendanceRecords = await Attendance.find({ session: sessionId })
+         .populate('student', 'firstName lastName email phone code');
+
+      const byStudentId = new Map();
+      attendanceRecords.forEach((r) => {
+         byStudentId.set(r.student?._id?.toString(), r);
+      });
+
+      return classMembers.map((member) => {
+         const uid = member.user?._id?.toString();
+         const record = uid ? byStudentId.get(uid) : null;
+         return {
+            _id: record?._id || null,
+            student: member.user,
+            status: record ? (record.status || null) : null,
+            arrivedAt: record?.arrivedAt || null,
+            notes: record?.notes || null,
+            markedAt: record?.markedAt || null
+         };
+      });
+   },
    getAllAttendances,
    updateAttendance,
    deleteAttendance

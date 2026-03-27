@@ -9,8 +9,12 @@ const ClassDetail = () => {
   const navigate = useNavigate();
 
   const [classData, setClassData] = useState(null);
-  const [members, setMembers] = useState([]);
+  const [allMembers, setAllMembers] = useState([]);
   const [memberRoleFilter, setMemberRoleFilter] = useState('');
+  const members = useMemo(() => {
+    if (!memberRoleFilter) return allMembers;
+    return allMembers.filter((m) => m.role === memberRoleFilter);
+  }, [allMembers, memberRoleFilter]);
   const [loading, setLoading] = useState(false);
 
   const [teacherOptions, setTeacherOptions] = useState([]);
@@ -30,13 +34,13 @@ const ClassDetail = () => {
     try {
       const [classRes, memberRes, teacherRes, studentRes, tplRes] = await Promise.all([
         adminApi.getClassById(id),
-        adminApi.getClassMembers(id, memberRoleFilter),
+        adminApi.getClassMembers(id, ''), // always fetch ALL active members for correct dropdown filtering
         adminApi.getUsersByRole('teacher'),
         adminApi.getUsersByRole('student'),
         adminApi.getScheduleTemplates(),
       ]);
       if (classRes?.success) setClassData(classRes.data);
-      if (memberRes?.success) setMembers(memberRes.data || []);
+      if (memberRes?.success) setAllMembers(memberRes.data || []);
       if (teacherRes?.success) setTeacherOptions(teacherRes.data || []);
       if (studentRes?.success) setStudentOptions(studentRes.data || []);
       if (tplRes?.success) setTemplates(tplRes.data || []);
@@ -45,15 +49,41 @@ const ClassDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, memberRoleFilter]);
+  }, [id]);
 
   useEffect(() => { fetchClassData(); }, [fetchClassData]);
 
   const stats = useMemo(() => {
-    const teachers = members.filter(m => m.role === 'teacher').length;
-    const students = members.filter(m => m.role === 'student').length;
-    return { total: members.length, teachers, students };
-  }, [members]);
+    const teachers = allMembers.filter(m => m.role === 'teacher').length;
+    const students = allMembers.filter(m => m.role === 'student').length;
+    return { total: allMembers.length, teachers, students };
+  }, [allMembers]);
+
+  const assignedTeacherIds = useMemo(() => {
+    const set = new Set();
+    allMembers.forEach((m) => {
+      if (m.role === 'teacher' && m.user?._id) set.add(String(m.user._id));
+    });
+    return set;
+  }, [allMembers]);
+
+  const enrolledStudentIds = useMemo(() => {
+    const set = new Set();
+    allMembers.forEach((m) => {
+      if (m.role === 'student' && m.user?._id) set.add(String(m.user._id));
+    });
+    return set;
+  }, [allMembers]);
+
+  const filteredTeacherOptions = useMemo(() => {
+    // hide teachers already assigned to this class
+    return (teacherOptions || []).filter((t) => !assignedTeacherIds.has(String(t._id)));
+  }, [teacherOptions, assignedTeacherIds]);
+
+  const filteredStudentOptions = useMemo(() => {
+    // hide students already enrolled in this class
+    return (studentOptions || []).filter((s) => !enrolledStudentIds.has(String(s._id)));
+  }, [studentOptions, enrolledStudentIds]);
 
   const handleAssignTeacher = async () => {
     if (!selectedTeacherId) return;
@@ -133,7 +163,7 @@ const ClassDetail = () => {
           <div className="tool-row">
             <select value={selectedTeacherId} onChange={e => setSelectedTeacherId(e.target.value)}>
               <option value="">Chọn giáo viên</option>
-              {teacherOptions.map(t => (
+              {filteredTeacherOptions.map(t => (
                 <option key={t._id} value={t._id}>
                   {t.firstName} {t.lastName} ({t.email}){t.phone ? ` - ${t.phone}` : ''}
                 </option>
@@ -141,6 +171,11 @@ const ClassDetail = () => {
             </select>
             <button type="button" onClick={handleAssignTeacher}>Gán</button>
           </div>
+          {allMembers.some((m) => m.role === 'teacher') && (
+            <p className="hint-text" style={{ marginTop: 8 }}>
+              Mỗi lớp chỉ có 1 giáo viên. Gán giáo viên mới sẽ thay thế giáo viên cũ.
+            </p>
+          )}
         </div>
 
         <div className="tool-card">
@@ -148,7 +183,7 @@ const ClassDetail = () => {
           <div className="tool-row">
             <select value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
               <option value="">Chọn học sinh</option>
-              {studentOptions.map(s => (
+              {filteredStudentOptions.map(s => (
                 <option key={s._id} value={s._id}>{s.firstName} {s.lastName} ({s.email})</option>
               ))}
             </select>

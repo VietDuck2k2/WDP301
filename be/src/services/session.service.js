@@ -29,6 +29,50 @@ const parseLocalZeroHour = (dateInput) => {
 const normalizeRoom = (room) => (room ? String(room).trim() : '');
 
 /**
+ * Check if a teacher is already assigned at the same date + slotNumber.
+ * @param {string} teacherId - Teacher user id
+ * @param {Date|string} date - Session date
+ * @param {number} slotNumber - Slot number
+ * @param {string} [excludeSessionId] - Session ID to exclude (for updates)
+ * @returns {string|null} - Returns conflict message, or null if clear
+ */
+const checkTeacherConflict = async (teacherId, date, slotNumber, excludeSessionId = null) => {
+   if (!teacherId) return null; // no teacher assigned → no conflict possible
+   if (slotNumber === undefined || slotNumber === null || slotNumber === '') return null;
+
+   const normalizedSlotNumber = Number(slotNumber);
+   if (!Number.isFinite(normalizedSlotNumber)) return null;
+
+   const dayStart = parseLocalZeroHour(date);
+   const dayEnd = new Date(dayStart);
+   dayEnd.setHours(23, 59, 59, 999);
+
+   const conflictQuery = {
+      teacher: teacherId,
+      slotNumber: normalizedSlotNumber,
+      date: { $gte: dayStart, $lte: dayEnd },
+      status: { $ne: 'cancelled' }
+   };
+   if (excludeSessionId) conflictQuery._id = { $ne: excludeSessionId };
+
+   const conflict = await Session.findOne(conflictQuery).populate('class', 'name code');
+   if (conflict) {
+      const msg = `Giáo viên đã được xếp cho lớp ${conflict.class?.name || ''} (${conflict.class?.code || ''}) ` +
+         `vào slot ${slotNumber} ngày ${parseLocalZeroHour(date).toLocaleDateString('vi-VN')}.`;
+      return msg;
+   }
+   return null;
+};
+
+/**
+ * Throws if checkTeacherConflict returns a conflict message.
+ */
+const assertNoTeacherConflict = async (teacherId, date, slotNumber, excludeSessionId = null) => {
+   const msg = await checkTeacherConflict(teacherId, date, slotNumber, excludeSessionId);
+   if (msg) throw ApiError.conflict(msg);
+};
+
+/**
  * Check if a room is already booked at the same date + slotNumber.
  * @param {string} room - Room name
  * @param {Date|string} date - Session date
@@ -166,6 +210,8 @@ const createSession = async (sessionData) => {
 
    // Check room conflict (strict: throw on conflict for single session create)
    await assertNoRoomConflict(data.room, data.date, data.slotNumber);
+   // Check teacher conflict (cannot assign the same teacher to multiple classes in the same slot)
+   await assertNoTeacherConflict(data.teacher, data.date, data.slotNumber);
 
    const session = await Session.create(data);
    return session;
@@ -187,10 +233,12 @@ const updateSession = async (sessionId, updateData) => {
    const room = updateData.room !== undefined ? updateData.room : existing.room;
    const slotNumber = updateData.slotNumber !== undefined ? updateData.slotNumber : existing.slotNumber;
    const date = updateData.date !== undefined ? updateData.date : existing.date;
+   const teacher = updateData.teacher !== undefined ? updateData.teacher : existing.teacher;
 
    // Only check conflicts if the session is NOT being cancelled
    if (updateData.status !== 'cancelled') {
       await assertNoRoomConflict(room, date, slotNumber, sessionId);
+      await assertNoTeacherConflict(teacher, date, slotNumber, sessionId);
    }
 
    const session = await Session.findByIdAndUpdate(
@@ -247,7 +295,8 @@ const createMakeupSession = async (originalSessionId, makeupData) => {
    data.title = `Bù cho ${originalSession.title}`;
 
    // Check room conflict
-   await checkRoomConflict(data.room, data.date, data.slotNumber);
+   await assertNoRoomConflict(data.room, data.date, data.slotNumber);
+   await assertNoTeacherConflict(data.teacher, data.date, data.slotNumber);
 
    const session = await Session.create(data);
 
@@ -420,18 +469,33 @@ const getWeeklyTimetable = async (filters = {}) => {
 
    if (classId) query.class = classId;
 
-   // Teacher: lookup classes they are assigned to (sessions may not have teacher field set)
+   // Teacher: include sessions explicitly assigned to them (session.teacher),
+   // and also sessions of classes they are assigned to (legacy behavior).
    if (teacherId) {
       const teacherClasses = await ClassMember.find({
          user: teacherId,
          role: 'teacher',
          status: 'active'
       }).select('class');
-      // Merge with any existing classId filter
       const classIds = teacherClasses.map(m => m.class);
-      query.class = classId
-         ? { $in: classIds.filter(id => id.toString() === classId) }
-         : { $in: classIds };
+
+      // If client also filters by classId, keep it consistent.
+      const effectiveClassIds = classId
+         ? classIds.filter(id => id.toString() === String(classId))
+         : classIds;
+
+      // Prefer explicit per-session teacher assignment, but keep class membership too.
+      // This enables "đổi giáo viên theo từng buổi" to reflect in teacher timetable.
+      delete query.class;
+      query.$or = [
+         { teacher: teacherId },
+         ...(effectiveClassIds.length > 0 ? [{ class: { $in: effectiveClassIds } }] : [])
+      ];
+
+      if (classId) {
+         // also constrain the teacher-assigned sessions to this class
+         query.$and = [{ class: classId }];
+      }
    }
 
    // Student: lookup their enrolled classes first
@@ -448,6 +512,30 @@ const getWeeklyTimetable = async (filters = {}) => {
       .populate('class', 'name code level')
       .populate('teacher', 'firstName lastName email')
       .sort({ date: 1, startTime: 1 });
+
+   // Fallback: some sessions may not have `teacher` set.
+   // In that case, attach the active teacher of the session's class for display.
+   const classIdsMissingTeacher = [
+      ...new Set(
+         sessions
+            .filter((s) => !s.teacher && s.class?._id)
+            .map((s) => s.class._id.toString())
+      )
+   ];
+   let classTeacherMap = new Map();
+   if (classIdsMissingTeacher.length > 0) {
+      const teacherMembers = await ClassMember.find({
+         class: { $in: classIdsMissingTeacher },
+         role: 'teacher',
+         status: 'active'
+      }).populate('user', 'firstName lastName email');
+
+      classTeacherMap = new Map(
+         teacherMembers
+            .filter((m) => m.class && m.user)
+            .map((m) => [m.class.toString(), m.user])
+      );
+   }
 
    // Student timetable: attach attendance status per session card
    let attendanceMap = new Map();
@@ -477,6 +565,9 @@ const getWeeklyTimetable = async (filters = {}) => {
       const dayName = DAY_NAMES[dayOfWeek];
 
       const sessionObj = s.toObject ? s.toObject() : s;
+      if (!sessionObj.teacher && sessionObj.class?._id) {
+         sessionObj.teacher = classTeacherMap.get(String(sessionObj.class._id)) || null;
+      }
       if (studentId) {
          sessionObj.attendanceStatus = attendanceMap.get(String(s._id)) || null;
       }
@@ -510,6 +601,14 @@ const getWeeklyTimetable = async (filters = {}) => {
 const generateSessionsFromTemplate = async (classId, templateId, defaultRoom = '') => {
    const classData = await Class.findById(classId);
    if (!classData) throw ApiError.notFound('Class not found');
+
+   // Auto attach active teacher (if any) to generated sessions
+   const activeTeacherMember = await ClassMember.findOne({
+      class: classId,
+      role: 'teacher',
+      status: 'active'
+   }).select('user');
+   const activeTeacherId = activeTeacherMember?.user || null;
 
    const template = await ScheduleTemplate.findById(templateId);
    if (!template) throw ApiError.notFound('Schedule template not found');
@@ -569,6 +668,16 @@ const generateSessionsFromTemplate = async (classId, templateId, defaultRoom = '
                }
             }
 
+            // Check teacher conflict for the auto-attached active teacher (if any)
+            if (activeTeacherId) {
+               const teacherConflictMsg = await checkTeacherConflict(activeTeacherId, new Date(current), targetSlotNum);
+               if (teacherConflictMsg) {
+                  roomConflicts.push(teacherConflictMsg);
+                  sessionNumber++;
+                  continue;
+               }
+            }
+
             const session = await Session.create({
                class: classId,
                title: `Buổi ${sessionNumber}`,
@@ -577,6 +686,7 @@ const generateSessionsFromTemplate = async (classId, templateId, defaultRoom = '
                slotNumber: targetSlotNum,
                startTime: slot.startTime || slotDef.startTime,
                endTime: slot.endTime || slotDef.endTime,
+               teacher: activeTeacherId,
                room: roomName, // Assign room (may be empty string if not provided)
                status: 'scheduled'
             });

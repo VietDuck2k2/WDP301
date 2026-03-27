@@ -15,7 +15,7 @@ export default function TeacherClassDetail() {
 
   // Sessions grid (attendance per student)
   const [attendanceLoading, setAttendanceLoading] = useState(false);
-  const [attendanceGrid, setAttendanceGrid] = useState(null); // { [studentId]: ['present'|'absent', ...] }
+  const [attendanceGrid, setAttendanceGrid] = useState(null); // { [studentId]: [{ status, markedAt }, ...] }
 
   useEffect(() => {
     if (!id) return;
@@ -84,22 +84,25 @@ export default function TeacherClassDetail() {
 
         const gridByStudent = {};
         students.forEach((st) => {
-          gridByStudent[st._id] = Array(sessionsOrdered.length).fill('absent');
+          gridByStudent[st._id] = Array(sessionsOrdered.length).fill(null).map(() => ({ status: null, markedAt: null }));
         });
 
         sessionsOrdered.forEach((_, sessionIndex) => {
           const rows = attendanceResults[sessionIndex]?.data || [];
-          const statusByStudentId = new Map();
+          const byStudentId = new Map();
           rows.forEach((r) => {
             const sid = r?.student?._id;
             if (!sid) return;
-            statusByStudentId.set(sid.toString(), r?.status || 'absent');
+            byStudentId.set(sid.toString(), {
+              status: r?.status || null,
+              markedAt: r?.markedAt || null,
+            });
           });
 
           students.forEach((st) => {
             const sid = st?._id?.toString();
-            if (sid && statusByStudentId.has(sid)) {
-              gridByStudent[sid][sessionIndex] = statusByStudentId.get(sid);
+            if (sid && byStudentId.has(sid)) {
+              gridByStudent[sid][sessionIndex] = byStudentId.get(sid);
             }
           });
         });
@@ -228,13 +231,14 @@ export default function TeacherClassDetail() {
                     return students.map((st) => {
                     const sid = st?._id?.toString();
                     const statuses = attendanceGrid?.[sid] || null;
-                    const totalStarted = startedIndices.length;
+                    // % vắng = số buổi vắng (đã lưu điểm danh) / tổng TẤT CẢ buổi (kể cả chưa học)
+                    // Buổi tương lai/quên điểm danh vẫn hiển thị '-' nhưng vẫn nằm trong mẫu số.
+                    const totalAll = sessionsOrdered.length;
                     const absentCount = statuses
-                      ? startedIndices.filter((idx) => statuses[idx] === 'absent').length
+                      ? statuses.filter((c) => c?.markedAt && c?.status === 'absent').length
                       : 0;
-                    // % điểm danh = nghỉ/vắng / tổng số buổi học đã diễn ra
-                    const percent = statuses && totalStarted > 0
-                      ? Math.round((absentCount / totalStarted) * 100)
+                    const percent = statuses && totalAll > 0
+                      ? Math.round((absentCount / totalAll) * 100)
                       : null;
 
                     return (
@@ -249,7 +253,7 @@ export default function TeacherClassDetail() {
                         {Array(sessionsOrdered.length)
                           .fill(0)
                           .map((_, idx) => {
-                            const status = statuses ? statuses[idx] : null;
+                            const cell = statuses ? statuses[idx] : null;
                             // Buổi tương lai: chưa học => '-'
                             if (sessionFutureFlags[idx]) {
                               return (
@@ -259,9 +263,18 @@ export default function TeacherClassDetail() {
                               );
                             }
 
-                            const cellText = status === 'present' ? 'p' : 'a';
+                            // Quên điểm danh / chưa lưu: hiển thị '-'
+                            if (!cell?.markedAt) {
+                              return (
+                                <td key={`cell-${sid}-${idx}`} className="teacher-att-cell">
+                                  -
+                                </td>
+                              );
+                            }
+
+                            const cellText = cell.status === 'present' ? 'p' : 'a';
                             const cellClass =
-                              status === 'present' ? 'present' : 'absent';
+                              cell.status === 'present' ? 'present' : 'absent';
                             return (
                               <td key={`cell-${sid}-${idx}`} className={`teacher-att-cell ${cellClass}`}>
                                 {cellText}

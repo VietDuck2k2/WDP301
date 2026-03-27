@@ -56,30 +56,33 @@ const AttendanceAdmin = () => {
     }
   };
 
+  const isFutureSession = (session) => {
+    if (!session?.date || !session?.startTime) return false;
+    const dStr = session.date instanceof Date
+      ? session.date.toISOString().split('T')[0]
+      : String(session.date).split('T')[0];
+    const parts = dStr.split('-');
+    const [hh, mm] = String(session.startTime).split(':').map((n) => Number(n));
+    const start = parts.length === 3
+      ? new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), hh || 0, mm || 0, 0, 0)
+      : new Date(session.date);
+    if (parts.length !== 3) start.setHours(hh || 0, mm || 0, 0, 0);
+    return start.getTime() > Date.now();
+  };
+
   const handleInlineStatusChange = async (studentId, nextStatus) => {
+    if (isFutureSession(sessionDetail)) return;
     const target = detailRows.find((r) => r.student?._id === studentId);
     if (!target) return;
 
     const prevStatus = target.status;
+    const prevMarkedAt = target.markedAt;
     
     // Optimistic update
     setDetailRows(prev => prev.map(r => r.student?._id === studentId ? { ...r, status: nextStatus } : r));
 
     setSavingStudentId(studentId);
     try {
-      // If student already has attendanceId, update it. 
-      // If not, we might need a "bulk update" or "create record" logic.
-      // Based on our controllers, adminApi.updateAttendance usually takes recordId.
-      // If record doesn't exist, we send a bulk update for the session.
-      
-      const payload = {
-         attendanceList: detailRows.map(r => ({
-            studentId: r.student._id,
-            status: r.student._id === studentId ? nextStatus : (r.status || 'present'),
-            notes: r.notes || ''
-         }))
-      };
-
       // Since updateAttendance is usually for single records, for Admin we'll leverage the Teacher bulk API logic or similar if available for Admin
       // However, usually center systems let Admin edit the session's overall attendance.
       // Assuming existing backend 'updateAttendance' updates specific record.
@@ -87,11 +90,26 @@ const AttendanceAdmin = () => {
       if (target._id) {
          await adminApi.updateAttendance(target._id, { status: nextStatus });
       } else {
-         // Create a bulk update context if this record isn't initially created (same behavior as teacher)
-         await adminApi.postSessionAttendanceBulk(sessionDetail._id, payload);
+         // Upsert ONLY this student (avoid auto-marking the whole class)
+         await adminApi.postSessionAttendanceBulk(sessionDetail._id, {
+            attendanceList: [{
+               studentId,
+               status: nextStatus,
+               notes: target.notes || ''
+            }]
+         });
       }
+
+      // Mark as "saved" locally so future cells are not treated as blank anymore
+      setDetailRows(prev =>
+        prev.map(r =>
+          r.student?._id === studentId
+            ? { ...r, markedAt: r.markedAt || new Date().toISOString() }
+            : r
+        )
+      );
     } catch (error) {
-      setDetailRows(prev => prev.map(r => r.student?._id === studentId ? { ...r, status: prevStatus } : r));
+      setDetailRows(prev => prev.map(r => r.student?._id === studentId ? { ...r, status: prevStatus, markedAt: prevMarkedAt } : r));
       alert(error?.response?.data?.message || 'Update failed');
     } finally {
       setSavingStudentId('');
@@ -199,6 +217,11 @@ const AttendanceAdmin = () => {
                <span>Ngày: {formatDate(sessionDetail.date)}</span>
                <span>Giờ: {sessionDetail.startTime}-{sessionDetail.endTime}</span>
             </div>
+            {isFutureSession(sessionDetail) && (
+              <div className="future-alert">
+                Buổi học chưa đến ngày/giờ. Chưa thể điểm danh.
+              </div>
+            )}
 
             <div className="table-wrapper">
               <table className="modal-table">
@@ -214,7 +237,7 @@ const AttendanceAdmin = () => {
                   {detailLoading ? (
                     <tr><td colSpan="4">Đang tải danh sách...</td></tr>
                   ) : detailRows.map((row) => (
-                    <tr key={row.student?._id}>
+                    <tr key={row.student?._id} className={isFutureSession(sessionDetail) ? 'row-future' : ''}>
                       <td>
                          <div className="student-info">
                             <strong>{row.student?.firstName} {row.student?.lastName}</strong>
@@ -223,7 +246,7 @@ const AttendanceAdmin = () => {
                       </td>
                       <td>{row.student?.phone || row.student?.phoneNumber || '-'}</td>
                       <td>
-                        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                        <div className={`radio-group ${isFutureSession(sessionDetail) ? 'disabled' : ''}`}>
                           {statusOptions.map((opt) => (
                             <label
                               key={opt.value}
@@ -231,16 +254,16 @@ const AttendanceAdmin = () => {
                                 display: 'flex',
                                 gap: '6px',
                                 alignItems: 'center',
-                                opacity: savingStudentId === row.student?._id ? 0.8 : 1,
-                                cursor: savingStudentId === row.student?._id ? 'not-allowed' : 'pointer',
+                                opacity: (savingStudentId === row.student?._id || isFutureSession(sessionDetail)) ? 0.55 : 1,
+                                cursor: (savingStudentId === row.student?._id || isFutureSession(sessionDetail)) ? 'not-allowed' : 'pointer',
                               }}
                             >
                               <input
                                 type="radio"
                                 name={`admin-att-status-${row.student?._id}`}
                                 value={opt.value}
-                                checked={(row.status || 'absent') === opt.value}
-                                disabled={savingStudentId === row.student?._id}
+                                checked={row.status === opt.value}
+                                disabled={savingStudentId === row.student?._id || isFutureSession(sessionDetail)}
                                 onChange={() => handleInlineStatusChange(row.student?._id, opt.value)}
                               />
                               <span>{opt.label}</span>

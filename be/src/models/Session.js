@@ -100,6 +100,22 @@ sessionSchema.index(
    }
 );
 
+// [IMPROVEMENT] Unique compound index to prevent race-condition double-booking of a teacher.
+// Applies only when: teacher is set AND session is not cancelled.
+// sparse:true ensures rows with empty teacher are excluded from uniqueness check.
+sessionSchema.index(
+   { teacher: 1, date: 1, slotNumber: 1 },
+   {
+      unique: true,
+      sparse: true,
+      partialFilterExpression: {
+         teacher: { $exists: true, $ne: null },
+         status: { $ne: 'cancelled' }
+      },
+      name: 'teacher_date_slot_unique'
+   }
+);
+
 const Session = mongoose.model('Session', sessionSchema);
 
 module.exports = Session;

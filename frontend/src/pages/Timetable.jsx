@@ -224,9 +224,12 @@ const Timetable = ({ role, fixedClassId }) => {
       const slotDef = getSlotByNumber(sessionForm.slotNumber) || {};
       const payload = {
         ...sessionForm,
+        // Backend Session schema uses `teacher` field (ObjectId), not `teacherId`
+        teacher: sessionForm.teacherId || undefined,
         startTime: slotDef.startTime || '',
         endTime: slotDef.endTime || ''
       };
+      delete payload.teacherId;
 
       if (editingSession) {
         res = await timetableApi.updateSession(editingSession._id, payload);
@@ -303,7 +306,7 @@ const Timetable = ({ role, fixedClassId }) => {
         <div className="session-time">{timeLabel}</div>
         <div className="session-title">{session.title}</div>
         <div className="session-class">{session.class?.name || 'Unknown Class'}</div>
-        {role !== 'teacher' && session.teacher && (
+        {session.teacher && (
           <div className="session-teacher">👤 {session.teacher.firstName} {session.teacher.lastName}</div>
         )}
         {session.room && <div className="session-room">📍 {session.room}</div>}
