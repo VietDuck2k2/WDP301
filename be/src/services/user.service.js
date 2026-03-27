@@ -7,17 +7,13 @@ const ApiError = require('../utils/apiError');
 const getAllUsers = async (filters = {}) => {
    const { role, isActive, search, page = 1, limit = 20 } = filters;
 
-   // By default, admin list shows active users only.
-   // Soft-deleted users (isActive=false) are hidden unless explicitly requested.
-   const query = { isActive: true };
+   // Empty query = show all users (active + inactive)
+   // Only filter by isActive when explicitly requested ('true' / 'false')
+   const query = {};
 
    if (role) query.role = role;
    if (isActive !== undefined && isActive !== '') {
-      if (typeof isActive === 'boolean') {
-         query.isActive = isActive;
-      } else if (typeof isActive === 'string') {
-         query.isActive = isActive.toLowerCase() === 'true';
-      }
+      query.isActive = typeof isActive === 'boolean' ? isActive : isActive.toLowerCase() === 'true';
    }
    if (search) {
       query.$or = [
@@ -123,14 +119,27 @@ const adminResetPassword = async (userId, newPassword) => {
 };
 
 /**
- * Delete user (soft delete)
+ * Deactivate user (soft delete — keep in DB, set isActive=false)
  */
-const deleteUser = async (userId) => {
+const deactivateUser = async (userId) => {
    const user = await User.findByIdAndUpdate(
       userId,
       { isActive: false },
       { new: true }
    );
+
+   if (!user) {
+      throw ApiError.notFound('User not found');
+   }
+
+   return user;
+};
+
+/**
+ * Permanently delete user from database
+ */
+const deleteUser = async (userId) => {
+   const user = await User.findByIdAndDelete(userId);
 
    if (!user) {
       throw ApiError.notFound('User not found');
@@ -150,12 +159,55 @@ const getUsersByRole = async (role) => {
    return users;
 };
 
+/**
+ * Bulk delete users permanently
+ */
+const bulkDeleteUsers = async (userIds) => {
+   if (!Array.isArray(userIds) || userIds.length === 0) {
+      throw ApiError.badRequest('No user IDs provided');
+   }
+   const result = await User.deleteMany({ _id: { $in: userIds } });
+   return { deletedCount: result.deletedCount };
+};
+
+/**
+ * Bulk deactivate users (isActive=false)
+ */
+const bulkDeactivateUsers = async (userIds) => {
+   if (!Array.isArray(userIds) || userIds.length === 0) {
+      throw ApiError.badRequest('No user IDs provided');
+   }
+   const result = await User.updateMany(
+      { _id: { $in: userIds } },
+      { isActive: false }
+   );
+   return { modifiedCount: result.modifiedCount };
+};
+
+/**
+ * Bulk activate users (isActive=true)
+ */
+const bulkActivateUsers = async (userIds) => {
+   if (!Array.isArray(userIds) || userIds.length === 0) {
+      throw ApiError.badRequest('No user IDs provided');
+   }
+   const result = await User.updateMany(
+      { _id: { $in: userIds } },
+      { isActive: true }
+   );
+   return { modifiedCount: result.modifiedCount };
+};
+
 module.exports = {
    getAllUsers,
    getUserById,
    createUser,
    updateUser,
    adminResetPassword,
+   deactivateUser,
    deleteUser,
-   getUsersByRole
+   getUsersByRole,
+   bulkDeleteUsers,
+   bulkDeactivateUsers,
+   bulkActivateUsers
 };

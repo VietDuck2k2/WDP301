@@ -6,7 +6,11 @@ export const adminApi = {
   createUser: (payload) => axiosInstance.post('/admin/users', payload),
   updateUser: (id, payload) => axiosInstance.put(`/admin/users/${id}`, payload),
   deleteUser: (id) => axiosInstance.delete(`/admin/users/${id}`),
+  deactivateUser: (id) => axiosInstance.patch(`/admin/users/${id}/deactivate`),
   resetPassword: (id, newPassword) => axiosInstance.put(`/admin/users/${id}/reset-password`, { newPassword }),
+  bulkDeleteUsers: (userIds) => axiosInstance.post('/admin/users/bulk/delete', { userIds }),
+  bulkDeactivateUsers: (userIds) => axiosInstance.patch('/admin/users/bulk/deactivate', { userIds }),
+  bulkActivateUsers: (userIds) => axiosInstance.patch('/admin/users/bulk/activate', { userIds }),
 
   // Bulk Student Import
   downloadImportTemplate: () => axiosInstance.get('/admin/users/import/template', { responseType: 'blob' }),

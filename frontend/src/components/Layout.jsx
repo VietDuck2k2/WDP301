@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
+import { authApi } from '../api/authApi';
 import './Layout.css';
 
 const adminNav = [
@@ -31,9 +32,103 @@ const studentNav = [
   { to: '/student/announcements', label: 'Thông báo', icon: '📢' },
 ];
 
+// ── Change Password Modal ──────────────────────────────────────────────────
+const ChangePasswordModal = ({ onClose }) => {
+  const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [showPwd, setShowPwd] = useState({ current: false, newPwd: false, confirm: false });
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null); // { type: 'success'|'error', msg }
+
+  const showToast = (type, msg) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (form.newPassword !== form.confirmPassword) {
+      return showToast('error', 'Mật khẩu xác nhận không khớp!');
+    }
+    if (form.newPassword.length < 6) {
+      return showToast('error', 'Mật khẩu mới phải ít nhất 6 ký tự!');
+    }
+    setLoading(true);
+    try {
+      await authApi.changePassword(form.currentPassword, form.newPassword);
+      showToast('success', '✅ Đổi mật khẩu thành công!');
+      setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(onClose, 1500);
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Đổi mật khẩu thất bại!';
+      showToast('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggle = (key) => setShowPwd((p) => ({ ...p, [key]: !p[key] }));
+
+  const fields = [
+    { key: 'currentPassword', label: 'Mật khẩu hiện tại', showKey: 'current' },
+    { key: 'newPassword',     label: 'Mật khẩu mới',      showKey: 'newPwd'  },
+    { key: 'confirmPassword', label: 'Xác nhận mật khẩu', showKey: 'confirm' },
+  ];
+
+  return (
+    <div className="cpw-overlay" onClick={onClose}>
+      <div className="cpw-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="cpw-header">
+          <h3>🔑 Đổi mật khẩu</h3>
+          <button className="cpw-close" onClick={onClose} aria-label="Đóng">✕</button>
+        </div>
+
+        {toast && <div className={`cpw-toast ${toast.type}`}>{toast.msg}</div>}
+
+        <form onSubmit={handleSubmit} className="cpw-form" autoComplete="off">
+          {fields.map(({ key, label, showKey }) => (
+            <div className="cpw-field" key={key}>
+              <label>{label}</label>
+              <div className="cpw-input-wrap">
+                <input
+                  type={showPwd[showKey] ? 'text' : 'password'}
+                  value={form[key]}
+                  onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
+                  placeholder={label}
+                  required
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="cpw-eye"
+                  onClick={() => toggle(showKey)}
+                  aria-label="Toggle visibility"
+                  tabIndex={-1}
+                >
+                  {showPwd[showKey] ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <div className="cpw-actions">
+            <button type="button" className="cpw-btn cancel" onClick={onClose} disabled={loading}>
+              Hủy
+            </button>
+            <button type="submit" className="cpw-btn submit" disabled={loading}>
+              {loading ? '⏳ Đang lưu...' : 'Đổi mật khẩu'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ── Layout ─────────────────────────────────────────────────────────────────
 const Layout = () => {
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showChangePwd, setShowChangePwd] = useState(false);
 
   const nav = useMemo(() => {
     if (user?.role === 'admin') return adminNav;
@@ -73,6 +168,14 @@ const Layout = () => {
         </nav>
 
         <div className="sidebar-footer">
+          <button
+            className="change-pwd-btn"
+            onClick={() => setShowChangePwd(true)}
+            title="Đổi mật khẩu"
+          >
+            <span className="icon">🔑</span>
+            <span className="text">Đổi mật khẩu</span>
+          </button>
           <button onClick={logout} className="logout-btn">
             <span className="icon">🚪</span>
             <span className="text">Logout</span>
@@ -95,6 +198,8 @@ const Layout = () => {
           <Outlet />
         </main>
       </div>
+
+      {showChangePwd && <ChangePasswordModal onClose={() => setShowChangePwd(false)} />}
     </div>
   );
 };

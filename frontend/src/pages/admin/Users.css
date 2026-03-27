@@ -488,3 +488,62 @@ tbody td {
   border-top: 1px solid #e2e8f0;
   margin: 12px 0 6px;
 }
+
+/* ============================================================
+   Bulk Action Bar
+   ============================================================ */
+.bulk-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #1e293b;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  animation: slideDown 0.18s ease;
+  flex-wrap: wrap;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.bulk-count {
+  font-weight: 600;
+  color: #f1f5f9;
+  font-size: 0.88rem;
+  margin-right: 6px;
+}
+
+.bulk-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 7px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.bulk-btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+.bulk-btn:active { transform: translateY(0); }
+
+.bulk-btn.activate   { background: #22c55e; color: #fff; }
+.bulk-btn.deactivate { background: #f59e0b; color: #fff; }
+.bulk-btn.delete     { background: #ef4444; color: #fff; }
+.bulk-btn.cancel     { background: #475569; color: #f1f5f9; }
+
+/* ============================================================
+   Row selection highlight
+   ============================================================ */
+tr.row-selected td {
+  background: #eff6ff !important;
+}
+
+/* Checkbox column */
+table th:first-child,
+table td:first-child {
+  text-align: center;
+  padding-left: 10px;
+  padding-right: 6px;
+}

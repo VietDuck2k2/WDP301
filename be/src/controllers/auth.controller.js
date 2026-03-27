@@ -76,9 +76,31 @@ const logout = (req, res, next) => {
    }
 };
 
+/**
+ * @route   PUT /api/auth/change-password
+ * @desc    Change password for logged-in user
+ * @access  Private
+ */
+const changePassword = async (req, res, next) => {
+   try {
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+         return next(require('../utils/apiError').badRequest('currentPassword and newPassword are required'));
+      }
+      if (newPassword.length < 6) {
+         return next(require('../utils/apiError').badRequest('New password must be at least 6 characters'));
+      }
+      const result = await authService.changePassword(req.user._id, currentPassword, newPassword);
+      ApiResponse.ok(res, result, 'Password changed successfully');
+   } catch (error) {
+      next(error);
+   }
+};
+
 module.exports = {
    register,
    login,
    refreshToken,
-   logout
+   logout,
+   changePassword
 };

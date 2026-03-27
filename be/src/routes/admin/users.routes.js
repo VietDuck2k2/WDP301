@@ -43,6 +43,17 @@ router.post('/import/preview', importUpload.single('file'), usersController.prev
 // @route   POST /api/admin/users/import/execute
 router.post('/import/execute', usersController.executeBulkImport);
 
+// --- Bulk action routes (must be BEFORE /:id) ---
+
+// @route   POST /api/admin/users/bulk/delete
+router.post('/bulk/delete', usersController.bulkDeleteUsers);
+
+// @route   PATCH /api/admin/users/bulk/deactivate
+router.patch('/bulk/deactivate', usersController.bulkDeactivateUsers);
+
+// @route   PATCH /api/admin/users/bulk/activate
+router.patch('/bulk/activate', usersController.bulkActivateUsers);
+
 // @route   GET /api/admin/users/:id
 router.get('/:id', validateObjectId('id'), usersController.getUserById);
 
@@ -59,6 +70,9 @@ router.put('/:id', validateObjectId('id'), usersController.updateUser);
 
 // @route   PUT /api/admin/users/:id/reset-password
 router.put('/:id/reset-password', validateObjectId('id'), usersController.adminResetPassword);
+
+// @route   PATCH /api/admin/users/:id/deactivate
+router.patch('/:id/deactivate', validateObjectId('id'), usersController.deactivateUser);
 
 // @route   DELETE /api/admin/users/:id
 router.delete('/:id', validateObjectId('id'), usersController.deleteUser);

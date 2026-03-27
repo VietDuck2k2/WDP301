@@ -14,8 +14,11 @@ const emptyCreateForm = {
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 20 });
-  const [filters, setFilters] = useState({ role: '', search: '', page: 1, limit: 20 });
+  const [filters, setFilters] = useState({ role: '', isActive: '', search: '', page: 1, limit: 20 });
   const [loading, setLoading] = useState(false);
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState(emptyCreateForm);
@@ -36,6 +39,7 @@ const Users = () => {
 
   const fetchUsers = async (nextFilters = filters) => {
     setLoading(true);
+    setSelectedIds([]);
     try {
       const res = await adminApi.getUsers(nextFilters);
       if (res?.success && res?.data) {
@@ -128,7 +132,7 @@ const Users = () => {
   };
 
   const handleDelete = async (userId) => {
-    const confirmed = window.confirm('Delete this user? This action cannot be undone.');
+    const confirmed = window.confirm('⚠️ Xóa vĩnh viễn user này? Hành động này không thể hoàn tác!');
     if (!confirmed) return;
 
     try {
@@ -139,6 +143,81 @@ const Users = () => {
     } catch (error) {
       console.error('Delete user failed:', error);
       alert(error?.response?.data?.message || 'Delete user failed');
+    }
+  };
+
+  const handleDeactivate = async (user) => {
+    const action = user.isActive ? 'inactive' : 'active';
+    const confirmed = window.confirm(`Chuyển tài khoản "${user.firstName} ${user.lastName}" sang trạng thái ${action}?`);
+    if (!confirmed) return;
+
+    try {
+      let res;
+      if (user.isActive) {
+        // Deactivate
+        res = await adminApi.deactivateUser(user._id);
+      } else {
+        // Reactivate via updateUser
+        res = await adminApi.updateUser(user._id, { isActive: true });
+      }
+      if (res?.success) {
+        fetchUsers(filters);
+      }
+    } catch (error) {
+      console.error('Toggle status failed:', error);
+      alert(error?.response?.data?.message || 'Thao tác thất bại');
+    }
+  };
+
+  // ---- Bulk action handlers ----
+  const allPageIds = users.map((u) => u._id);
+  const isAllSelected = allPageIds.length > 0 && allPageIds.every((id) => selectedIds.includes(id));
+  const isIndeterminate = selectedIds.length > 0 && !isAllSelected;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !allPageIds.includes(id)));
+    } else {
+      setSelectedIds((prev) => [...new Set([...prev, ...allPageIds])]);
+    }
+  };
+
+  const toggleSelectOne = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    const confirmed = window.confirm(`⚠️ Xóa vĩnh viễn ${selectedIds.length} user? Hành động này không thể hoàn tác!`);
+    if (!confirmed) return;
+    try {
+      const res = await adminApi.bulkDeleteUsers(selectedIds);
+      if (res?.success) { setSelectedIds([]); fetchUsers(filters); }
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Bulk delete thất bại');
+    }
+  };
+
+  const handleBulkDeactivate = async () => {
+    const confirmed = window.confirm(`Đặt Inactive ${selectedIds.length} user?`);
+    if (!confirmed) return;
+    try {
+      const res = await adminApi.bulkDeactivateUsers(selectedIds);
+      if (res?.success) { setSelectedIds([]); fetchUsers(filters); }
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Bulk deactivate thất bại');
+    }
+  };
+
+  const handleBulkActivate = async () => {
+    const confirmed = window.confirm(`Kích hoạt ${selectedIds.length} user?`);
+    if (!confirmed) return;
+    try {
+      const res = await adminApi.bulkActivateUsers(selectedIds);
+      if (res?.success) { setSelectedIds([]); fetchUsers(filters); }
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Bulk activate thất bại');
     }
   };
 
@@ -247,6 +326,15 @@ const Users = () => {
             <option value="student">Student</option>
           </select>
 
+          <select
+            value={filters.isActive}
+            onChange={(e) => setFilters((prev) => ({ ...prev, isActive: e.target.value, page: 1 }))}
+          >
+            <option value="">All status</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+
           <input
             type="text"
             placeholder="Search by name or email"
@@ -255,10 +343,30 @@ const Users = () => {
           />
         </div>
 
+        {/* Bulk action bar */}
+        {selectedIds.length > 0 && (
+          <div className="bulk-action-bar">
+            <span className="bulk-count">{selectedIds.length} user đã chọn</span>
+            <button className="bulk-btn activate" onClick={handleBulkActivate}>✅ Active</button>
+            <button className="bulk-btn deactivate" onClick={handleBulkDeactivate}>🚫 Inactive</button>
+            <button className="bulk-btn delete" onClick={handleBulkDelete}>🗑️ Xóa vĩnh viễn</button>
+            <button className="bulk-btn cancel" onClick={() => setSelectedIds([])}>✕ Bỏ chọn</button>
+          </div>
+        )}
+
         <div className="table-wrapper">
           <table>
             <thead>
               <tr>
+                <th style={{ width: '36px' }}>
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    ref={(el) => { if (el) el.indeterminate = isIndeterminate; }}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all users on this page"
+                  />
+                </th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Role</th>
@@ -270,12 +378,20 @@ const Users = () => {
             <tbody>
               {!loading && users.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="empty-row">No users found.</td>
+                  <td colSpan="7" className="empty-row">No users found.</td>
                 </tr>
               )}
 
               {users.map((user) => (
-                <tr key={user._id}>
+                <tr key={user._id} className={selectedIds.includes(user._id) ? 'row-selected' : ''}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(user._id)}
+                      onChange={() => toggleSelectOne(user._id)}
+                      aria-label={`Select ${user.firstName} ${user.lastName}`}
+                    />
+                  </td>
                   <td>{user.firstName} {user.lastName}</td>
                   <td>{user.email}</td>
                   <td><span className={`role-pill ${user.role}`}>{user.role}</span></td>
@@ -298,9 +414,18 @@ const Users = () => {
                       </button>
                       <button
                         type="button"
+                        className={`icon-btn ${user.isActive ? 'deactivate' : 'activate'}`}
+                        title={user.isActive ? 'Đặt Inactive' : 'Kích hoạt lại'}
+                        aria-label={user.isActive ? 'Deactivate user' : 'Activate user'}
+                        onClick={() => handleDeactivate(user)}
+                      >
+                        {user.isActive ? '🚫' : '✅'}
+                      </button>
+                      <button
+                        type="button"
                         className="icon-btn delete"
-                        title="Delete"
-                        aria-label="Delete user"
+                        title="Xóa vĩnh viễn"
+                        aria-label="Delete user permanently"
                         onClick={() => handleDelete(user._id)}
                       >
                         🗑️

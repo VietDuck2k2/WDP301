@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
 const { validate, validateEmail } = require('../middlewares/validate.middleware');
+const { authenticate } = require('../middlewares/auth.middleware');
 
 // @route   POST /api/auth/register
 router.post(
@@ -23,5 +24,8 @@ router.post('/refresh-token', authController.refreshToken);
 
 // @route   POST /api/auth/logout
 router.post('/logout', authController.logout);
+
+// @route   PUT /api/auth/change-password  (Private)
+router.put('/change-password', authenticate, authController.changePassword);
 
 module.exports = router;

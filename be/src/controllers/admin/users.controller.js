@@ -59,14 +59,28 @@ const updateUser = async (req, res, next) => {
 };
 
 /**
+ * @route   PATCH /api/admin/users/:id/deactivate
+ * @desc    Deactivate user (soft delete — isActive=false)
+ * @access  Private/Admin
+ */
+const deactivateUser = async (req, res, next) => {
+   try {
+      const user = await userService.deactivateUser(req.params.id);
+      ApiResponse.ok(res, user, 'User deactivated successfully');
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
  * @route   DELETE /api/admin/users/:id
- * @desc    Deactivate user
+ * @desc    Permanently delete user
  * @access  Private/Admin
  */
 const deleteUser = async (req, res, next) => {
    try {
-      const user = await userService.deleteUser(req.params.id);
-      ApiResponse.ok(res, user, 'User deactivated successfully');
+      await userService.deleteUser(req.params.id);
+      ApiResponse.ok(res, null, 'User permanently deleted');
    } catch (error) {
       next(error);
    }
@@ -147,15 +161,61 @@ const adminResetPassword = async (req, res, next) => {
    }
 };
 
+/**
+ * @route   POST /api/admin/users/bulk/delete
+ * @desc    Permanently delete multiple users
+ */
+const bulkDeleteUsers = async (req, res, next) => {
+   try {
+      const { userIds } = req.body;
+      const result = await userService.bulkDeleteUsers(userIds);
+      ApiResponse.ok(res, result, `${result.deletedCount} user(s) permanently deleted`);
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
+ * @route   PATCH /api/admin/users/bulk/deactivate
+ * @desc    Deactivate multiple users
+ */
+const bulkDeactivateUsers = async (req, res, next) => {
+   try {
+      const { userIds } = req.body;
+      const result = await userService.bulkDeactivateUsers(userIds);
+      ApiResponse.ok(res, result, `${result.modifiedCount} user(s) deactivated`);
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
+ * @route   PATCH /api/admin/users/bulk/activate
+ * @desc    Activate multiple users
+ */
+const bulkActivateUsers = async (req, res, next) => {
+   try {
+      const { userIds } = req.body;
+      const result = await userService.bulkActivateUsers(userIds);
+      ApiResponse.ok(res, result, `${result.modifiedCount} user(s) activated`);
+   } catch (error) {
+      next(error);
+   }
+};
+
 module.exports = {
    getAllUsers,
    getUserById,
    createUser,
    updateUser,
+   deactivateUser,
    deleteUser,
    getUsersByRole,
    downloadImportTemplate,
    previewImport,
    executeBulkImport,
-   adminResetPassword
+   adminResetPassword,
+   bulkDeleteUsers,
+   bulkDeactivateUsers,
+   bulkActivateUsers
 };
