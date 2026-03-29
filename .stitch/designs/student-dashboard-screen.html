@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lexis Scholar | Student Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-primary": "#b7c4ff",
+                        "on-background": "#191c1e",
+                        "surface-container": "#eceef0",
+                        "on-secondary-fixed": "#03164d",
+                        "on-primary-fixed-variant": "#0039b5",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#006a48",
+                        "primary": "#0037b0",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary-fixed": "#001551",
+                        "secondary-fixed-dim": "#b7c4ff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-secondary-container": "#3d4c83",
+                        "inverse-surface": "#2d3133",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#2151da",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "secondary": "#4d5b94",
+                        "tertiary-fixed": "#6ffbbe",
+                        "outline": "#747686",
+                        "outline-variant": "#c4c5d7",
+                        "surface-container-low": "#f2f4f6",
+                        "on-surface-variant": "#434655",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-high": "#e6e8ea",
+                        "primary-fixed-dim": "#b7c4ff",
+                        "on-tertiary-fixed": "#002113",
+                        "on-tertiary-container": "#60eeb1",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#004f35",
+                        "on-error": "#ffffff",
+                        "background": "#f7f9fb",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#dce1ff",
+                        "on-secondary-fixed-variant": "#35437b",
+                        "primary-fixed": "#dce1ff",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#cad3ff",
+                        "on-surface": "#191c1e",
+                        "surface-bright": "#f7f9fb",
+                        "surface": "#f7f9fb",
+                        "secondary-container": "#b0befe",
+                        "primary-container": "#1d4ed8",
+                        "surface-container-highest": "#e0e3e5",
+                        "inverse-on-surface": "#eff1f3"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Manrope', sans-serif; }
+        .ambient-shadow { box-shadow: 0px 20px 40px rgba(25, 28, 30, 0.06); }
+        .glass-header { backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.8); }
+        .gradient-primary { background: linear-gradient(135deg, #0037b0 0%, #1d4ed8 100%); }
+        .ghost-border { outline: 1px solid rgba(196, 197, 215, 0.15); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-tertiary-fixed selection:text-on-tertiary-fixed">
+<!-- TopNavBar Implementation -->
+<header class="bg-[#f7f9fb] dark:bg-slate-900 fixed top-0 w-full z-50">
+<nav class="flex justify-between items-center w-full px-14 py-4 max-w-full mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tight text-[#191c1e] dark:text-white">Lexis Scholar</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="text-[#0037b0] dark:text-blue-400 font-semibold border-b-2 border-[#0037b0] pb-1 font-['Manrope'] text-sm tracking-tight transition-opacity duration-200" href="#">Dashboard</a>
+<a class="text-[#434655] dark:text-slate-400 hover:text-[#0037b0] font-['Manrope'] text-sm font-medium tracking-tight hover:bg-[#dce1ff]/30 dark:hover:bg-blue-900/20 transition-colors" href="#">My Courses</a>
+<a class="text-[#434655] dark:text-slate-400 hover:text-[#0037b0] font-['Manrope'] text-sm font-medium tracking-tight hover:bg-[#dce1ff]/30 dark:hover:bg-blue-900/20 transition-colors" href="#">Assignments</a>
+<a class="text-[#434655] dark:text-slate-400 hover:text-[#0037b0] font-['Manrope'] text-sm font-medium tracking-tight hover:bg-[#dce1ff]/30 dark:hover:bg-blue-900/20 transition-colors" href="#">Grades</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-[#434655] hover:bg-[#dce1ff]/30 p-2 rounded-lg transition-colors" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-[#434655] hover:bg-[#dce1ff]/30 p-2 rounded-lg transition-colors" data-icon="account_circle">account_circle</button>
+</div>
+</nav>
+<div class="bg-[#f2f4f6] dark:bg-slate-800 h-[1.2rem]"></div>
+</header>
+<main class="pt-32 pb-16 px-14 max-w-[1600px] mx-auto grid grid-cols-12 gap-10">
+<!-- Welcome Hero Section -->
+<section class="col-span-12 relative overflow-hidden rounded-xl p-10 glass-header ghost-border ambient-shadow mb-8">
+<div class="absolute top-0 right-0 w-1/3 h-full opacity-10 pointer-events-none">
+<div class="w-full h-full bg-primary-container blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
+</div>
+<div class="relative z-10 flex flex-col md:flex-row justify-between items-end gap-8">
+<div class="max-w-2xl">
+<h1 class="text-[3.5rem] font-bold leading-tight tracking-tight text-on-surface mb-4">
+                        Welcome back, Alex! <br/>
+<span class="text-primary">You're making great progress.</span>
+</h1>
+<p class="text-on-surface-variant body-lg mb-8 max-w-lg">
+                        You've completed 85% of your semester goals. Just a few more assignments to reach your target for October.
+                    </p>
+</div>
+<div class="w-full md:w-80 flex flex-col gap-3">
+<div class="flex justify-between items-end">
+<span class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Overall Progress</span>
+<span class="text-2xl font-bold text-[#10b981]">85%</span>
+</div>
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-[#10b981] rounded-full w-[85%] transition-all"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Sidebar (Assignments & Grades) -->
+<aside class="col-span-12 lg:col-span-4 flex flex-col gap-10 order-2 lg:order-1">
+<!-- Recent Grades -->
+<div class="bg-surface-container-lowest rounded-xl p-8 ambient-shadow ghost-border">
+<h3 class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant mb-6">Recent Grades</h3>
+<div class="flex flex-col gap-5">
+<div class="flex justify-between items-center group">
+<div>
+<p class="font-semibold text-on-surface">Grammar Test</p>
+<p class="text-xs text-on-surface-variant">Module 4 Evaluation</p>
+</div>
+<div class="text-right">
+<span class="text-lg font-bold text-primary">94</span><span class="text-xs text-on-surface-variant">/100</span>
+</div>
+</div>
+<div class="flex justify-between items-center group">
+<div>
+<p class="font-semibold text-on-surface">Vocab Quiz</p>
+<p class="text-xs text-on-surface-variant">Advanced Adjectives</p>
+</div>
+<div class="text-right">
+<span class="text-lg font-bold text-primary">18</span><span class="text-xs text-on-surface-variant">/20</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Upcoming Assignments -->
+<div class="bg-surface-container-low rounded-xl p-8 ghost-border">
+<h3 class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant mb-6">Upcoming Assignments</h3>
+<div class="flex flex-col gap-6">
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-lg bg-error-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-error-container" data-icon="history">history</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface">Grammar Quiz 4</p>
+<p class="text-xs text-error font-medium">Due tomorrow</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-secondary-fixed" data-icon="presentation_chart">show_chart</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface">Business Presentation</p>
+<p class="text-xs text-on-surface-variant">Due Oct 29</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-tertiary-fixed" data-icon="edit_note">edit_note</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface">Weekly Journal</p>
+<p class="text-xs text-on-surface-variant">Due Friday</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Workspace Support (The Atelier Touch) -->
+<div class="p-8 border border-dashed border-outline-variant/30 rounded-xl flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-4 text-3xl" data-icon="auto_awesome">auto_awesome</span>
+<p class="text-sm font-medium text-on-surface mb-2">Need Workspace Support?</p>
+<p class="text-xs text-on-surface-variant mb-4">Connect with our language tutors in the digital atelier.</p>
+<button class="text-primary text-xs font-bold uppercase tracking-widest hover:underline transition-all">Open Atelier</button>
+</div>
+</aside>
+<!-- Main Course Grid -->
+<div class="col-span-12 lg:col-span-8 order-1 lg:order-2">
+<div class="flex justify-between items-end mb-10">
+<h2 class="text-2xl font-semibold tracking-tight text-on-surface">Current Courses</h2>
+<button class="text-sm font-semibold text-primary hover:opacity-80 transition-opacity">View All</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Course Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow ghost-border group">
+<div class="h-48 overflow-hidden relative">
+<img alt="Business English" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Modern office desk with open laptop, coffee cup, and leather notebook in soft daylight, professional minimalist aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo3gQt0_5vAOs4UjDQFB71RSkRbavel5rEdQzQz2pWSo9sYLov-HrbEK5GpTeGGh8oqnG9Plr9Un7HwpQKt3SaUDfdWNBX4cah-SzxWzi-naCRUJ52b-8UmgbJdyBBVCaEr77dw2Ja-FA4l4T1b_wtdspsNk5i8xordH1syICvxS-lFzyFCRnjITBnnBC0j42v_AkwWY3LVl5qk3ukNAmSvNNsuW5hNlwhoP2NKqEhf9nmGZBpKRVN08nGkB__fyr64HwpNURNlkqd"/>
+<div class="absolute top-4 left-4">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">New Content</span>
+</div>
+</div>
+<div class="p-8">
+<h4 class="text-xl font-semibold text-on-surface mb-1">Business English I</h4>
+<p class="text-sm text-on-surface-variant mb-8">Dr. Smith</p>
+<button class="w-full py-3 rounded-full gradient-primary text-white text-sm font-semibold tracking-tight shadow-md hover:opacity-90 transition-opacity">Continue Learning</button>
+</div>
+</div>
+<!-- Course Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow ghost-border group">
+<div class="h-48 overflow-hidden relative">
+<img alt="Advanced Grammar" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Close up of vintage typewriter keys and stacked aged paper, soft atmospheric lighting, artistic educational focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmyThBVNOwz2WgZxP6pkZShaqsE-l1eADQn2Lj7nUVcWvO9kiSAqNdPLNWHBghlv1vlDEq-pfbmgO2JNxhKU8egyJi8u0sLP0zMc-1V9nGHhM6hozt2Zi0DOVSytOJ0Wu2M5G47HE4rG-mXlVM7hRCmIDR4OJm9RpTAHWDTjyDdUeyscFwus6p2rp0u-yMR1l3WzeO74lEN7Lz6xyiUARh2_WfhCaDt6nXJgSm-Gg9NtqB7ftrHDTM7JY-5LlPaTRccqUCrPFL_TzF"/>
+</div>
+<div class="p-8">
+<h4 class="text-xl font-semibold text-on-surface mb-1">Advanced Grammar</h4>
+<p class="text-sm text-on-surface-variant mb-8">Prof. Jenkins</p>
+<button class="w-full py-3 rounded-full gradient-primary text-white text-sm font-semibold tracking-tight shadow-md hover:opacity-90 transition-opacity">Continue Learning</button>
+</div>
+</div>
+<!-- Course Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow ghost-border group">
+<div class="h-48 overflow-hidden relative">
+<img alt="IELTS Preparation" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Person writing in a clean white notebook with fountain pen, library background in soft bokeh, focused study mood" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2HUYJQFf5BPV-2Sw75eZbZj6ISAJynE73PIyIDW6tSuseS1K60HfNZEnA3fBHoCV-ziI4DOBNfkti86cfQE56CH_FQ9OSdglsPBUObtsyjHo6Qr52ZSf-sVcsFzg9BM3mPN0h7XTHrDJuKkqMa1vVWp5iDd64srqyzvzk27aZLicOCC1EK7Dzy9mYN7HvcVk7MLBnfeq1EZovSJuW_zRprTUgtG4kU2GF8eHByVLn5UIWvYEaAiw6AE1vZkObEkPV8Cato0jSGGJx"/>
+</div>
+<div class="p-8">
+<h4 class="text-xl font-semibold text-on-surface mb-1">IELTS Preparation</h4>
+<p class="text-sm text-on-surface-variant mb-8">Dr. Smith</p>
+<button class="w-full py-3 rounded-full gradient-primary text-white text-sm font-semibold tracking-tight shadow-md hover:opacity-90 transition-opacity">Continue Learning</button>
+</div>
+</div>
+<!-- Course Card 4 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow ghost-border group">
+<div class="h-48 overflow-hidden relative">
+<img alt="Creative Writing" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Handwritten poetry on parchment paper with a quill pen, warm candlelit glow, inspiring literary atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOwFMK2fk7EKpu4bnCNLNW1fiG70JUphK52YPUaF7TYuETNsEi3UX8s0fviruUwSqtSMz4cyDBHVutdfQM1iO_DcZWfGYxGgkP1veqbyzH8IkambJSuVLtNvx1aATNKO1yu4agVwr-1CHq6HWdYXnl5KJkdstkuWx-lpXNBFfoprUnkzXh8sisOVockKFYrI6zHpossTSAweTvpc9yb7WSdxSH4kunGxsvukTZ_oyWd2kfwXYVEuHv57jb8xOOBW3nm04yFubuq2VA"/>
+</div>
+<div class="p-8">
+<h4 class="text-xl font-semibold text-on-surface mb-1">Creative Writing</h4>
+<p class="text-sm text-on-surface-variant mb-8">Dr. Harrison</p>
+<button class="w-full py-3 rounded-full gradient-primary text-white text-sm font-semibold tracking-tight shadow-md hover:opacity-90 transition-opacity">Continue Learning</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Implementation -->
+<footer class="bg-[#f7f9fb] dark:bg-slate-950 flex flex-col items-center justify-center gap-4 px-14 py-12 border-t border-[#c4c5d7]/15 mt-16">
+<p class="font-['Manrope'] text-xs font-semibold uppercase tracking-widest text-[#434655] dark:text-slate-500">
+            © 2024 Lexis Scholar. The Digital Atelier.
+        </p>
+<div class="flex gap-8">
+<a class="font-['Manrope'] text-xs font-semibold uppercase tracking-widest text-[#434655] dark:text-slate-500 hover:text-[#0037b0] transition-colors hover:underline" href="#">Support</a>
+<a class="font-['Manrope'] text-xs font-semibold uppercase tracking-widest text-[#434655] dark:text-slate-500 hover:text-[#0037b0] transition-colors hover:underline" href="#">Privacy</a>
+<a class="font-['Manrope'] text-xs font-semibold uppercase tracking-widest text-[#434655] dark:text-slate-500 hover:text-[#0037b0] transition-colors hover:underline" href="#">Terms</a>
+</div>
+</footer>
+</body></html>

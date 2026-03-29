@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary": "#ffffff",
+              "on-error": "#ffffff",
+              "on-error-container": "#93000a",
+              "outline-variant": "#c4c5d7",
+              "secondary": "#006c49",
+              "error-container": "#ffdad6",
+              "primary": "#0037b0",
+              "on-primary-container": "#cad3ff",
+              "inverse-surface": "#2d3133",
+              "on-secondary-container": "#00714d",
+              "on-tertiary": "#ffffff",
+              "on-primary-fixed": "#001551",
+              "inverse-primary": "#b7c4ff",
+              "on-secondary-fixed": "#002113",
+              "surface-tint": "#2151da",
+              "surface-bright": "#f7f9fb",
+              "on-background": "#191c1e",
+              "tertiary-fixed": "#ffdbcf",
+              "error": "#ba1a1a",
+              "surface-container-low": "#f2f4f6",
+              "secondary-container": "#6cf8bb",
+              "surface-variant": "#e0e3e5",
+              "tertiary-container": "#a73400",
+              "inverse-on-surface": "#eff1f3",
+              "on-surface": "#191c1e",
+              "tertiary": "#7f2500",
+              "primary-container": "#1d4ed8",
+              "surface-dim": "#d8dadc",
+              "primary-fixed-dim": "#b7c4ff",
+              "tertiary-fixed-dim": "#ffb59c",
+              "on-primary-fixed-variant": "#0039b5",
+              "on-tertiary-fixed-variant": "#832700",
+              "on-tertiary-container": "#ffc9b7",
+              "surface-container-lowest": "#ffffff",
+              "secondary-fixed-dim": "#4edea3",
+              "on-secondary-fixed-variant": "#005236",
+              "on-primary": "#ffffff",
+              "surface-container": "#eceef0",
+              "background": "#f7f9fb",
+              "on-surface-variant": "#434655",
+              "on-tertiary-fixed": "#390c00",
+              "secondary-fixed": "#6ffbbe",
+              "outline": "#747686",
+              "surface-container-high": "#e6e8ea",
+              "surface": "#f7f9fb",
+              "primary-fixed": "#dce1ff",
+              "surface-container-highest": "#e0e3e5"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "1rem", "xl": "1.25rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .ambient-glow {
+        box-shadow: 0 12px 40px rgba(0, 55, 176, 0.06);
+      }
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+      }
+      .ghost-border {
+        outline: 1px solid rgba(196, 197, 215, 0.15);
+      }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased overflow-hidden">
+<!-- Main Auth Container -->
+<main class="flex h-screen w-full">
+<!-- Left Section: High-Impact Visual -->
+<section class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-primary">
+<div class="absolute inset-0 z-0 opacity-80">
+<img alt="Library Interior" class="w-full h-full object-cover" data-alt="Modern high-end library with sunlight streaming through tall windows, rows of leather-bound books, clean architectural lines and academic atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBiKdReHtt7bIlw_6kQAHIikUVGDam7jYqU3mbB-d1515KPR9f-8EmHw4wz7O6E5-akuVLBCGFaH3oUHB587Ay83ZhS4123yDVBWj1HWYDrLS2B6F82AL05C1MJ20rJgOaPUEU22ydl0_7sWrklj7xOUgAPLjXkL0z48Rqh9wmXLGhzh9KZ_gsS7-MTizaiNWB0lVkppJI5qajpgGQpBKgpZXatSLroYU8OwaVWIn140Z-lah2-RnwgTO6TsN476cyE5WAag85N1ji"/>
+</div>
+<!-- Overlay Gradient for Brand Presence -->
+<div class="absolute inset-0 z-10 bg-gradient-to-br from-primary/60 to-primary-container/90 mix-blend-multiply"></div>
+<div class="relative z-20 flex flex-col justify-between p-16 w-full text-white">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+<span class="font-headline font-bold text-3xl tracking-tight">Scholarly</span>
+</div>
+<div class="max-w-md">
+<h1 class="font-headline text-5xl font-extrabold leading-tight tracking-tight mb-6">
+                        Elevate your English command.
+                    </h1>
+<p class="text-on-primary-container text-xl font-light leading-relaxed">
+                        Join an elite community of scholars mastering the art of the English language through our intelligent management system.
+                    </p>
+</div>
+<div class="flex items-center gap-6">
+<div class="h-px w-12 bg-on-primary-container/30"></div>
+<span class="text-xs font-label uppercase tracking-widest text-on-primary-container/60">Established 2024</span>
+</div>
+</div>
+</section>
+<!-- Right Section: Login Form -->
+<section class="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 md:px-12 lg:px-24 bg-surface">
+<div class="w-full max-w-md">
+<!-- Mobile Logo -->
+<div class="lg:hidden flex justify-center mb-12">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+<span class="font-headline font-bold text-2xl tracking-tight">Scholarly</span>
+</div>
+</div>
+<!-- Form Card -->
+<div class="bg-surface-container-lowest rounded-lg p-10 ambient-glow ghost-border">
+<div class="mb-10 text-left">
+<h2 class="font-headline text-3xl font-bold text-on-surface mb-2">Welcome Back</h2>
+<p class="text-on-surface-variant font-light">Enter your credentials to access your atelier.</p>
+</div>
+<form action="#" class="space-y-6" method="POST">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant block ml-1" for="email">
+                                Email Address
+                            </label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-lg">mail</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-lg focus:ring-1 focus:ring-primary focus:bg-surface-container-lowest transition-all duration-300 placeholder:text-outline/50 text-on-surface" id="email" name="email" placeholder="scholar@university.edu" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center px-1">
+<label class="font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant block" for="password">
+                                    Password
+                                </label>
+<a class="text-xs font-medium text-primary hover:text-primary-container transition-colors" href="#">Forgot Password?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-lg">lock</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-lg focus:ring-1 focus:ring-primary focus:bg-surface-container-lowest transition-all duration-300 placeholder:text-outline/50 text-on-surface" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center px-1">
+<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-low transition-all" id="remember" name="remember" type="checkbox"/>
+<label class="ml-3 text-sm text-on-surface-variant font-medium cursor-pointer" for="remember">Remember my session</label>
+</div>
+<!-- Submit Button -->
+<button class="w-full py-4 px-6 bg-primary-container text-on-primary font-headline font-bold text-lg rounded-lg transition-all duration-200 active:scale-[0.98] hover:shadow-lg hover:shadow-primary/20 flex justify-center items-center group" type="submit">
+                            Sign In
+                            <span class="material-symbols-outlined ml-2 transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</form>
+<div class="mt-8 text-center">
+<p class="text-sm text-on-surface-variant">
+                            Don't have an account yet? 
+                            <a class="text-primary font-bold hover:underline underline-offset-4 ml-1" href="#">Apply for Membership</a>
+</p>
+</div>
+</div>
+<!-- Footer - Map to Shared Component JSON structure -->
+<footer class="mt-12 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 dark:text-slate-500 text-sm font-['Inter'] tracking-wide">
+<p>© 2024 Scholarly Management System. All rights reserved.</p>
+<div class="flex gap-6 opacity-80 hover:opacity-100 transition-opacity">
+<a class="hover:text-blue-700 dark:hover:text-blue-300 transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-blue-700 dark:hover:text-blue-300 transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-blue-700 dark:hover:text-blue-300 transition-colors" href="#">Help Center</a>
+</div>
+</footer>
+</div>
+</section>
+</main>
+</body></html>
