@@ -295,92 +295,117 @@ const Timetable = ({ role, fixedClassId }) => {
   const renderSessionCard = (session) => {
     const slotDef = session.slotNumber ? getSlotByNumber(session.slotNumber) : null;
     const timeLabel = slotDef
-      ? `${slotDef.label} · ${slotDef.startTime}–${slotDef.endTime}`
+      ? `${slotDef.startTime}–${slotDef.endTime}`
       : (session.startTime && session.endTime ? `${session.startTime} - ${session.endTime}` : '');
+
+    let statusColor = 'bg-surface-container text-on-surface';
+    let borderColor = 'border-l-outline-variant';
+    
+    if (session.status === 'completed') { statusColor = 'bg-emerald-100 text-emerald-800'; borderColor = 'border-l-emerald-500'; }
+    if (session.status === 'scheduled') { statusColor = 'bg-blue-100 text-blue-800'; borderColor = 'border-l-blue-500'; }
+    if (session.status === 'ongoing') { statusColor = 'bg-amber-100 text-amber-800'; borderColor = 'border-l-amber-500'; }
+    if (session.status === 'cancelled') { statusColor = 'bg-red-100 text-red-800'; borderColor = 'border-l-red-500'; }
+
     return (
       <div
         key={session._id}
-        className={`session-card ${role === 'admin' ? 'clickable' : ''}`}
+        className={`group bg-surface-container-lowest p-3 rounded-xl shadow-sm border border-outline-variant/15 border-l-4 ${borderColor} hover:shadow-md transition-all cursor-[pointer] relative overflow-hidden ${role === 'admin' ? 'hover:-translate-y-0.5' : ''}`}
         onClick={() => openEditModal(session)}
       >
-        <div className="session-time">{timeLabel}</div>
-        <div className="session-title">{session.title}</div>
-        <div className="session-class">{session.class?.name || 'Unknown Class'}</div>
-        {session.teacher && (
-          <div className="session-teacher">👤 {session.teacher.firstName} {session.teacher.lastName}</div>
-        )}
-        {session.room && <div className="session-room">📍 {session.room}</div>}
-        <div className="session-badges">
-           <div className={`session-status status-${session.status}`}>{session.status}</div>
-           {role === 'student' && session.attendanceStatus && (
-             <div className={`attendance-status att-${session.attendanceStatus}`}>
-               {ATTENDANCE_LABEL[session.attendanceStatus] || session.attendanceStatus}
-             </div>
-           )}
-           {session.isMakeup && <div className="session-makeup-badge">Học bù</div>}
+        <div className="flex justify-between items-start mb-2 gap-1">
+          <span className="text-[10px] font-extrabold text-primary uppercase tracking-tighter">{timeLabel}</span>
+          <span className={`px-2 py-0.5 flex-shrink-0 ${statusColor} text-[9px] font-bold rounded-full uppercase tracking-wider`}>
+            {session.status}
+          </span>
         </div>
+        <h4 className="text-xs font-bold leading-tight mb-2 text-on-surface">{session.title}</h4>
+        
+        <div className="text-[10px] text-on-surface-variant font-medium space-y-1 mb-2">
+            <div className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[12px]">school</span> <span className="truncate">{session.class?.name || 'Unknown'}</span></div>
+            {session.teacher && <div className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[12px]">person</span> <span className="truncate">{session.teacher.firstName}</span></div>}
+            {session.room && <div className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[12px]">room</span> <span className="truncate">{session.room}</span></div>}
+        </div>
+        
+        {(session.attendanceStatus || session.isMakeup) && (
+          <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-outline-variant/10">
+            {role === 'student' && session.attendanceStatus && (
+              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${session.attendanceStatus === 'present' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                {ATTENDANCE_LABEL[session.attendanceStatus] || session.attendanceStatus}
+              </span>
+            )}
+            {session.isMakeup && <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-[9px] font-bold rounded uppercase tracking-wider">Học bù</span>}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="timetable-container">
-      <div className="timetable-header">
-        <div className="title-section">
-          <h2>Weekly Timetable</h2>
-          {role === 'admin' && (
-            <div className="admin-actions">
-              <button className="btn-primary" onClick={openCreateModal}>+ New Session</button>
-              <button className="btn-secondary" onClick={() => setIsGenerateModalOpen(true)}>Generate Sessions</button>
-            </div>
-          )}
+    <div className="w-full max-w-[1600px] mx-auto fade-in pb-16">
+      {/* Header Controls Section */}
+      <div className="flex flex-col md:flex-row justify-between md:items-end mb-8 gap-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 text-on-surface font-headline">Lịch học & Giảng dạy</h1>
+          <p className="text-on-surface-variant font-medium font-body flex items-center gap-2">
+             <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+             {timetableData ? `Tuần từ ${timetableData.week.start}` : 'Đang tải...'}
+          </p>
         </div>
-        <div className="week-controls">
-          <button onClick={handlePrevWeek}>&lt; Prev Week</button>
-          <span className="current-week">
-            {timetableData ? `Week of ${timetableData.week.start}` : 'Loading...'}
-          </span>
-          <button onClick={handleNextWeek}>Next Week &gt;</button>
+        
+        <div className="flex flex-col gap-4 items-end">
+            {role === 'admin' && (
+                <div className="flex gap-3">
+                    <button className="px-5 py-2.5 bg-primary text-white rounded-lg font-bold shadow-sm shadow-primary/30 hover:bg-primary-container transition-all" onClick={openCreateModal}>+ Tạo Buổi Học</button>
+                    <button className="px-5 py-2.5 bg-surface-container-low text-on-surface border border-outline-variant/30 rounded-lg font-bold hover:bg-surface-container transition-all" onClick={() => setIsGenerateModalOpen(true)}>Generate Auto</button>
+                </div>
+            )}
+            <div className="flex items-center bg-surface-container-low p-1.5 rounded-xl border border-outline-variant/20 whisper-shadow inline-flex">
+                <button onClick={handlePrevWeek} className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-lg hover:bg-surface-container-lowest"><span className="material-symbols-outlined">chevron_left</span></button>
+                <div className="px-4 text-sm font-extrabold bg-surface-container-lowest text-primary shadow-sm rounded-lg py-2 cursor-pointer">Tuần này</div>
+                <button onClick={handleNextWeek} className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-lg hover:bg-surface-container-lowest"><span className="material-symbols-outlined">chevron_right</span></button>
+            </div>
         </div>
       </div>
 
       {role === 'admin' && !fixedClassId && (
-        <div className="admin-filters">
+        <div className="flex gap-4 mb-8 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/20 shadow-sm flex-wrap">
            <input 
               type="text" 
-              placeholder="Filter by Class ID" 
+              className="flex-1 min-w-[200px] border border-outline-variant/30 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              placeholder="Lọc theo Class ID..." 
               value={targetClassId}
               onChange={(e) => setTargetClassId(e.target.value)}
            />
            <input 
               type="text" 
-              placeholder="Filter by Teacher ID" 
+              className="flex-1 min-w-[200px] border border-outline-variant/30 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              placeholder="Lọc theo Teacher ID..." 
               value={targetTeacherId}
               onChange={(e) => setTargetTeacherId(e.target.value)}
            />
-           <button onClick={fetchTimetable} className="btn-filter">Apply</button>
+           <button onClick={fetchTimetable} className="px-6 py-2.5 bg-on-surface text-white rounded-lg font-bold hover:opacity-90 transition-all shadow-sm">Áp dụng bộ lọc</button>
         </div>
       )}
 
-      {error && <div className="error-alert">{error}</div>}
+      {error && <div className="p-4 bg-error-container text-on-error-container rounded-lg font-medium text-sm mb-6 border border-error/20 flex gap-2"><span className="material-symbols-outlined">error</span> {error}</div>}
 
-      <div className="day-tabs-mobile">
+      <div className="flex md:hidden gap-2 mb-4 overflow-x-auto pb-2 custom-scrollbar">
         {DAY_NAMES.map(day => (
           <button 
              key={day} 
-             className={`tab-btn ${activeDayTab === day ? 'active' : ''}`}
+             className={`px-6 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all border ${activeDayTab === day ? 'bg-primary text-white border-primary shadow-md' : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant/30 hover:border-outline'}`}
              onClick={() => setActiveDayTab(day)}
           >
-             {day.substring(0,3)}
+             {day}
           </button>
         ))}
       </div>
 
-      <div className="timetable-grid">
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-px bg-outline-variant/30 rounded-2xl overflow-hidden border border-outline-variant/30 shadow-sm">
         {DAY_NAMES.map((day, index) => {
           const isEmpty = !timetableData?.timetable[day] || timetableData.timetable[day].length === 0;
 
-          // Calculate specific date string for this column
           const dObj = new Date(currentDate);
           dObj.setDate(currentDate.getDate() + index);
           const colDateStr = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
@@ -388,20 +413,22 @@ const Timetable = ({ role, fixedClassId }) => {
           const isToday = colDateStr === todayStr;
 
           return (
-             <div key={day} className={`day-column ${isToday ? 'is-today' : ''} ${activeDayTab !== day ? 'hidden-on-mobile' : ''}`}>
-               <div className="day-header">
-                  {day} <br/> 
-                  <span className="date-subtext">{colDateStr.slice(5).replace('-','/')}</span>
-                  {isToday && <span className="today-badge">Hôm nay</span>}
+             <div key={day} className={`flex flex-col min-h-[600px] bg-surface ${isToday ? 'relative z-10' : ''} ${activeDayTab !== day ? 'hidden md:flex' : 'flex'}`}>
+               <div className={`p-4 text-center border-b border-outline-variant/10 ${isToday ? 'bg-primary-fixed' : 'bg-surface-container-lowest'}`}>
+                  <span className={`block text-[11px] uppercase tracking-widest font-bold mb-1 ${isToday ? 'text-primary' : 'text-on-surface-variant'}`}>{day.substring(0, 3)}</span>
+                  <span className={`text-2xl font-extrabold font-headline ${isToday ? 'text-primary block' : 'text-on-surface block'}`}>{new Date(colDateStr).getDate()}</span>
+                  {isToday && <span className="block text-[9px] font-extrabold text-white bg-primary rounded-full uppercase mt-2 w-fit mx-auto px-3 py-1 tracking-widest shadow-sm">Hôm nay</span>}
                </div>
                
-               <div className="day-content">
+               <div className={`p-2.5 flex flex-col gap-2.5 flex-1 ${isToday ? 'bg-primary-fixed/10' : 'bg-surface-container-lowest'}`}>
                  {loading ? (
-                    <div className="loading-placeholder">Đang tải...</div>
+                    <div className="py-10 text-center text-on-surface-variant text-xs font-semibold animate-pulse">Đang tải...</div>
                  ) : !isEmpty ? (
                    timetableData.timetable[day].map(renderSessionCard)
                  ) : (
-                   <div className="empty-day">Trống</div>
+                   <div className="h-full flex items-center justify-center opacity-40">
+                      <span className="text-on-surface-variant text-[11px] font-semibold uppercase tracking-widest">Trống</span>
+                   </div>
                  )}
                </div>
              </div>

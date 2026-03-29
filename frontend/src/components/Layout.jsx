@@ -23,6 +23,7 @@ const teacherNav = [
 ];
 
 const studentNav = [
+  { to: '/student/dashboard', label: 'Tổng quan', icon: 'dashboard' },
   { to: '/student/timetable', label: 'Thời khóa biểu', icon: 'calendar_month' },
   { to: '/student/classes', label: 'Khóa học', icon: 'school' },
   { to: '/student/assignments', label: 'Bài tập', icon: 'assignment' },

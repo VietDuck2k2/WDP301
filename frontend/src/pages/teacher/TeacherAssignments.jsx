@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { teacherApi } from '../../api/teacherApi';
 import FileUpload from '../../components/FileUpload';
 
-const formatDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN') : '-');
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-');
 
 export default function TeacherAssignments() {
   const [assignments, setAssignments] = useState([]);
@@ -48,63 +48,266 @@ export default function TeacherAssignments() {
       attachments: form.attachments,
     })
       .then((res) => {
-        if (res?.success) { setShowForm(false); setForm({ class: '', title: '', description: '', instructions: '', dueDate: '', maxScore: 100, attachments: [] }); setAssignments((prev) => [res.data, ...prev]); }
+        if (res?.success) { 
+            setShowForm(false); 
+            setForm({ class: '', title: '', description: '', instructions: '', dueDate: '', maxScore: 100, attachments: [] }); 
+            setAssignments((prev) => [res.data, ...prev]); 
+            alert('Tạo bài tập thành công!');
+        }
         else setError(res?.message || 'Tạo thất bại');
       })
       .catch((err) => setError(err.response?.data?.message || 'Tạo thất bại'))
       .finally(() => setSubmitting(false));
   };
 
+  const getStatusBadge = (status, dueDate) => {
+      const now = new Date();
+      const due = new Date(dueDate);
+      const isOverdue = dueDate && now > due;
+
+      if (status === 'draft') return <span className="bg-surface-container text-on-surface-variant px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-outline-variant/30">Lưu nháp</span>;
+      if (isOverdue) return <span className="bg-red-50 text-red-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-red-200">Đã hết hạn</span>;
+      return <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-emerald-200">Đang Mở</span>;
+  };
+
   return (
-    <div className="page-card">
-      <h1 className="page-title">Bài tập</h1>
-      <div className="toolbar">
-        <select value={classId} onChange={(e) => setClassId(e.target.value)} className="form-select">
-          <option value="">Tất cả lớp</option>
-          {classes.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
-        </select>
-        <button type="button" className="btn-primary" onClick={() => setShowForm(true)}>Tạo bài tập</button>
-      </div>
-      {error && <p className="error-msg">{error}</p>}
-      {showForm && (
-        <form onSubmit={handleCreate} className="form-card">
-          <h3>Tạo bài tập mới</h3>
-          <select required value={form.class} onChange={(e) => setForm((f) => ({ ...f, class: e.target.value }))} className="form-select">
-            <option value="">Chọn lớp</option>
-            {classes.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
-          </select>
-          <input required placeholder="Tiêu đề" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="form-input" />
-          <textarea placeholder="Mô tả" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="form-input" />
-          <input placeholder="Hướng dẫn nộp bài" value={form.instructions} onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))} className="form-input" />
-          <input type="datetime-local" value={form.dueDate} onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))} className="form-input" />
-          <input type="number" min="0" placeholder="Điểm tối đa" value={form.maxScore} onChange={(e) => setForm((f) => ({ ...f, maxScore: e.target.value }))} className="form-input" />
-          <FileUpload value={form.attachments} onChange={(att) => setForm((f) => ({ ...f, attachments: att }))} label="Tệp đính kèm" />
-          <div>
-            <button type="submit" className="btn-primary" disabled={submitting}>{submitting ? 'Đang tạo...' : 'Tạo'}</button>
-            <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Hủy</button>
+    <div className="max-w-[1600px] mx-auto fade-in pb-16">
+      <div className="flex flex-col md:flex-row justify-between md:items-end mb-8 gap-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 text-on-surface font-headline">Quản lý Bài tập</h1>
+          <p className="text-on-surface-variant font-medium flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">assignment</span>
+            Tạo và chấm điểm bài tập cho các lớp
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-[200px]">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-70 pointer-events-none text-[20px]">filter_list</span>
+            <select 
+                value={classId} 
+                onChange={(e) => setClassId(e.target.value)} 
+                className="w-full bg-surface border border-outline-variant/50 text-on-surface text-sm rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.25em 1.25em' }}
+            >
+              <option value="">Tất cả các lớp</option>
+              {classes.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+            </select>
           </div>
-        </form>
+          
+          <button 
+            type="button" 
+            className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-primary-container transition-all shadow-sm shadow-primary/20 hover:shadow-md hover:-translate-y-0.5" 
+            onClick={() => setShowForm(!showForm)}
+          >
+            <span className="material-symbols-outlined text-[18px]">{showForm ? 'close' : 'add_task'}</span>
+            {showForm ? 'Hủy tạo' : 'Tạo Bài tập mới'}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mb-6 bg-red-50 text-red-800 p-4 rounded-xl flex items-center gap-3 border border-red-200 shadow-sm animate-in slide-in-from-top-2">
+            <span className="material-symbols-outlined">error</span>
+            <span className="font-medium text-sm">{error}</span>
+        </div>
       )}
-      {loading ? <p>Đang tải...</p> : (
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr><th>Tiêu đề</th><th>Lớp</th><th>Hạn nộp</th><th>Điểm</th><th>Trạng thái</th><th></th></tr>
-            </thead>
-            <tbody>
-              {assignments.map((a) => (
-                <tr key={a._id}>
-                  <td>{a.title}</td>
-                  <td>{a.class?.name}</td>
-                  <td>{formatDate(a.dueDate)}</td>
-                  <td>{a.maxScore}</td>
-                  <td>{a.status || '-'}</td>
-                  <td><Link to={`/teacher/assignments/${a._id}`} className="link">Xem / Chấm bài</Link></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {assignments.length === 0 && <p className="empty">Chưa có bài tập.</p>}
+
+      {showForm && (
+        <div className="bg-surface-container-lowest rounded-3xl p-8 border border-outline-variant/30 shadow-[0_12px_40px_rgba(0,0,0,0.06)] mb-10 relative overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+            
+            <div className="relative z-10">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-extrabold font-headline text-on-surface flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">edit_document</span>
+                        Tạo bài tập mới
+                    </h3>
+                </div>
+
+                <form onSubmit={handleCreate} className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Lớp học giao bài <span className="text-red-500">*</span></label>
+                                <select 
+                                    required 
+                                    value={form.class} 
+                                    onChange={(e) => setForm((f) => ({ ...f, class: e.target.value }))} 
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface"
+                                >
+                                    <option value="" disabled>-- Chọn lớp học --</option>
+                                    {classes.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Tiêu đề bài tập <span className="text-red-500">*</span></label>
+                                <input 
+                                    required 
+                                    placeholder="Vd: Bài tập về nhà Unit 1 - Present Simple" 
+                                    value={form.title} 
+                                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} 
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface placeholder:text-on-surface-variant/40" 
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Thời hạn nộp bài</label>
+                                <input 
+                                    type="datetime-local" 
+                                    value={form.dueDate} 
+                                    onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))} 
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface" 
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Thang điểm tối đa</label>
+                                <input 
+                                    type="number" 
+                                    min="0" 
+                                    placeholder="100" 
+                                    value={form.maxScore} 
+                                    onChange={(e) => setForm((f) => ({ ...f, maxScore: e.target.value }))} 
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface" 
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Mô tả và Yêu cầu</label>
+                                <textarea 
+                                    placeholder="Nhập nội dung chi tiết bài tập..." 
+                                    value={form.description} 
+                                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} 
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface placeholder:text-on-surface-variant/40 min-h-[120px] resize-y" 
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Định dạng nộp bài (Hướng dẫn)</label>
+                                <input 
+                                    placeholder="Vd: Nộp file PDF hoặc Docx" 
+                                    value={form.instructions} 
+                                    onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))} 
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface placeholder:text-on-surface-variant/40" 
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Tài liệu đính kèm</label>
+                                <FileUpload 
+                                    value={form.attachments} 
+                                    onChange={(att) => setForm((f) => ({ ...f, attachments: att }))} 
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-4 border-t border-outline-variant/20">
+                        <button 
+                            type="submit" 
+                            className="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold min-w-[120px] hover:bg-primary-container transition-all shadow-sm shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed" 
+                            disabled={submitting}
+                        >
+                            {submitting ? (
+                                <><span className="material-symbols-outlined animate-spin text-[18px]">sync</span> Đang tạo...</>
+                            ) : (
+                                <><span className="material-symbols-outlined text-[18px]">send</span> Tạo Bài tập</>
+                            )}
+                        </button>
+                        <button 
+                            type="button" 
+                            className="px-6 py-2.5 rounded-xl font-bold text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" 
+                            onClick={() => setShowForm(false)}
+                        >
+                            Hủy bỏ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+          <span className="material-symbols-outlined text-primary text-5xl animate-spin">sync</span>
+          <p className="text-on-surface-variant font-bold text-sm tracking-widest uppercase">Đang tải dữ liệu...</p>
+        </div>
+      ) : assignments.length === 0 ? (
+        <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/30 flex flex-col items-center justify-center py-32 px-4 shadow-sm text-center">
+            <span className="material-symbols-outlined text-6xl text-primary/30 mb-4">inventory_2</span>
+            <h3 className="text-xl font-bold text-on-surface mb-2 font-headline">Chưa có bài tập nào</h3>
+            <p className="text-on-surface-variant max-w-md mx-auto mb-6">Bạn chưa tạo bài tập nào cho lớp này. Hãy tạo bài tập đầu tiên để học viên có thể vào làm bài.</p>
+            <button 
+                onClick={() => setShowForm(true)}
+                className="bg-primary/10 text-primary px-6 py-2.5 rounded-xl font-bold hover:bg-primary/20 transition-colors inline-flex items-center gap-2"
+            >
+                <span className="material-symbols-outlined text-[18px]">add</span> Tạo ngay
+            </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {assignments.map((a) => (
+                <div key={a._id} className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col">
+                    {/* Header line with status */}
+                    <div className="px-6 py-5 border-b border-outline-variant/10 flex justify-between items-start gap-4">
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-xs font-bold uppercase tracking-widest text-primary/80">{a.class?.name || 'Không rõ lớp'}</span>
+                            <h3 className="font-headline font-bold text-lg text-on-surface line-clamp-2 leading-tight group-hover:text-primary transition-colors">{a.title}</h3>
+                        </div>
+                        <div className="shrink-0 pt-1">
+                            {getStatusBadge(a.status, a.dueDate)}
+                        </div>
+                    </div>
+                    
+                    {/* Content body */}
+                    <div className="p-6 flex-grow flex flex-col gap-5">
+                        <p className="text-sm text-on-surface-variant line-clamp-3 leading-relaxed">
+                            {a.description || <span className="opacity-50 italic">Không có mô tả...</span>}
+                        </p>
+
+                        <div className="bg-surface-container-low/50 rounded-xl p-4 mt-auto space-y-3 border border-outline-variant/20">
+                            <div className="flex items-center gap-3 text-sm">
+                                <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-[18px]">event</span>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant font-headline">Hạn nộp bài</p>
+                                    <p className="font-bold text-on-surface">{formatDate(a.dueDate)}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 text-sm">
+                                <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-[18px]">verified</span>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant font-headline">Điểm tối đa</p>
+                                    <p className="font-bold text-on-surface">{a.maxScore} điểm</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="px-6 py-4 bg-surface-container/30 border-t border-outline-variant/10 flex justify-between items-center mt-auto">
+                        <div className="text-xs font-medium text-on-surface-variant flex items-center gap-1.5 opacity-70">
+                            <span className="material-symbols-outlined text-[14px]">upload_file</span>
+                            {a.attachments?.length || 0} tệp
+                        </div>
+                        <Link 
+                            to={`/teacher/assignments/${a._id}`}
+                            className="bg-surface border border-outline-variant/50 text-primary px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:border-primary/50 hover:bg-primary/5 transition-all inline-flex items-center gap-1.5 group-hover:bg-primary group-hover:text-white"
+                        >
+                            Chấm bài
+                            <span className="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                        </Link>
+                    </div>
+                </div>
+            ))}
         </div>
       )}
     </div>
