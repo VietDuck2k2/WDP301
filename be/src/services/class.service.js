@@ -2,6 +2,13 @@ const Class = require('../models/Class');
 const ClassMember = require('../models/ClassMember');
 const Session = require('../models/Session');
 const ApiError = require('../utils/apiError');
+const { getSlotByNumber } = require('../constants/slots');
+
+const toDateOnly = (dateValue) => {
+   const d = new Date(dateValue);
+   d.setHours(0, 0, 0, 0);
+   return d;
+};
 
 /**
  * Get all classes with filters
@@ -97,7 +104,15 @@ const createClass = async (classData) => {
    }
 
    // Validate dates
-   if (new Date(classData.endDate) <= new Date(classData.startDate)) {
+   const startDate = toDateOnly(classData.startDate);
+   const endDate = toDateOnly(classData.endDate);
+   const today = toDateOnly(new Date());
+
+   if (startDate < today) {
+      throw ApiError.badRequest('Start date cannot be in the past');
+   }
+
+   if (endDate <= startDate) {
       throw ApiError.badRequest('End date must be after start date');
    }
 
@@ -237,6 +252,76 @@ const enrollStudent = async (classId, studentId) => {
       throw ApiError.conflict('Student already enrolled in this class');
    }
 
+   // New rule: prevent double-booking a student at the same time in different classes.
+   // 1) Find all other active classes of this student.
+   const activeMemberships = await ClassMember.find({
+      user: studentId,
+      role: 'student',
+      status: 'active',
+      class: { $ne: classId }
+   }).select('class');
+
+   if (activeMemberships.length > 0) {
+      const otherClassIds = activeMemberships.map((m) => m.class);
+
+      // 2) Fetch all sessions of the target class and those other classes.
+      const [targetSessions, otherSessions] = await Promise.all([
+         Session.find({ class: classId, status: { $ne: 'cancelled' } }).select('date slotNumber'),
+         Session.find({ class: { $in: otherClassIds }, status: { $ne: 'cancelled' } })
+            .populate('class', 'name code')
+            .select('date slotNumber class')
+      ]);
+
+      if (targetSessions.length > 0 && otherSessions.length > 0) {
+         // Build a quick lookup: key = yyyy-mm-dd|slot, value = session + class info.
+         const conflictMap = new Map();
+
+         otherSessions.forEach((s) => {
+            if (!s.date || !s.slotNumber) return;
+            const dStr = (s.date instanceof Date
+               ? s.date.toISOString().split('T')[0]
+               : String(s.date).split('T')[0]);
+            const key = `${dStr}|${s.slotNumber}`;
+            // Only keep one representative per time slot
+            if (!conflictMap.has(key)) {
+               conflictMap.set(key, s);
+            }
+         });
+
+         let firstConflict = null;
+         for (const s of targetSessions) {
+            if (!s.date || !s.slotNumber) continue;
+            const dStr = (s.date instanceof Date
+               ? s.date.toISOString().split('T')[0]
+               : String(s.date).split('T')[0]);
+            const key = `${dStr}|${s.slotNumber}`;
+            if (conflictMap.has(key)) {
+               firstConflict = { at: s, with: conflictMap.get(key) };
+               break;
+            }
+         }
+
+         if (firstConflict) {
+            const slotInfo = getSlotByNumber
+               ? getSlotByNumber(firstConflict.at.slotNumber)
+               : null;
+            const timeLabel = slotInfo
+               ? `${slotInfo.startTime} - ${slotInfo.endTime}`
+               : `slot ${firstConflict.at.slotNumber}`;
+
+            const otherClass = firstConflict.with.class;
+            const dateLabel = (firstConflict.at.date instanceof Date
+               ? firstConflict.at.date.toLocaleDateString('vi-VN')
+               : String(firstConflict.at.date));
+
+            throw ApiError.conflict(
+               `Học sinh đã được xếp học cho lớp ${otherClass?.name || ''} (${otherClass?.code || ''}) ` +
+               `vào ${timeLabel} ngày ${dateLabel}. Vui lòng chọn lớp khác hoặc khung giờ khác.`
+            );
+         }
+      }
+   }
+
    // Create or update enrollment
    if (existing) {
       existing.status = 'active';
@@ -254,47 +339,68 @@ const enrollStudent = async (classId, studentId) => {
 };
 
 /**
- * Assign teacher to class
+ * Assign one or many teachers to class
  */
-const assignTeacher = async (classId, teacherId) => {
+const assignTeacher = async (classId, teacherIdsInput) => {
    const classData = await Class.findById(classId);
    if (!classData) {
       throw ApiError.notFound('Class not found');
    }
 
-   // Ensure each class has ONLY ONE active teacher:
-   // deactivate other active teacher members before assigning the new one
-   await ClassMember.updateMany(
-      { class: classId, role: 'teacher', status: 'active', user: { $ne: teacherId } },
-      { status: 'dropped' }
-   );
-
-   // Ensure sessions of this class point to the newly assigned teacher
-   // so timetables can display the correct teacher name.
-   await Session.updateMany(
-      { class: classId },
-      { teacher: teacherId }
-   );
-
-   // Check if already assigned
-   const existing = await ClassMember.findOne({ class: classId, user: teacherId, role: 'teacher' });
-   if (existing && existing.status === 'active') {
-      throw ApiError.conflict('Teacher already assigned to this class');
+   const rawIds = Array.isArray(teacherIdsInput) ? teacherIdsInput : [teacherIdsInput];
+   const teacherIds = [...new Set(rawIds.filter(Boolean).map((id) => String(id)))];
+   if (teacherIds.length === 0) {
+      throw ApiError.badRequest('Vui lòng chọn ít nhất một giáo viên');
    }
 
-   // Create or update assignment
-   if (existing) {
-      existing.status = 'active';
-      await existing.save();
-      return existing;
-   } else {
-      const assignment = await ClassMember.create({
-         class: classId,
-         user: teacherId,
-         role: 'teacher'
-      });
-      return assignment;
+   const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+   if (teacherIds.some((id) => !objectIdRegex.test(id))) {
+      throw ApiError.badRequest('teacherIds chứa ObjectId không hợp lệ');
    }
+
+   const added = [];
+   const reactivated = [];
+   const skipped = [];
+
+   for (const teacherId of teacherIds) {
+      const existing = await ClassMember.findOne({ class: classId, user: teacherId, role: 'teacher' });
+      if (existing && existing.status === 'active') {
+         skipped.push(teacherId);
+         continue;
+      }
+
+      if (existing) {
+         existing.status = 'active';
+         await existing.save();
+         reactivated.push(teacherId);
+      } else {
+         await ClassMember.create({
+            class: classId,
+            user: teacherId,
+            role: 'teacher'
+         });
+         added.push(teacherId);
+      }
+   }
+
+   // Keep old behavior for single-assign flow so existing timetable usage is unchanged.
+   if (teacherIds.length === 1) {
+      await Session.updateMany(
+         { class: classId },
+         { teacher: teacherIds[0] }
+      );
+   }
+
+   return {
+      added,
+      reactivated,
+      skipped,
+      summary: {
+         total: teacherIds.length,
+         success: added.length + reactivated.length,
+         skipped: skipped.length
+      }
+   };
 };
 
 /**

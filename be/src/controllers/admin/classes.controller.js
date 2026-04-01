@@ -145,8 +145,11 @@ const enrollStudent = async (req, res, next) => {
  */
 const assignTeacher = async (req, res, next) => {
    try {
-      const { teacherId } = req.body;
-      const assignment = await classService.assignTeacher(req.params.id, teacherId);
+      const { teacherId, teacherIds } = req.body;
+      const normalizedTeacherIds = Array.isArray(teacherIds)
+         ? teacherIds
+         : (teacherId ? [teacherId] : []);
+      const assignment = await classService.assignTeacher(req.params.id, normalizedTeacherIds);
       ApiResponse.created(res, assignment, 'Teacher assigned successfully');
    } catch (error) {
       next(error);

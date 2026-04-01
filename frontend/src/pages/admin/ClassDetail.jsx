@@ -19,7 +19,7 @@ const ClassDetail = () => {
 
   const [teacherOptions, setTeacherOptions] = useState([]);
   const [studentOptions, setStudentOptions] = useState([]);
-  const [selectedTeacherId, setSelectedTeacherId] = useState('');
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState('');
 
   // Generate TKB state
@@ -86,10 +86,13 @@ const ClassDetail = () => {
   }, [studentOptions, enrolledStudentIds]);
 
   const handleAssignTeacher = async () => {
-    if (!selectedTeacherId) return;
+    if (!selectedTeacherIds.length) return;
     try {
-      const res = await adminApi.assignTeacher(id, selectedTeacherId);
-      if (res?.success) { setSelectedTeacherId(''); fetchClassData(); }
+      const res = await adminApi.assignTeacher(id, selectedTeacherIds);
+      if (res?.success) {
+        setSelectedTeacherIds([]);
+        fetchClassData();
+      }
     } catch (error) {
       alert(error?.response?.data?.message || 'Gán giáo viên thất bại');
     }
@@ -161,21 +164,25 @@ const ClassDetail = () => {
         <div className="tool-card">
           <h3>Gán Giáo viên</h3>
           <div className="tool-row">
-            <select value={selectedTeacherId} onChange={e => setSelectedTeacherId(e.target.value)}>
-              <option value="">Chọn giáo viên</option>
+            <select
+              multiple
+              value={selectedTeacherIds}
+              onChange={(e) => setSelectedTeacherIds(Array.from(e.target.selectedOptions, (opt) => opt.value))}
+              size={Math.min(6, Math.max(3, filteredTeacherOptions.length || 3))}
+            >
               {filteredTeacherOptions.map(t => (
                 <option key={t._id} value={t._id}>
                   {t.firstName} {t.lastName} ({t.email}){t.phone ? ` - ${t.phone}` : ''}
                 </option>
               ))}
             </select>
-            <button type="button" onClick={handleAssignTeacher}>Gán</button>
+            <button type="button" onClick={handleAssignTeacher}>
+              Gán {selectedTeacherIds.length > 0 ? `${selectedTeacherIds.length} GV` : ''}
+            </button>
           </div>
-          {allMembers.some((m) => m.role === 'teacher') && (
-            <p className="hint-text" style={{ marginTop: 8 }}>
-              Mỗi lớp chỉ có 1 giáo viên. Gán giáo viên mới sẽ thay thế giáo viên cũ.
-            </p>
-          )}
+          <p className="hint-text" style={{ marginTop: 8 }}>
+            Có thể chọn nhiều giáo viên cùng lúc (giữ Ctrl hoặc Shift để chọn nhiều).
+          </p>
         </div>
 
         <div className="tool-card">

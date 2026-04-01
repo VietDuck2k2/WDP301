@@ -48,6 +48,20 @@ const toDateInput = (value) => {
 
 };
 
+const getTodayInput = () => {
+
+  const now = new Date();
+
+  const year = now.getFullYear();
+
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+
+  const day = String(now.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+
+};
+
 
 
 const Classes = () => {
@@ -79,6 +93,8 @@ const Classes = () => {
   const [editForm, setEditForm] = useState(defaultForm);
 
   const [savingEdit, setSavingEdit] = useState(false);
+
+  const todayInput = useMemo(() => getTodayInput(), []);
 
 
 
@@ -153,6 +169,14 @@ const Classes = () => {
   const handleCreate = async (e) => {
 
     e.preventDefault();
+
+    if (createForm.startDate < todayInput) {
+
+      alert('Ngày bắt đầu không được ở trong quá khứ.');
+
+      return;
+
+    }
 
     setCreating(true);
 
@@ -671,6 +695,8 @@ const Classes = () => {
 
                   type="date"
 
+                  min={todayInput}
+
                   value={createForm.startDate}
 
                   onChange={(e) => setCreateForm((prev) => ({ ...prev, startDate: e.target.value }))}
@@ -682,6 +708,8 @@ const Classes = () => {
                 <input
 
                   type="date"
+
+                  min={createForm.startDate || todayInput}
 
                   value={createForm.endDate}
 

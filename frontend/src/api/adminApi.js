@@ -30,7 +30,10 @@ export const adminApi = {
   getClassById: (id) => axiosInstance.get(`/admin/classes/${id}`),
   getClassMembers: (id, role = '') => axiosInstance.get(`/admin/classes/${id}/members`, { params: role ? { role } : {} }),
   enrollStudent: (id, studentId) => axiosInstance.post(`/admin/classes/${id}/enroll`, { studentId }),
-  assignTeacher: (id, teacherId) => axiosInstance.post(`/admin/classes/${id}/assign-teacher`, { teacherId }),
+  assignTeacher: (id, teacherIdOrIds) => {
+    const teacherIds = Array.isArray(teacherIdOrIds) ? teacherIdOrIds : [teacherIdOrIds];
+    return axiosInstance.post(`/admin/classes/${id}/assign-teacher`, { teacherIds });
+  },
   removeClassMember: (id, memberId) => axiosInstance.delete(`/admin/classes/${id}/members/${memberId}`),
 
   getScheduleTemplates: () => axiosInstance.get('/admin/schedule-templates'),

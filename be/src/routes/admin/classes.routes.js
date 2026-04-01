@@ -41,7 +41,6 @@ router.post(
 router.post(
    '/:id/assign-teacher',
    validateObjectId('id'),
-   validate(['teacherId']),
    classesController.assignTeacher
 );
 
