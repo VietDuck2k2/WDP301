@@ -184,6 +184,36 @@ const removeMember = async (req, res, next) => {
    }
 };
 
+/**
+ * @route   GET /api/admin/classes/suggest-code?level=beginner
+ * @desc    Suggest next available class code based on level prefix
+ * @access  Private/Admin
+ */
+const suggestCode = async (req, res, next) => {
+   try {
+      const { level } = req.query;
+      const code = await classService.suggestNextCode(level);
+      ApiResponse.ok(res, { suggestedCode: code });
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
+ * @route   GET /api/admin/classes/check-code?code=BEG004
+ * @desc    Check if a class code is available (not taken)
+ * @access  Private/Admin
+ */
+const checkCode = async (req, res, next) => {
+   try {
+      const { code } = req.query;
+      const available = await classService.isCodeAvailable(code);
+      ApiResponse.ok(res, { available });
+   } catch (error) {
+      next(error);
+   }
+};
+
 module.exports = {
    getAllClasses,
    getClassById,
@@ -193,5 +223,7 @@ module.exports = {
    enrollStudent,
    assignTeacher,
    getClassMembers,
-   removeMember
+   removeMember,
+   suggestCode,
+   checkCode
 };

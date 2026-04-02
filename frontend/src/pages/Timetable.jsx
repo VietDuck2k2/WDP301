@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { timetableApi } from '../api/timetableApi';
 import { SLOT_DEFINITIONS, getSlotByNumber } from '../constants/slots';
-import './Timetable.css';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const ATTENDANCE_LABEL = {
@@ -438,58 +437,58 @@ const Timetable = ({ role, fixedClassId }) => {
 
       {/* Session Modal */}
       {isSessionModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>{editingSession ? 'Edit Session' : 'Create New Session'}</h3>
-            <form onSubmit={handleSaveSession}>
-              <div className="form-group">
-                <label>Title</label>
-                <input type="text" value={sessionForm.title} onChange={e => setSessionForm({...sessionForm, title: e.target.value})} required />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest rounded-3xl shadow-2xl w-full max-w-lg p-8 relative overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-headline font-extrabold text-xl text-on-surface">{editingSession ? 'Chỉnh sửa buổi học' : 'Tạo buổi học mới'}</h3>
+              <button type="button" onClick={() => setIsSessionModalOpen(false)} className="text-on-surface-variant hover:text-on-surface rounded-full p-1 hover:bg-surface-container transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleSaveSession} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Tên buổi học</label>
+                <input type="text" value={sessionForm.title} onChange={e => setSessionForm({...sessionForm, title: e.target.value})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Class</label>
-                  <select 
-                    value={sessionForm.class} 
-                    onChange={e => setSessionForm({...sessionForm, class: e.target.value})} 
-                    required
-                    disabled={!!fixedClassId}
-                  >
-                    <option value="">Select Class</option>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Lớp</label>
+                  <select value={sessionForm.class} onChange={e => setSessionForm({...sessionForm, class: e.target.value})} required disabled={!!fixedClassId} className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                    <option value="">Chọn lớp...</option>
                     {classList.map(c => <option key={c._id} value={c._id}>{c.name} ({c.code})</option>)}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Session Number</label>
-                  <input type="number" value={sessionForm.sessionNumber} onChange={e => setSessionForm({...sessionForm, sessionNumber: e.target.value})} required />
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Số buổi</label>
+                  <input type="number" value={sessionForm.sessionNumber} onChange={e => setSessionForm({...sessionForm, sessionNumber: e.target.value})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
                 </div>
               </div>
-              <div className="form-group">
-                <label>Teacher</label>
-                <select value={sessionForm.teacherId} onChange={e => setSessionForm({...sessionForm, teacherId: e.target.value})} required>
-                  <option value="">Select Teacher</option>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Giáo viên</label>
+                <select value={sessionForm.teacherId} onChange={e => setSessionForm({...sessionForm, teacherId: e.target.value})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                  <option value="">Chọn giáo viên...</option>
                   {teacherList.map(t => <option key={t._id} value={t._id}>{t.firstName} {t.lastName}</option>)}
                 </select>
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Ngày</label>
-                  <input type="date" value={sessionForm.date} onChange={e => setSessionForm({...sessionForm, date: e.target.value})} required />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Ngày</label>
+                  <input type="date" value={sessionForm.date} onChange={e => setSessionForm({...sessionForm, date: e.target.value})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
                 </div>
-                <div className="form-group">
-                  <label>Phòng</label>
-                  <select value={sessionForm.room} onChange={e => setSessionForm({...sessionForm, room: e.target.value})}>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Phòng</label>
+                  <select value={sessionForm.room} onChange={e => setSessionForm({...sessionForm, room: e.target.value})} className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
                     <option value="">-- Chọn phòng --</option>
                     {editingSession && editingSession.room && !availableRooms.find(r => r.name === editingSession.room) && (
-                       <option value={editingSession.room}>{editingSession.room} (Đang chọn)</option>
+                       <option value={editingSession.room}>{editingSession.room} (Đang dùng)</option>
                     )}
                     {availableRooms.map(r => <option key={r._id} value={r.name}>{r.name} {r.capacity ? `(${r.capacity} chỗ)` : ''}</option>)}
                   </select>
                 </div>
               </div>
-              <div className="form-group">
-                <label>Slot thời gian</label>
-                <select value={sessionForm.slotNumber} onChange={e => setSessionForm({...sessionForm, slotNumber: Number(e.target.value)})} required>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Slot thời gian</label>
+                <select value={sessionForm.slotNumber} onChange={e => setSessionForm({...sessionForm, slotNumber: Number(e.target.value)})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
                   {SLOT_DEFINITIONS.map(s => (
                     <option key={s.slotNumber} value={s.slotNumber}>
                       {s.label} · {s.startTime}–{s.endTime} ({s.period})
@@ -497,31 +496,33 @@ const Timetable = ({ role, fixedClassId }) => {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
-                <label>Status</label>
-                <select value={sessionForm.status} onChange={e => setSessionForm({...sessionForm, status: e.target.value})}>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="ongoing">Ongoing</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Trạng thái</label>
+                <select value={sessionForm.status} onChange={e => setSessionForm({...sessionForm, status: e.target.value})} className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                  <option value="scheduled">Đã lên lịch</option>
+                  <option value="ongoing">Đang diễn ra</option>
+                  <option value="completed">Hoàn thành</option>
+                  <option value="cancelled">Đã huỷ</option>
                 </select>
               </div>
               {sessionForm.status === 'cancelled' && (
-                <div className="form-group">
-                  <label>Lý do huỷ</label>
-                  <input type="text" value={sessionForm.cancelReason} onChange={e => setSessionForm({...sessionForm, cancelReason: e.target.value})} placeholder="VD: Nghỉ lễ, Giáo viên ốm..." />
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Lý do huỷ</label>
+                  <input type="text" value={sessionForm.cancelReason} onChange={e => setSessionForm({...sessionForm, cancelReason: e.target.value})} placeholder="VD: Nghỉ lễ, Giáo viên ốm..." className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
                 </div>
               )}
-              <div className="modal-actions">
-                {editingSession && (
-                  <button type="button" className="btn-danger" onClick={handleDeleteSession}>Delete</button>
-                )}
-                {editingSession && editingSession.status === 'cancelled' && (
-                  <button type="button" className="btn-secondary" onClick={openMakeupModal} style={{marginLeft: '10px'}}>+ Tạo buổi học bù</button>
-                )}
-                <div className="right-actions">
-                  <button type="button" onClick={() => setIsSessionModalOpen(false)}>Cancel</button>
-                  <button type="submit" className="btn-primary">Save</button>
+              <div className="flex items-center justify-between pt-4 border-t border-outline-variant/20 gap-3">
+                <div className="flex gap-2">
+                  {editingSession && (
+                    <button type="button" className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors" onClick={handleDeleteSession}>Xoá</button>
+                  )}
+                  {editingSession && editingSession.status === 'cancelled' && (
+                    <button type="button" className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-xl font-bold text-sm hover:bg-purple-100 transition-colors" onClick={openMakeupModal}>+ Tạo buổi bù</button>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setIsSessionModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-sm text-on-surface-variant hover:bg-surface-container transition-colors">Huỷ</button>
+                  <button type="submit" className="px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-container transition-all shadow-sm shadow-primary/20">Lưu</button>
                 </div>
               </div>
             </form>
@@ -531,39 +532,44 @@ const Timetable = ({ role, fixedClassId }) => {
 
       {/* Generate Modal */}
       {isGenerateModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Generate Sessions from Template</h3>
-            <p className="modal-subtitle">Automatically create sessions for a class based on a template schedule.</p>
-            <form onSubmit={handleGenerate}>
-              <div className="form-group">
-                <label>Class</label>
-                <select value={generateForm.classId} onChange={e => setGenerateForm({...generateForm, classId: e.target.value})} required>
-                  <option value="">Select Class</option>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest rounded-3xl shadow-2xl w-full max-w-md p-8">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-headline font-extrabold text-xl text-on-surface">Tạo lịch tự động</h3>
+              <button type="button" onClick={() => setIsGenerateModalOpen(false)} className="text-on-surface-variant hover:text-on-surface rounded-full p-1 hover:bg-surface-container transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <p className="text-sm text-on-surface-variant mb-6">Tự động tạo các buổi học cho lớp theo mẫu lịch.</p>
+            <form onSubmit={handleGenerate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Lớp học</label>
+                <select value={generateForm.classId} onChange={e => setGenerateForm({...generateForm, classId: e.target.value})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                  <option value="">Chọn lớp học...</option>
                   {classList.map(c => <option key={c._id} value={c._id}>{c.name} ({c.code})</option>)}
                 </select>
               </div>
-              <div className="form-group">
-                <label>Schedule Template</label>
-                <select value={generateForm.templateId} onChange={e => setGenerateForm({...generateForm, templateId: e.target.value})} required>
-                  <option value="">Select Template</option>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Mẫu lịch học</label>
+                <select value={generateForm.templateId} onChange={e => setGenerateForm({...generateForm, templateId: e.target.value})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                  <option value="">Chọn mẫu lịch...</option>
                   {templateList.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
                 </select>
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Start Date</label>
-                  <input type="date" value={generateForm.startDate} onChange={e => setGenerateForm({...generateForm, startDate: e.target.value})} />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Ngày bắt đầu</label>
+                  <input type="date" value={generateForm.startDate} onChange={e => setGenerateForm({...generateForm, startDate: e.target.value})} className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
                 </div>
-                <div className="form-group">
-                  <label>End Date</label>
-                  <input type="date" value={generateForm.endDate} onChange={e => setGenerateForm({...generateForm, endDate: e.target.value})} />
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Ngày kết thúc</label>
+                  <input type="date" value={generateForm.endDate} onChange={e => setGenerateForm({...generateForm, endDate: e.target.value})} className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
                 </div>
               </div>
-              <p className="hint-text">If dates are empty, class start/end dates will be used.</p>
-              <div className="modal-actions">
-                <button type="button" onClick={() => setIsGenerateModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Generate</button>
+              <p className="text-xs text-on-surface-variant/60 italic">Nếu để trống, hệ thống sẽ dùng ngày khai giảng và kết thúc của lớp.</p>
+              <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/20">
+                <button type="button" onClick={() => setIsGenerateModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-sm text-on-surface-variant hover:bg-surface-container transition-colors">Huỷ</button>
+                <button type="submit" className="px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-container transition-all shadow-sm shadow-primary/20">Tạo lịch</button>
               </div>
             </form>
           </div>
@@ -572,34 +578,41 @@ const Timetable = ({ role, fixedClassId }) => {
 
       {/* Make-up Session Modal */}
       {isMakeupModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Tạo Buổi Học Bù</h3>
-            <p className="modal-subtitle">Bù cho: {editingSession?.title} - {editingSession?.class?.name}</p>
-            <form onSubmit={handleCreateMakeup}>
-              <div className="form-group">
-                <label>Giáo viên dạy bù</label>
-                <select value={makeupForm.teacherId} onChange={e => setMakeupForm({...makeupForm, teacherId: e.target.value})} required>
-                  <option value="">Select Teacher</option>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest rounded-3xl shadow-2xl w-full max-w-md p-8">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-headline font-extrabold text-xl text-on-surface">Tạo Buổi Học Bù</h3>
+              <button type="button" onClick={() => setIsMakeupModalOpen(false)} className="text-on-surface-variant hover:text-on-surface rounded-full p-1 hover:bg-surface-container transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <p className="text-sm text-on-surface-variant mb-6 bg-purple-50 text-purple-800 border border-purple-100 rounded-xl px-4 py-2 font-medium">
+              Bù cho: <span className="font-bold">{editingSession?.title}</span> — {editingSession?.class?.name}
+            </p>
+            <form onSubmit={handleCreateMakeup} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Giáo viên dạy bù</label>
+                <select value={makeupForm.teacherId} onChange={e => setMakeupForm({...makeupForm, teacherId: e.target.value})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                  <option value="">Chọn giáo viên...</option>
                   {teacherList.map(t => <option key={t._id} value={t._id}>{t.firstName} {t.lastName}</option>)}
                 </select>
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Ngày học bù</label>
-                  <input type="date" value={makeupForm.date} onChange={e => setMakeupForm({...makeupForm, date: e.target.value})} required />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Ngày học bù</label>
+                  <input type="date" value={makeupForm.date} onChange={e => setMakeupForm({...makeupForm, date: e.target.value})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
                 </div>
-                <div className="form-group">
-                  <label>Phòng học</label>
-                  <select value={makeupForm.room} onChange={e => setMakeupForm({...makeupForm, room: e.target.value})}>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Phòng học</label>
+                  <select value={makeupForm.room} onChange={e => setMakeupForm({...makeupForm, room: e.target.value})} className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
                     <option value="">-- Chọn phòng --</option>
                     {availableRooms.map(r => <option key={r._id} value={r.name}>{r.name} {r.capacity ? `(${r.capacity} chỗ)` : ''}</option>)}
                   </select>
                 </div>
               </div>
-              <div className="form-group">
-                <label>Slot thời gian</label>
-                <select value={makeupForm.slotNumber} onChange={e => setMakeupForm({...makeupForm, slotNumber: Number(e.target.value)})} required>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5 ml-1">Slot thời gian</label>
+                <select value={makeupForm.slotNumber} onChange={e => setMakeupForm({...makeupForm, slotNumber: Number(e.target.value)})} required className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
                   {SLOT_DEFINITIONS.map(s => (
                     <option key={s.slotNumber} value={s.slotNumber}>
                       {s.label} · {s.startTime}–{s.endTime} ({s.period})
@@ -607,11 +620,9 @@ const Timetable = ({ role, fixedClassId }) => {
                   ))}
                 </select>
               </div>
-              <div className="modal-actions">
-                <div className="right-actions">
-                  <button type="button" onClick={() => setIsMakeupModalOpen(false)}>Cancel</button>
-                  <button type="submit" className="btn-primary">Tạo lịch</button>
-                </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/20">
+                <button type="button" onClick={() => setIsMakeupModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-sm text-on-surface-variant hover:bg-surface-container transition-colors">Huỷ</button>
+                <button type="submit" className="px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-container transition-all shadow-sm shadow-primary/20">Tạo lịch bù</button>
               </div>
             </form>
           </div>

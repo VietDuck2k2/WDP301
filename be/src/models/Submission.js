@@ -50,6 +50,22 @@ const submissionSchema = new mongoose.Schema({
    isLate: {
       type: Boolean,
       default: false
+   },
+   isResubmission: {
+      type: Boolean,
+      default: false
+   },
+   attemptNo: {
+      type: Number,
+      default: 1,
+      min: 1
+   },
+   returnedAt: {
+      type: Date
+   },
+   returnReason: {
+      type: String,
+      trim: true
    }
 }, {
    timestamps: true

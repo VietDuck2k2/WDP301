@@ -20,15 +20,28 @@ const assignmentSchema = new mongoose.Schema({
       type: String,
       trim: true
    },
+   assignmentType: {
+      type: String,
+      enum: ['homework', 'writing', 'speaking', 'vocabulary', 'quiz', 'midterm', 'final'],
+      default: 'homework'
+   },
    dueDate: {
       type: Date,
       required: [true, 'Due date is required']
+   },
+   closeDate: {
+      type: Date,
+      required: [true, 'Close date is required']
    },
    maxScore: {
       type: Number,
       required: [true, 'Max score is required'],
       min: [0, 'Max score cannot be negative'],
       default: 100
+   },
+   allowLateSubmission: {
+      type: Boolean,
+      default: false
    },
    attachments: [{
       name: String,
@@ -45,10 +58,13 @@ const assignmentSchema = new mongoose.Schema({
    },
    status: {
       type: String,
-      enum: ['draft', 'published', 'closed'],
+      enum: ['draft', 'published', 'closed', 'archived'],
       default: 'draft'
    },
    publishedAt: {
+      type: Date
+   },
+   closedAt: {
       type: Date
    }
 }, {

@@ -11,6 +11,13 @@ router.use(authenticate, requireAdmin);
 // @route   GET /api/admin/classes
 router.get('/', classesController.getAllClasses);
 
+// @route   GET /api/admin/classes/suggest-code?level=beginner
+// MUST come before /:id to prevent Express treating 'suggest-code' as an id
+router.get('/suggest-code', classesController.suggestCode);
+
+// @route   GET /api/admin/classes/check-code?code=BEG004
+router.get('/check-code', classesController.checkCode);
+
 // @route   GET /api/admin/classes/:id
 router.get('/:id', validateObjectId('id'), classesController.getClassById);
 

@@ -11,16 +11,34 @@ router.use(authenticate, requireTeacher);
 // @route   GET /api/teacher/assignments
 router.get('/', assignmentsController.getMyAssignments);
 
-// @route   GET /api/teacher/assignments/:id
-router.get('/:id', validateObjectId('id'), assignmentsController.getAssignmentById);
-
 // @route   POST /api/teacher/assignments
 router.post(
    '/',
-   validate(['class', 'title', 'description', 'dueDate', 'maxScore']),
+   validate(['class', 'title', 'description', 'dueDate', 'closeDate', 'maxScore']),
    validateDate('dueDate'),
+   validateDate('closeDate'),
    assignmentsController.createAssignment
 );
+
+// @route   POST /api/teacher/submissions/:id/grade
+// MUST come before /:id routes to avoid route shadowing
+router.post(
+   '/submissions/:id/grade',
+   validateObjectId('id'),
+   validate(['score']),
+   assignmentsController.gradeSubmission
+);
+
+// @route   POST /api/teacher/submissions/:id/return
+router.post(
+   '/submissions/:id/return',
+   validateObjectId('id'),
+   validate(['returnReason']),
+   assignmentsController.returnSubmission
+);
+
+// @route   GET /api/teacher/assignments/:id
+router.get('/:id', validateObjectId('id'), assignmentsController.getAssignmentById);
 
 // @route   PUT /api/teacher/assignments/:id
 router.put('/:id', validateObjectId('id'), assignmentsController.updateAssignment);
@@ -31,15 +49,10 @@ router.delete('/:id', validateObjectId('id'), assignmentsController.deleteAssign
 // @route   POST /api/teacher/assignments/:id/publish
 router.post('/:id/publish', validateObjectId('id'), assignmentsController.publishAssignment);
 
+// @route   POST /api/teacher/assignments/:id/close
+router.post('/:id/close', validateObjectId('id'), assignmentsController.closeAssignment);
+
 // @route   GET /api/teacher/assignments/:id/submissions
 router.get('/:id/submissions', validateObjectId('id'), assignmentsController.getAssignmentSubmissions);
-
-// @route   POST /api/teacher/submissions/:id/grade
-router.post(
-   '/submissions/:id/grade',
-   validateObjectId('id'),
-   validate(['score']),
-   assignmentsController.gradeSubmission
-);
 
 module.exports = router;

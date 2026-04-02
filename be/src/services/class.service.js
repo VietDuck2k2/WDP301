@@ -445,6 +445,44 @@ const removeMember = async (classId, userId) => {
    return member;
 };
 
+// Level → 3-letter prefix mapping
+const LEVEL_PREFIX = {
+   beginner: 'BEG',
+   elementary: 'ELE',
+   intermediate: 'INT',
+   'upper-intermediate': 'UPP',
+   advanced: 'ADV'
+};
+
+/**
+ * Suggest the next sequential class code for a given level.
+ * E.g. level=beginner, last code BEG003 → returns 'BEG004'
+ */
+const suggestNextCode = async (level) => {
+   const prefix = LEVEL_PREFIX[level] || 'CLS';
+   // Find all classes whose code matches the prefix
+   const regex = new RegExp(`^${prefix}(\\d{3})$`);
+   const existing = await Class.find({ code: regex }).select('code').lean();
+
+   let maxNum = 0;
+   for (const cls of existing) {
+      const num = parseInt(cls.code.slice(-3), 10);
+      if (!isNaN(num) && num > maxNum) maxNum = num;
+   }
+
+   const nextNum = String(maxNum + 1).padStart(3, '0');
+   return `${prefix}${nextNum}`;
+};
+
+/**
+ * Check whether a class code is available (not taken and matches format).
+ */
+const isCodeAvailable = async (code) => {
+   if (!code || !/^[A-Z]{3}\d{3}$/.test(code.toUpperCase())) return false;
+   const existing = await Class.findOne({ code: code.toUpperCase() }).lean();
+   return !existing;
+};
+
 module.exports = {
    getAllClasses,
    getClassById,
@@ -454,5 +492,7 @@ module.exports = {
    enrollStudent,
    assignTeacher,
    getClassMembers,
-   removeMember
+   removeMember,
+   suggestNextCode,
+   isCodeAvailable
 };

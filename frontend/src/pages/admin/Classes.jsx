@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -95,6 +95,39 @@ const Classes = () => {
   const [savingEdit, setSavingEdit] = useState(false);
 
   const todayInput = useMemo(() => getTodayInput(), []);
+
+  // --- Code auto-suggest & real-time check ---
+  const [codeStatus, setCodeStatus] = useState('idle'); // 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
+  const checkDebounceTimer = useRef(null);
+
+  const checkCodeRealTime = useCallback(async (code) => {
+    if (!code || code.length < 6) { setCodeStatus('idle'); return; }
+    if (!/^[A-Za-z]{3}\d{3}$/.test(code)) { setCodeStatus('invalid'); return; }
+    setCodeStatus('checking');
+    try {
+      const res = await adminApi.checkClassCode(code.toUpperCase());
+      setCodeStatus(res?.data?.available ? 'available' : 'taken');
+    } catch { setCodeStatus('idle'); }
+  }, []);
+
+  const handleCodeChange = (value, formSetter) => {
+    const upper = value.toUpperCase();
+    formSetter((prev) => ({ ...prev, code: upper }));
+    setCodeStatus('idle');
+    clearTimeout(checkDebounceTimer.current);
+    checkDebounceTimer.current = setTimeout(() => checkCodeRealTime(upper), 500);
+  };
+
+  const handleLevelChange = async (level) => {
+    setCreateForm((prev) => ({ ...prev, level }));
+    setCodeStatus('checking');
+    try {
+      const res = await adminApi.suggestClassCode(level);
+      const suggested = res?.data?.suggestedCode || '';
+      setCreateForm((prev) => ({ ...prev, level, code: suggested }));
+      setCodeStatus('available');
+    } catch { setCodeStatus('idle'); }
+  };
 
 
 
@@ -619,23 +652,27 @@ const Classes = () => {
 
                 />
 
-                <input
-
-                  placeholder="Mã lớp (VD: EBC001)"
-
-                  value={createForm.code}
-
-                  pattern="[A-Za-z]{3}[0-9]{3}"
-
-                  maxLength={6}
-
-                  title="3 chữ cái in hoa + 3 chữ số (VD: EBC001)"
-
-                  onChange={(e) => setCreateForm((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
-
-                  required
-
-                />
+                <div className="code-input-wrapper" style={{ position: 'relative' }}>
+                  <input
+                    placeholder="Mã lớp (VD: BEG001)"
+                    value={createForm.code}
+                    pattern="[A-Za-z]{3}[0-9]{3}"
+                    maxLength={6}
+                    title="3 chữ cái + 3 chữ số (VD: BEG001)"
+                    onChange={(e) => handleCodeChange(e.target.value, setCreateForm)}
+                    required
+                    style={{
+                      borderColor:
+                        codeStatus === 'available' ? '#22c55e' :
+                        codeStatus === 'taken' || codeStatus === 'invalid' ? '#ef4444' : undefined,
+                      paddingRight: '110px'
+                    }}
+                  />
+                  {codeStatus === 'checking' && <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: '#64748b' }}>Đang kiểm tra...</span>}
+                  {codeStatus === 'available' && <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: '#22c55e', fontWeight: 700 }}>✅ Khả dụng</span>}
+                  {codeStatus === 'taken' && <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: '#ef4444', fontWeight: 700 }}>❌ Đã tồn tại</span>}
+                  {codeStatus === 'invalid' && <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: '#ef4444', fontWeight: 700 }}>❌ Sai định dạng</span>}
+                </div>
 
               </div>
 
@@ -655,7 +692,7 @@ const Classes = () => {
 
               <div className="triple-grid">
 
-                <select value={createForm.level} onChange={(e) => setCreateForm((prev) => ({ ...prev, level: e.target.value }))}>
+                <select value={createForm.level} onChange={(e) => handleLevelChange(e.target.value)}>
 
                   {levelOptions.map((level) => (
 
@@ -777,25 +814,18 @@ const Classes = () => {
 
                 />
 
-                <input
-
-                  placeholder="Mã lớp (VD: EBC001)"
-
-                  value={editForm.code}
-
-                  pattern="[A-Za-z]{3}[0-9]{3}"
-
-                  maxLength={6}
-
-                  title="3 chữ cái in hoa + 3 chữ số (VD: EBC001)"
-
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
-
-                  required
-
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    value={editForm.code}
+                    readOnly
+                    title="Mã lớp không thể thay đổi sau khi tạo"
+                    style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#64748b', width: '100%' }}
+                  />
+                  <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: '#94a3b8' }}>🔒 Cố định</span>
+                </div>
 
               </div>
+
 
 
 

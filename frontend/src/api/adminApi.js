@@ -35,6 +35,8 @@ export const adminApi = {
     return axiosInstance.post(`/admin/classes/${id}/assign-teacher`, { teacherIds });
   },
   removeClassMember: (id, memberId) => axiosInstance.delete(`/admin/classes/${id}/members/${memberId}`),
+  suggestClassCode: (level) => axiosInstance.get('/admin/classes/suggest-code', { params: { level } }),
+  checkClassCode: (code) => axiosInstance.get('/admin/classes/check-code', { params: { code } }),
 
   getScheduleTemplates: () => axiosInstance.get('/admin/schedule-templates'),
   getScheduleTemplateById: (id) => axiosInstance.get(`/admin/schedule-templates/${id}`),

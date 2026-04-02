@@ -1,10 +1,9 @@
 const assignmentService = require('../../services/assignment.service');
+const submissionService = require('../../services/submission.service');
 const ApiResponse = require('../../utils/apiResponse');
 
 /**
  * @route   GET /api/teacher/assignments
- * @desc    Get teacher's assignments
- * @access  Private/Teacher
  */
 const getMyAssignments = async (req, res, next) => {
    try {
@@ -20,8 +19,6 @@ const getMyAssignments = async (req, res, next) => {
 
 /**
  * @route   GET /api/teacher/assignments/:id
- * @desc    Get assignment by ID
- * @access  Private/Teacher
  */
 const getAssignmentById = async (req, res, next) => {
    try {
@@ -34,8 +31,6 @@ const getAssignmentById = async (req, res, next) => {
 
 /**
  * @route   POST /api/teacher/assignments
- * @desc    Create new assignment
- * @access  Private/Teacher
  */
 const createAssignment = async (req, res, next) => {
    try {
@@ -48,12 +43,10 @@ const createAssignment = async (req, res, next) => {
 
 /**
  * @route   PUT /api/teacher/assignments/:id
- * @desc    Update assignment
- * @access  Private/Teacher
  */
 const updateAssignment = async (req, res, next) => {
    try {
-      const assignment = await assignmentService.updateAssignment(req.params.id, req.body);
+      const assignment = await assignmentService.updateAssignment(req.params.id, req.body, req.user._id);
       ApiResponse.ok(res, assignment, 'Assignment updated successfully');
    } catch (error) {
       next(error);
@@ -62,13 +55,11 @@ const updateAssignment = async (req, res, next) => {
 
 /**
  * @route   DELETE /api/teacher/assignments/:id
- * @desc    Delete assignment
- * @access  Private/Teacher
  */
 const deleteAssignment = async (req, res, next) => {
    try {
-      const assignment = await assignmentService.deleteAssignment(req.params.id);
-      ApiResponse.ok(res, assignment, 'Assignment deleted successfully');
+      const result = await assignmentService.deleteAssignment(req.params.id, req.user._id);
+      ApiResponse.ok(res, result, result.deleted ? 'Assignment deleted' : 'Assignment archived');
    } catch (error) {
       next(error);
    }
@@ -76,12 +67,10 @@ const deleteAssignment = async (req, res, next) => {
 
 /**
  * @route   POST /api/teacher/assignments/:id/publish
- * @desc    Publish assignment
- * @access  Private/Teacher
  */
 const publishAssignment = async (req, res, next) => {
    try {
-      const assignment = await assignmentService.publishAssignment(req.params.id);
+      const assignment = await assignmentService.publishAssignment(req.params.id, req.user._id);
       ApiResponse.ok(res, assignment, 'Assignment published successfully');
    } catch (error) {
       next(error);
@@ -89,13 +78,23 @@ const publishAssignment = async (req, res, next) => {
 };
 
 /**
+ * @route   POST /api/teacher/assignments/:id/close
+ */
+const closeAssignment = async (req, res, next) => {
+   try {
+      const assignment = await assignmentService.closeAssignment(req.params.id, req.user._id);
+      ApiResponse.ok(res, assignment, 'Assignment closed successfully');
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
  * @route   GET /api/teacher/assignments/:id/submissions
- * @desc    Get submissions for an assignment
- * @access  Private/Teacher
  */
 const getAssignmentSubmissions = async (req, res, next) => {
    try {
-      const submissions = await require('../../services/submission.service').getAssignmentSubmissions(req.params.id);
+      const submissions = await submissionService.getAssignmentSubmissions(req.params.id, req.user._id);
       ApiResponse.ok(res, submissions);
    } catch (error) {
       next(error);
@@ -104,18 +103,33 @@ const getAssignmentSubmissions = async (req, res, next) => {
 
 /**
  * @route   POST /api/teacher/submissions/:id/grade
- * @desc    Grade a submission
- * @access  Private/Teacher
  */
 const gradeSubmission = async (req, res, next) => {
    try {
       const { score, feedback } = req.body;
-      const submission = await require('../../services/submission.service').gradeSubmission(
+      const submission = await submissionService.gradeSubmission(
          req.params.id,
          { score, feedback },
          req.user._id
       );
       ApiResponse.ok(res, submission, 'Submission graded successfully');
+   } catch (error) {
+      next(error);
+   }
+};
+
+/**
+ * @route   POST /api/teacher/submissions/:id/return
+ */
+const returnSubmission = async (req, res, next) => {
+   try {
+      const { returnReason } = req.body;
+      const submission = await submissionService.returnForRevision(
+         req.params.id,
+         { returnReason },
+         req.user._id
+      );
+      ApiResponse.ok(res, submission, 'Submission returned for revision');
    } catch (error) {
       next(error);
    }
@@ -128,6 +142,8 @@ module.exports = {
    updateAssignment,
    deleteAssignment,
    publishAssignment,
+   closeAssignment,
    getAssignmentSubmissions,
-   gradeSubmission
+   gradeSubmission,
+   returnSubmission
 };
