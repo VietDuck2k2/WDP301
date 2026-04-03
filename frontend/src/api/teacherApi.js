@@ -29,8 +29,10 @@ export const teacherApi = {
    updateAssignment: (id, data) => axiosInstance.put(`/teacher/assignments/${id}`, data),
    deleteAssignment: (id) => axiosInstance.delete(`/teacher/assignments/${id}`),
    publishAssignment: (id) => axiosInstance.post(`/teacher/assignments/${id}/publish`),
+   closeAssignment: (id) => axiosInstance.post(`/teacher/assignments/${id}/close`),
    getAssignmentSubmissions: (id) => axiosInstance.get(`/teacher/assignments/${id}/submissions`),
    gradeSubmission: (submissionId, data) => axiosInstance.post(`/teacher/assignments/submissions/${submissionId}/grade`, data),
+   returnSubmission: (submissionId, data) => axiosInstance.post(`/teacher/assignments/submissions/${submissionId}/return`, data),
 
    // Announcements
    getAnnouncements: (params) => axiosInstance.get('/teacher/announcements', { params }),

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { teacherApi } from '../../api/teacherApi';
 import FileUpload from '../../components/FileUpload';
 
-const formatDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-');
+const formatDate = (d) => d ? new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
 
 export default function TeacherAssignments() {
   const [assignments, setAssignments] = useState([]);
@@ -12,29 +12,26 @@ export default function TeacherAssignments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ class: '', title: '', description: '', instructions: '', dueDate: '', maxScore: 100, attachments: [] });
+  const [form, setForm] = useState({ class: '', title: '', description: '', instructions: '', dueDate: '', closeDate: '', maxScore: 100, assignmentType: 'homework', allowLateSubmission: false, attachments: [] });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    teacherApi.getMyClasses()
-      .then((res) => { if (res?.success && res.data) setClasses(Array.isArray(res.data) ? res.data : []); })
-      .catch(() => setClasses([]));
+    teacherApi.getMyClasses().then((res) => {
+      if (res?.success && res.data) setClasses(Array.isArray(res.data) ? res.data : []);
+    });
   }, []);
 
   useEffect(() => {
     setLoading(true);
     teacherApi.getAssignments(classId ? { classId } : {})
       .then((res) => {
-        if (res?.success && res.data) {
-          const list = res.data.assignments || res.data;
-          setAssignments(Array.isArray(list) ? list : []);
-        } else setAssignments([]);
+        if (res?.success && res.data) setAssignments(Array.isArray(res.data) ? res.data : (res.data.assignments || []));
       })
       .catch(() => setAssignments([]))
       .finally(() => setLoading(false));
   }, [classId]);
 
-  const handleCreate = async (e) => {
+  const handleCreate = (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
@@ -44,30 +41,54 @@ export default function TeacherAssignments() {
       description: form.description,
       instructions: form.instructions,
       dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : undefined,
+      closeDate: form.closeDate ? new Date(form.closeDate).toISOString() : undefined,
       maxScore: Number(form.maxScore) || 100,
+      assignmentType: form.assignmentType || 'homework',
+      allowLateSubmission: form.allowLateSubmission,
       attachments: form.attachments,
     })
       .then((res) => {
-        if (res?.success) { 
-            setShowForm(false); 
-            setForm({ class: '', title: '', description: '', instructions: '', dueDate: '', maxScore: 100, attachments: [] }); 
-            setAssignments((prev) => [res.data, ...prev]); 
-            alert('Tạo bài tập thành công!');
+        if (res?.success && res.data) {
+          setAssignments((prev) => [res.data, ...prev]);
+          setShowForm(false);
+          setForm({ class: '', title: '', description: '', instructions: '', dueDate: '', closeDate: '', maxScore: 100, assignmentType: 'homework', allowLateSubmission: false, attachments: [] });
         }
-        else setError(res?.message || 'Tạo thất bại');
       })
-      .catch((err) => setError(err.response?.data?.message || 'Tạo thất bại'))
+      .catch((err) => setError(err.response?.data?.message || 'Có lỗi xảy ra khi tạo bài tập.'))
       .finally(() => setSubmitting(false));
+  };
+
+  const handleClose = async (assignmentId) => {
+    if (!confirm('Đóng bài tập? Học sinh sẽ không thể nộp thêm.')) return;
+    try {
+      const res = await teacherApi.closeAssignment(assignmentId);
+      if (res?.success) setAssignments((prev) => prev.map((a) => a._id === assignmentId ? { ...a, status: 'closed' } : a));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể đóng bài tập.');
+    }
   };
 
   const getStatusBadge = (status, dueDate) => {
       const now = new Date();
       const due = new Date(dueDate);
       const isOverdue = dueDate && now > due;
-
       if (status === 'draft') return <span className="bg-surface-container text-on-surface-variant px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-outline-variant/30">Lưu nháp</span>;
+      if (status === 'closed' || status === 'archived') return <span className="bg-red-50 text-red-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-red-200">{status === 'archived' ? 'Lưu trữ' : 'Đã đóng'}</span>;
       if (isOverdue) return <span className="bg-red-50 text-red-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-red-200">Đã hết hạn</span>;
-      return <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-emerald-200">Đang Mở</span>;
+      return <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-emerald-200">Đang mở</span>;
+  };
+
+  // Auto-set closeDate = dueDate + 1 day when dueDate changes
+  const handleDueDateChange = (val) => {
+    setForm((f) => {
+      let newClose = f.closeDate;
+      if (val && (!newClose || newClose <= val)) {
+        const d = new Date(val);
+        d.setDate(d.getDate() + 1);
+        newClose = d.toISOString().slice(0, 16);
+      }
+      return { ...f, dueDate: val, closeDate: newClose };
+    });
   };
 
   return (
@@ -84,9 +105,9 @@ export default function TeacherAssignments() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-[200px]">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-70 pointer-events-none text-[20px]">filter_list</span>
-            <select 
-                value={classId} 
-                onChange={(e) => setClassId(e.target.value)} 
+            <select
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
                 className="w-full bg-surface border border-outline-variant/50 text-on-surface text-sm rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.25em 1.25em' }}
             >
@@ -95,9 +116,9 @@ export default function TeacherAssignments() {
             </select>
           </div>
           
-          <button 
-            type="button" 
-            className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-primary-container transition-all shadow-sm shadow-primary/20 hover:shadow-md hover:-translate-y-0.5" 
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-primary-container transition-all shadow-sm shadow-primary/20 hover:shadow-md hover:-translate-y-0.5"
             onClick={() => setShowForm(!showForm)}
           >
             <span className="material-symbols-outlined text-[18px]">{showForm ? 'close' : 'add_task'}</span>
@@ -130,10 +151,10 @@ export default function TeacherAssignments() {
                         <div className="space-y-5">
                             <div>
                                 <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Lớp học giao bài <span className="text-red-500">*</span></label>
-                                <select 
-                                    required 
-                                    value={form.class} 
-                                    onChange={(e) => setForm((f) => ({ ...f, class: e.target.value }))} 
+                                <select
+                                    required
+                                    value={form.class}
+                                    onChange={(e) => setForm((f) => ({ ...f, class: e.target.value }))}
                                     className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface"
                                 >
                                     <option value="" disabled>-- Chọn lớp học --</option>
@@ -143,73 +164,111 @@ export default function TeacherAssignments() {
 
                             <div>
                                 <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Tiêu đề bài tập <span className="text-red-500">*</span></label>
-                                <input 
-                                    required 
-                                    placeholder="Vd: Bài tập về nhà Unit 1 - Present Simple" 
-                                    value={form.title} 
-                                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} 
-                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface placeholder:text-on-surface-variant/40" 
+                                <input
+                                    required
+                                    placeholder="Vd: Bài tập về nhà Unit 1 - Present Simple"
+                                    value={form.title}
+                                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface placeholder:text-on-surface-variant/40"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Thời hạn nộp bài</label>
-                                <input 
-                                    type="datetime-local" 
-                                    value={form.dueDate} 
-                                    onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))} 
-                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface" 
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Loại bài tập</label>
+                                <select
+                                    value={form.assignmentType}
+                                    onChange={(e) => setForm((f) => ({ ...f, assignmentType: e.target.value }))}
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface"
+                                >
+                                    {['homework','writing','speaking','vocabulary','quiz','midterm','final'].map((t) => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Thời hạn nộp bài <span className="text-red-500">*</span></label>
+                                <input
+                                    type="datetime-local"
+                                    required
+                                    value={form.dueDate}
+                                    onChange={(e) => handleDueDateChange(e.target.value)}
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">
+                                    Thời điểm đóng nhận bài
+                                    <span className="ml-1 font-normal text-on-surface-variant/60 text-xs">(tự động = hạn nộp + 1 ngày)</span>
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    value={form.closeDate}
+                                    onChange={(e) => setForm((f) => ({ ...f, closeDate: e.target.value }))}
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Thang điểm tối đa</label>
-                                <input 
-                                    type="number" 
-                                    min="0" 
-                                    placeholder="100" 
-                                    value={form.maxScore} 
-                                    onChange={(e) => setForm((f) => ({ ...f, maxScore: e.target.value }))} 
-                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface" 
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder="100"
+                                    value={form.maxScore}
+                                    onChange={(e) => setForm((f) => ({ ...f, maxScore: e.target.value }))}
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface"
                                 />
+                            </div>
+
+                            <div className="flex items-center gap-3 p-3 bg-amber-50/50 rounded-xl border border-amber-200/40">
+                                <input
+                                    type="checkbox"
+                                    id="allowLate"
+                                    checked={form.allowLateSubmission}
+                                    onChange={(e) => setForm((f) => ({ ...f, allowLateSubmission: e.target.checked }))}
+                                    className="w-4 h-4 accent-amber-500"
+                                />
+                                <label htmlFor="allowLate" className="text-sm font-bold text-amber-800 cursor-pointer">
+                                    Cho phép nộp muộn sau hạn (nhưng trước closeDate)
+                                </label>
                             </div>
                         </div>
 
                         <div className="space-y-5">
                             <div>
                                 <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Mô tả và Yêu cầu</label>
-                                <textarea 
-                                    placeholder="Nhập nội dung chi tiết bài tập..." 
-                                    value={form.description} 
-                                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} 
-                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface placeholder:text-on-surface-variant/40 min-h-[120px] resize-y" 
+                                <textarea
+                                    placeholder="Nhập nội dung chi tiết bài tập..."
+                                    value={form.description}
+                                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface placeholder:text-on-surface-variant/40 min-h-[120px] resize-y"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Định dạng nộp bài (Hướng dẫn)</label>
-                                <input 
-                                    placeholder="Vd: Nộp file PDF hoặc Docx" 
-                                    value={form.instructions} 
-                                    onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))} 
-                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface placeholder:text-on-surface-variant/40" 
+                                <input
+                                    placeholder="Vd: Nộp file PDF hoặc Docx"
+                                    value={form.instructions}
+                                    onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))}
+                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface placeholder:text-on-surface-variant/40"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-bold text-on-surface-variant mb-1.5 ml-1">Tài liệu đính kèm</label>
-                                <FileUpload 
-                                    value={form.attachments} 
-                                    onChange={(att) => setForm((f) => ({ ...f, attachments: att }))} 
+                                <FileUpload
+                                    value={form.attachments}
+                                    onChange={(att) => setForm((f) => ({ ...f, attachments: att }))}
                                 />
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3 pt-4 border-t border-outline-variant/20">
-                        <button 
-                            type="submit" 
-                            className="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold min-w-[120px] hover:bg-primary-container transition-all shadow-sm shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed" 
+                        <button
+                            type="submit"
+                            className="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold min-w-[120px] hover:bg-primary-container transition-all shadow-sm shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed"
                             disabled={submitting}
                         >
                             {submitting ? (
@@ -218,9 +277,9 @@ export default function TeacherAssignments() {
                                 <><span className="material-symbols-outlined text-[18px]">send</span> Tạo Bài tập</>
                             )}
                         </button>
-                        <button 
-                            type="button" 
-                            className="px-6 py-2.5 rounded-xl font-bold text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" 
+                        <button
+                            type="button"
+                            className="px-6 py-2.5 rounded-xl font-bold text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"
                             onClick={() => setShowForm(false)}
                         >
                             Hủy bỏ
@@ -241,7 +300,7 @@ export default function TeacherAssignments() {
             <span className="material-symbols-outlined text-6xl text-primary/30 mb-4">inventory_2</span>
             <h3 className="text-xl font-bold text-on-surface mb-2 font-headline">Chưa có bài tập nào</h3>
             <p className="text-on-surface-variant max-w-md mx-auto mb-6">Bạn chưa tạo bài tập nào cho lớp này. Hãy tạo bài tập đầu tiên để học viên có thể vào làm bài.</p>
-            <button 
+            <button
                 onClick={() => setShowForm(true)}
                 className="bg-primary/10 text-primary px-6 py-2.5 rounded-xl font-bold hover:bg-primary/20 transition-colors inline-flex items-center gap-2"
             >
@@ -252,7 +311,7 @@ export default function TeacherAssignments() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {assignments.map((a) => (
                 <div key={a._id} className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col">
-                    {/* Header line with status */}
+                    {/* Header */}
                     <div className="px-6 py-5 border-b border-outline-variant/10 flex justify-between items-start gap-4">
                         <div className="flex flex-col gap-1.5">
                             <span className="text-xs font-bold uppercase tracking-widest text-primary/80">{a.class?.name || 'Không rõ lớp'}</span>
@@ -262,8 +321,8 @@ export default function TeacherAssignments() {
                             {getStatusBadge(a.status, a.dueDate)}
                         </div>
                     </div>
-                    
-                    {/* Content body */}
+
+                    {/* Body */}
                     <div className="p-6 flex-grow flex flex-col gap-5">
                         <p className="text-sm text-on-surface-variant line-clamp-3 leading-relaxed">
                             {a.description || <span className="opacity-50 italic">Không có mô tả...</span>}
@@ -279,7 +338,19 @@ export default function TeacherAssignments() {
                                     <p className="font-bold text-on-surface">{formatDate(a.dueDate)}</p>
                                 </div>
                             </div>
-                            
+
+                            {a.closeDate && (
+                                <div className="flex items-center gap-3 text-sm">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-500 flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-[18px]">lock</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant font-headline">Đóng nhận bài</p>
+                                        <p className="font-bold text-on-surface">{formatDate(a.closeDate)}</p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex items-center gap-3 text-sm">
                                 <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
                                     <span className="material-symbols-outlined text-[18px]">verified</span>
@@ -292,19 +363,30 @@ export default function TeacherAssignments() {
                         </div>
                     </div>
 
-                    {/* Footer Actions */}
+                    {/* Footer */}
                     <div className="px-6 py-4 bg-surface-container/30 border-t border-outline-variant/10 flex justify-between items-center mt-auto">
                         <div className="text-xs font-medium text-on-surface-variant flex items-center gap-1.5 opacity-70">
                             <span className="material-symbols-outlined text-[14px]">upload_file</span>
                             {a.attachments?.length || 0} tệp
                         </div>
-                        <Link 
-                            to={`/teacher/assignments/${a._id}`}
-                            className="bg-surface border border-outline-variant/50 text-primary px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:border-primary/50 hover:bg-primary/5 transition-all inline-flex items-center gap-1.5 group-hover:bg-primary group-hover:text-white"
-                        >
-                            Chấm bài
-                            <span className="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            {a.status === 'published' && (
+                                <button
+                                    onClick={() => handleClose(a._id)}
+                                    title="Đóng bài tập"
+                                    className="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center justify-center"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">lock</span>
+                                </button>
+                            )}
+                            <Link
+                                to={`/teacher/assignments/${a._id}`}
+                                className="bg-surface border border-outline-variant/50 text-primary px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:border-primary/50 hover:bg-primary/5 transition-all inline-flex items-center gap-1.5 group-hover:bg-primary group-hover:text-white"
+                            >
+                                Chấm bài
+                                <span className="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                            </Link>
+                        </div>
                     </div>
                 </div>
             ))}

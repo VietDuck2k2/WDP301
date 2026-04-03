@@ -12,7 +12,8 @@ export default function AssignmentDetail() {
   const [loading, setLoading] = useState(true);
   const [grading, setGrading] = useState({});
   const [feedback, setFeedback] = useState({});
-  const [savingState, setSavingState] = useState({}); // Tracking save state per submission
+  const [savingState, setSavingState] = useState({});
+  const [returnModal, setReturnModal] = useState({ open: false, subId: null, reason: '', loading: false });
 
   useEffect(() => {
     if (!id) return;
@@ -44,10 +45,37 @@ export default function AssignmentDetail() {
     }
   };
 
+  const handleClose = async () => {
+    if (!confirm('Đóng bài tập? Học sinh sẽ không thể nộp thêm sau khi đóng.')) return;
+    try {
+      const res = await teacherApi.closeAssignment(id);
+      if (res?.success) setAssignment((a) => ({ ...a, status: 'closed', closedAt: new Date().toISOString() }));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể đóng bài tập.');
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!returnModal.reason.trim()) { alert('Vui lòng nhập lý do trả lại.'); return; }
+    setReturnModal((m) => ({ ...m, loading: true }));
+    try {
+      const res = await teacherApi.returnSubmission(returnModal.subId, { returnReason: returnModal.reason });
+      if (res?.success) {
+        setSubmissions((prev) => prev.map((s) => s._id === returnModal.subId ? { ...s, status: 'returned', returnReason: returnModal.reason, score: null, feedback: null } : s));
+        setReturnModal({ open: false, subId: null, reason: '', loading: false });
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể trả lại bài.');
+      setReturnModal((m) => ({ ...m, loading: false }));
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
         case 'graded':
             return <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-emerald-200">Đã chấm điểm</span>;
+        case 'returned':
+            return <span className="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-amber-200">Trả lại</span>;
         case 'submitted':
         case 'submitted_late':
             return <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-blue-200">Chờ chấm</span>;
@@ -238,6 +266,18 @@ export default function AssignmentDetail() {
                              </div>
                          </div>
 
+                         {assignment.closeDate && (
+                             <div className="flex items-start gap-3 bg-slate-50/50 p-3 rounded-xl border border-slate-100/50">
+                                 <div className="w-8 h-8 rounded-lg bg-slate-100/80 text-slate-600 flex items-center justify-center shrink-0">
+                                     <span className="material-symbols-outlined text-[18px]">lock</span>
+                                 </div>
+                                 <div>
+                                     <p className="text-[10px] uppercase tracking-wider font-bold text-slate-600/60 mb-0.5">Đóng nhận bài</p>
+                                     <p className="font-bold text-slate-800 text-sm">{formatDate(assignment.closeDate)}</p>
+                                 </div>
+                             </div>
+                         )}
+
                          <div className="flex items-start gap-3 bg-amber-50/50 p-3 rounded-xl border border-amber-100/50">
                              <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-700 flex items-center justify-center shrink-0">
                                  <span className="material-symbols-outlined text-[18px]">verified</span>
@@ -286,6 +326,24 @@ export default function AssignmentDetail() {
           </div>
 
       </div>
+
+      {/* Return Modal */}
+      {returnModal.open && (
+          <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                  <h3 className="text-lg font-extrabold text-on-surface font-headline mb-1">Trả lại để sửa</h3>
+                  <p className="text-sm text-on-surface-variant mb-4">Nhập lý do để học sinh biết cần sửa gì.</p>
+                  <textarea autoFocus rows={4} className="w-full bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 text-on-surface" placeholder="Ví dụ: Cần bổ sung ví dụ minh họa..." value={returnModal.reason} onChange={(e) => setReturnModal((m) => ({ ...m, reason: e.target.value }))} />
+                  <div className="flex gap-3 justify-end">
+                      <button onClick={() => setReturnModal({ open: false, subId: null, reason: '', loading: false })} className="px-5 py-2 rounded-xl font-bold text-on-surface-variant hover:bg-surface-container transition-colors text-sm">Hủy</button>
+                      <button onClick={handleReturn} disabled={returnModal.loading || !returnModal.reason.trim()} className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-xl font-bold text-sm transition-colors disabled:opacity-60">
+                          {returnModal.loading ? <span className="material-symbols-outlined animate-spin text-[16px]">sync</span> : <span className="material-symbols-outlined text-[16px]">undo</span>}
+                          Trả lại
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 }

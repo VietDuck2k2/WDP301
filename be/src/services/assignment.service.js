@@ -83,14 +83,21 @@ const createAssignment = async (assignmentData, createdBy) => {
 
    await assertTeacherOwnsClass(assignmentData.class, createdBy);
 
-   // Validate date logic
+   // Validate date logic — auto-default closeDate to dueDate + 1 day if not provided
    const dueDate = new Date(assignmentData.dueDate);
-   const closeDate = new Date(assignmentData.closeDate);
-   if (closeDate < dueDate) {
-      throw ApiError.badRequest('closeDate must be on or after dueDate');
+   let closeDate;
+   if (assignmentData.closeDate) {
+      closeDate = new Date(assignmentData.closeDate);
+      if (closeDate < dueDate) {
+         throw ApiError.badRequest('closeDate must be on or after dueDate');
+      }
+   } else {
+      // Default: closeDate = dueDate + 1 day
+      closeDate = new Date(dueDate);
+      closeDate.setDate(closeDate.getDate() + 1);
    }
 
-   const assignment = await Assignment.create({ ...assignmentData, createdBy });
+   const assignment = await Assignment.create({ ...assignmentData, closeDate, createdBy });
    return assignment;
 };
 

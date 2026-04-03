@@ -14,7 +14,7 @@ router.get('/', assignmentsController.getMyAssignments);
 // @route   POST /api/teacher/assignments
 router.post(
    '/',
-   validate(['class', 'title', 'description', 'dueDate', 'closeDate', 'maxScore']),
+   validate(['class', 'title', 'dueDate', 'maxScore']),
    validateDate('dueDate'),
    validateDate('closeDate'),
    assignmentsController.createAssignment
