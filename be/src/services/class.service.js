@@ -42,14 +42,38 @@ const getAllClasses = async (filters = {}, userId = null, userRole = null) => {
 
    const skip = (page - 1) * limit;
 
-   const [classes, total] = await Promise.all([
+   const [rawClasses, total] = await Promise.all([
       Class.find(query)
          .populate('scheduleTemplate')
          .sort({ createdAt: -1 })
          .skip(skip)
-         .limit(parseInt(limit)),
+         .limit(parseInt(limit))
+         .lean(),
       Class.countDocuments(query)
    ]);
+
+   // Attach rich data for UI (teachers, student counts, session counts)
+   const classes = await Promise.all(rawClasses.map(async (c) => {
+      const [teachers, enrolledCount, sessionCount] = await Promise.all([
+         ClassMember.find({ class: c._id, role: 'teacher', status: 'active' })
+            .populate('user', 'firstName lastName email avatar')
+            .lean(),
+         ClassMember.countDocuments({ class: c._id, role: 'student', status: 'active' }),
+         Session.countDocuments({ class: c._id })
+      ]);
+
+      return {
+         ...c,
+         teachers: teachers.map(t => t.user).filter(u => u),
+         studentsCount: enrolledCount,
+         sessionCount: sessionCount,
+         // Add virtual-like fields for frontend iteration if it uses .length
+         students: Array(enrolledCount).fill({}),
+         sessions: Array(sessionCount).fill({}),
+         // Dummy course for UI compatibility
+         course: { name: 'Chương trình học', courseCode: 'ENG' }
+      };
+   }));
 
    return {
       classes,
@@ -89,7 +113,9 @@ const getClassById = async (classId) => {
    return {
       ...classData.toObject(),
       studentsCount,
-      teachers: teachers.map(t => t.user)
+      teachers: teachers.map(t => t.user),
+      teacher: teachers.length > 0 ? teachers[0].user : null,
+      course: { name: 'Chương trình học', courseCode: 'ENG' }
    };
 };
 

@@ -70,9 +70,10 @@ const validateDate = (fieldName) => {
       const dateValue = req.body[fieldName] || req.query[fieldName];
 
       if (dateValue) {
-         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+         // Accept either YYYY-MM-DD or full ISO strings (YYYY-MM-DDTHH:mm...)
+         const dateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}.*)?$/;
          if (!dateRegex.test(dateValue)) {
-            return next(ApiError.badRequest(`${fieldName} must be in YYYY-MM-DD format`));
+            return next(ApiError.badRequest(`${fieldName} must be a valid date or datetime (YYYY-MM-DD or ISO format)`));
          }
 
          const date = new Date(dateValue);

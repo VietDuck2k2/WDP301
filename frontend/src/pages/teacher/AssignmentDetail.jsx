@@ -55,6 +55,16 @@ export default function AssignmentDetail() {
     }
   };
 
+  const handlePublish = async () => {
+    if (!confirm('Công khai bài tập này? Học sinh có thể bắt đầu thấy và nộp bài.')) return;
+    try {
+      const res = await teacherApi.publishAssignment(id);
+      if (res?.success) setAssignment((a) => ({ ...a, status: 'published' }));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể công khai bài tập.');
+    }
+  };
+
   const handleReturn = async () => {
     if (!returnModal.reason.trim()) { alert('Vui lòng nhập lý do trả lại.'); return; }
     setReturnModal((m) => ({ ...m, loading: true }));
@@ -136,6 +146,7 @@ export default function AssignmentDetail() {
                             <tr className="bg-surface-container-low/50 text-[11px] uppercase tracking-wider text-on-surface-variant font-bold border-b border-outline-variant/20">
                                 <th className="p-5 w-64">Học sinh</th>
                                 <th className="p-5 hidden md:table-cell">Nộp lúc</th>
+                                <th className="p-5">Bài làm</th>
                                 <th className="p-5 text-center">Trạng thái</th>
                                 <th className="p-5 w-40 text-center">Cho Điểm</th>
                                 <th className="p-5 text-center">Thao tác</th>
@@ -157,6 +168,30 @@ export default function AssignmentDetail() {
                                 </td>
                                 <td className="p-5 font-medium text-on-surface-variant hidden md:table-cell">
                                     {formatDate(s.submittedAt)}
+                                </td>
+                                <td className="p-5">
+                                    {s.content && (
+                                        <div className="mb-2 text-xs text-on-surface-variant line-clamp-2 italic bg-surface-container-low p-2 rounded border border-outline-variant/10">
+                                            "{s.content}"
+                                        </div>
+                                    )}
+                                    <div className="flex flex-wrap gap-2">
+                                        {s.attachments?.map((file, fidx) => (
+                                            <a 
+                                                key={fidx} 
+                                                href={file.url.startsWith('http') ? file.url : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '')}${file.url.startsWith('/') ? '' : '/'}${file.url}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 px-2 py-1 bg-surface border border-outline-variant/30 rounded text-[10px] font-bold text-primary hover:bg-primary/5 transition-colors"
+                                            >
+                                                <span className="material-symbols-outlined text-[12px]">download</span>
+                                                {file.name || 'Tệp'}
+                                            </a>
+                                        ))}
+                                        {(!s.attachments || s.attachments.length === 0) && !s.content && (
+                                            <span className="text-[10px] text-outline italic">Không có nội dung</span>
+                                        )}
+                                    </div>
                                 </td>
                                 <td className="p-5 text-center">
                                     {getStatusBadge(s.status)}
@@ -201,25 +236,39 @@ export default function AssignmentDetail() {
                                 <td className="p-5 text-center">
                                     <div className="flex flex-col items-center gap-2">
                                         {/* Action Button: Grading or Edit/Download (Download TBD depending on files) */}
-                                        {s.score == null && (grading[s._id] != null && grading[s._id] !== '') ? (
-                                            <button 
-                                                type="button" 
-                                                className="w-28 inline-flex items-center justify-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg font-bold text-xs hover:bg-primary-container transition-all shadow-sm shadow-primary/20 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed" 
-                                                onClick={() => handleGrade(s._id)}
-                                                disabled={savingState[s._id] === 'saving'}
-                                            >
-                                                {savingState[s._id] === 'saving' ? (
-                                                    <><span className="material-symbols-outlined text-[14px] animate-spin">sync</span> Lưu...</>
-                                                ) : (
-                                                    <><span className="material-symbols-outlined text-[14px]">save</span> Lưu Điểm</>
-                                                )}
-                                            </button>
-                                        ) : s.score != null ? (
+                                        {(s.status === 'submitted' || s.status === 'submitted_late') && (
+                                            <div className="flex flex-col gap-2">
+                                                <button 
+                                                    type="button" 
+                                                    className="w-28 inline-flex items-center justify-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg font-bold text-xs hover:bg-primary-container transition-all shadow-sm shadow-primary/20 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed" 
+                                                    onClick={() => handleGrade(s._id)}
+                                                    disabled={savingState[s._id] === 'saving' || (grading[s._id] == null || grading[s._id] === '')}
+                                                >
+                                                    {savingState[s._id] === 'saving' ? (
+                                                        <><span className="material-symbols-outlined text-[14px] animate-spin">sync</span> Lưu...</>
+                                                    ) : (
+                                                        <><span className="material-symbols-outlined text-[14px]">save</span> Lưu Điểm</>
+                                                    )}
+                                                </button>
+                                                <button 
+                                                    onClick={() => setReturnModal({ open: true, subId: s._id, reason: '', loading: false })}
+                                                    className="w-28 inline-flex items-center justify-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-amber-100 transition-all border border-amber-200"
+                                                >
+                                                    <span className="material-symbols-outlined text-[14px]">undo</span> Trả lại
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {s.status === 'graded' && (
                                              <div className="flex items-center gap-1 text-emerald-600 font-medium text-xs">
-                                                 <span className="material-symbols-outlined text-[16px]">check_circle</span> Hoàn tất
+                                                 <span className="material-symbols-outlined text-[16px]">check_circle</span> Đã chấm
                                              </div>
-                                        ) : (
-                                            <span className="text-xs text-on-surface-variant opacity-60 font-medium">Chưa có điểm</span>
+                                        )}
+
+                                        {s.status === 'returned' && (
+                                             <div className="flex items-center gap-1 text-amber-600 font-medium text-xs">
+                                                 <span className="material-symbols-outlined text-[16px]">history</span> Đã trả lại
+                                             </div>
                                         )}
                                         
                                         {savingState[s._id] === 'success' && <span className="text-[10px] text-emerald-600 font-bold block mt-1 animate-pulse">Lưu thành công!</span>}
@@ -264,7 +313,7 @@ export default function AssignmentDetail() {
                                  <p className="text-[10px] uppercase tracking-wider font-bold text-red-800/60 mb-0.5">Thời hạn nộp bài</p>
                                  <p className="font-bold text-red-900 text-sm">{formatDate(assignment.dueDate)}</p>
                              </div>
-                         </div>
+                          </div>
 
                          {assignment.closeDate && (
                              <div className="flex items-start gap-3 bg-slate-50/50 p-3 rounded-xl border border-slate-100/50">
@@ -319,6 +368,30 @@ export default function AssignmentDetail() {
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Quick Actions at the bottom of sidebar */}
+                    {assignment.status !== 'archived' && (
+                        <div className="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col gap-3">
+                            {assignment.status === 'draft' && (
+                                <button
+                                    onClick={handlePublish}
+                                    className="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-sm"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">publish</span>
+                                    Công khai bài này
+                                </button>
+                            )}
+                            {assignment.status === 'published' && (
+                                <button
+                                    onClick={handleClose}
+                                    className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-2 border border-red-200"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">lock</span>
+                                    Đóng nhận bài
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>

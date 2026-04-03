@@ -1,5 +1,6 @@
 const classService = require('../../services/class.service');
 const ClassMember = require('../../models/ClassMember');
+const Session = require('../../models/Session');
 const ApiResponse = require('../../utils/apiResponse');
 const ApiError = require('../../utils/apiError');
 
@@ -10,8 +11,44 @@ const ApiError = require('../../utils/apiError');
  */
 const getMyClasses = async (req, res, next) => {
    try {
-      const result = await classService.getAllClasses(req.query, req.user._id, 'student');
-      ApiResponse.ok(res, result);
+      const studentId = req.user._id;
+
+      // Find active memberships for this student
+      const memberships = await ClassMember.find({
+         user: studentId,
+         role: 'student',
+         status: 'active'
+      }).populate({
+         path: 'class',
+         populate: { path: 'scheduleTemplate' }
+      });
+
+      const rawClasses = memberships.map(m => m.class).filter(c => c && c.isActive);
+
+      // Attach rich data for UI
+      const classes = await Promise.all(rawClasses.map(async (c) => {
+         const [teachers, enrolledCount, sessionCount] = await Promise.all([
+            ClassMember.find({ class: c._id, role: 'teacher', status: 'active' })
+               .populate('user', 'firstName lastName email avatar')
+               .lean(),
+            ClassMember.countDocuments({ class: c._id, role: 'student', status: 'active' }),
+            Session.countDocuments({ class: c._id })
+         ]);
+
+         const cObj = c.toObject ? c.toObject() : c;
+
+         return {
+            ...cObj,
+            teachers: teachers.map(t => t.user).filter(u => u),
+            studentsCount: enrolledCount,
+            sessionCount: sessionCount,
+            students: Array(enrolledCount).fill({}),
+            sessions: Array(sessionCount).fill({}),
+            course: { name: 'Chương trình học', courseCode: 'ENG' }
+         };
+      }));
+
+      ApiResponse.ok(res, classes);
    } catch (error) {
       next(error);
    }

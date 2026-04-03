@@ -58,13 +58,23 @@ export default function TeacherAssignments() {
       .finally(() => setSubmitting(false));
   };
 
-  const handleClose = async (assignmentId) => {
+   const handleClose = async (assignmentId) => {
     if (!confirm('Đóng bài tập? Học sinh sẽ không thể nộp thêm.')) return;
     try {
       const res = await teacherApi.closeAssignment(assignmentId);
       if (res?.success) setAssignments((prev) => prev.map((a) => a._id === assignmentId ? { ...a, status: 'closed' } : a));
     } catch (err) {
       alert(err.response?.data?.message || 'Không thể đóng bài tập.');
+    }
+  };
+
+  const handlePublish = async (assignmentId) => {
+    if (!confirm('Công khai bài tập này? Học sinh có thể bắt đầu thấy và nộp bài.')) return;
+    try {
+      const res = await teacherApi.publishAssignment(assignmentId);
+      if (res?.success) setAssignments((prev) => prev.map((a) => a._id === assignmentId ? { ...a, status: 'published' } : a));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể công khai bài tập.');
     }
   };
 
@@ -370,6 +380,16 @@ export default function TeacherAssignments() {
                             {a.attachments?.length || 0} tệp
                         </div>
                         <div className="flex items-center gap-2">
+                            {a.status === 'draft' && (
+                                <button
+                                    onClick={() => handlePublish(a._id)}
+                                    title="Công khai bài tập"
+                                    className="bg-emerald-500 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-emerald-600 transition-all flex items-center justify-center gap-1.5"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">publish</span>
+                                    Công khai
+                                </button>
+                            )}
                             {a.status === 'published' && (
                                 <button
                                     onClick={() => handleClose(a._id)}

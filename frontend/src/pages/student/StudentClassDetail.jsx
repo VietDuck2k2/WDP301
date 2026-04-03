@@ -27,10 +27,10 @@ export default function StudentClassDetail() {
           axiosInstance.get(`/student/classes/${classId}/assignments`).catch(() => null)
         ]);
 
-        if (classRes?.data?.data) setClassInfo(classRes.data.data);
-        if (studentsRes?.data?.data) setStudents(studentsRes.data.data);
-        if (annRes?.data?.data) setAnnouncements(annRes.data.data);
-        if (assignRes?.data?.data) setAssignments(assignRes.data.data);
+        if (classRes?.data) setClassInfo(classRes.data);
+        if (studentsRes?.data) setStudents(studentsRes.data);
+        if (annRes?.data) setAnnouncements(annRes.data);
+        if (assignRes?.data) setAssignments(assignRes.data);
 
       } catch (err) {
         setError('Không thể tải dữ liệu lớp học.');
@@ -97,8 +97,20 @@ export default function StudentClassDetail() {
             </div>
             
             <div className="bg-black/20 backdrop-blur-md p-4 rounded-xl border border-white/10 min-w-[200px]">
-                <p className="text-[10px] text-primary-fixed uppercase tracking-widest font-bold mb-1"><span className="material-symbols-outlined text-[14px] align-middle">person</span> Giáo viên</p>
-                <p className="font-bold text-lg">{classInfo.teacher ? `${classInfo.teacher.firstName} ${classInfo.teacher.lastName}` : 'Chưa phân công'}</p>
+                <p className="text-[10px] text-primary-fixed uppercase tracking-widest font-bold mb-1">
+                    <span className="material-symbols-outlined text-[14px] align-middle">person</span> {classInfo.teachers?.length > 1 ? 'Giáo viên hướng dẫn' : 'Giáo viên'}
+                </p>
+                <div className="flex flex-col gap-1">
+                    {classInfo.teachers?.length > 0 ? (
+                        classInfo.teachers.map((t, idx) => (
+                            <p key={t._id || idx} className="font-bold text-lg leading-tight">
+                                {t.firstName} {t.lastName}
+                            </p>
+                        ))
+                    ) : (
+                        <p className="font-bold text-lg">Chưa phân công</p>
+                    )}
+                </div>
             </div>
         </div>
         

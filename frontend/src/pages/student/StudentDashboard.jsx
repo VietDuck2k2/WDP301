@@ -25,9 +25,9 @@ const StudentDashboard = () => {
           axiosInstance.get('/student/grades').catch(() => null)
         ]);
 
-        const classes = classesRes?.data?.data || [];
-        const attendanceSummary = attendanceRes?.data?.data || null;
-        const gradesData = gradesRes?.data?.data || [];
+        const classes = classesRes?.data || [];
+        const attendanceSummary = attendanceRes?.data || null;
+        const gradesData = gradesRes?.data || [];
 
         // Flatten grades from all classes
         let allGrades = [];
@@ -52,9 +52,9 @@ const StudentDashboard = () => {
             const assignmentResults = await Promise.all(assignmentPromises);
             
             assignmentResults.forEach((res, index) => {
-                if (res?.data?.data) {
+                if (res?.data) {
                     const currentClass = classes[index];
-                    const classAssignments = res.data.data.map(a => ({ ...a, className: currentClass.name }));
+                    const classAssignments = res.data.map(a => ({ ...a, className: currentClass.name }));
                     loadedAssignments = [...loadedAssignments, ...classAssignments];
                 }
             });

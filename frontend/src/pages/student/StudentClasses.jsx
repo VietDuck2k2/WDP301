@@ -13,8 +13,9 @@ export default function StudentClasses() {
     const fetchClasses = async () => {
         try {
             const res = await axiosInstance.get('/student/classes');
-            if (res?.data?.success && res.data.data) {
-                setClasses(res.data.data);
+            if (res?.success && res.data) {
+                const data = Array.isArray(res.data) ? res.data : (res.data.classes || []);
+                setClasses(data);
             }
         } catch (err) {
             setError('Không thể tải danh sách khóa học.');
@@ -75,7 +76,25 @@ export default function StudentClasses() {
                 </div>
                 <div className="p-8 flex flex-col flex-1">
                     <h4 className="text-[1.5rem] font-bold text-on-surface mb-2 font-headline leading-tight group-hover:text-primary transition-colors">{cls.name}</h4>
-                    <p className="text-sm text-on-surface-variant mb-6 font-medium font-body flex-1">{cls.course?.name || 'Chương trình học tiêu chuẩn'}</p>
+                    <p className="text-sm text-on-surface-variant mb-4 font-medium font-body">{cls.course?.name || 'Chương trình học tiêu chuẩn'}</p>
+                    
+                    <div className="flex flex-wrap gap-2 mb-6 min-h-[32px]">
+                        {cls.teachers?.map((teacher, tidx) => (
+                            <div key={teacher._id || tidx} className="flex items-center gap-1.5 bg-surface p-1 pr-3 rounded-full border border-outline-variant/20 shadow-sm">
+                                <div className="w-6 h-6 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[10px] font-bold uppercase overflow-hidden">
+                                    {teacher.avatar ? (
+                                        <img src={teacher.avatar} alt="avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        teacher.firstName?.charAt(0)
+                                    )}
+                                </div>
+                                <span className="text-[11px] font-bold text-on-surface-variant">{teacher.firstName} {teacher.lastName}</span>
+                            </div>
+                        ))}
+                        {(!cls.teachers || cls.teachers.length === 0) && (
+                            <span className="text-[11px] font-medium text-outline italic">Chưa phân công giáo viên</span>
+                        )}
+                    </div>
                     
                     <div className="grid grid-cols-2 gap-4 mb-8">
                         <div className="bg-surface p-3 rounded-lg border border-outline-variant/10">

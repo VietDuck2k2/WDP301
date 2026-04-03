@@ -44,7 +44,10 @@ export default function StudentAssignments() {
 
   useEffect(() => {
     studentApi.getClasses().then((res) => {
-      if (res?.success && res.data) setClasses(Array.isArray(res.data) ? res.data : []);
+      if (res?.success && res.data) {
+        const data = Array.isArray(res.data) ? res.data : (res.data.classes || []);
+        setClasses(data);
+      }
     });
   }, []);
 
