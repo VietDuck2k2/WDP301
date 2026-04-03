@@ -26,11 +26,16 @@ const storage = multer.diskStorage({
 // File filter
 const fileFilter = (req, file, cb) => {
    const allowedTypes = config.allowedFileTypes.split(',');
+   const ext = path.extname(file.originalname).toLowerCase();
+   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.ppt', '.pptx', '.txt', '.mp3', '.m4a'];
 
    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
+   } else if (allowedExtensions.includes(ext)) {
+      // Fallback cho trường hợp trình duyệt/OS (nhất là Windows/WPS Office) gửi sai MIME type (vd: application/octet-stream, application/zip)
+      cb(null, true);
    } else {
-      cb(new ApiError(400, `File type not allowed. Allowed types: ${allowedTypes.join(', ')}`), false);
+      cb(new ApiError(400, `Loại file không được hỗ trợ (MIME: ${file.mimetype}, Đuôi tệp: ${ext}). Cần một trong: ${allowedExtensions.join(', ')}`), false);
    }
 };
 

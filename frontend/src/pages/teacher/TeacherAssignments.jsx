@@ -14,6 +14,7 @@ export default function TeacherAssignments() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ class: '', title: '', description: '', instructions: '', dueDate: '', closeDate: '', maxScore: 100, assignmentType: 'homework', allowLateSubmission: false, attachments: [] });
   const [submitting, setSubmitting] = useState(false);
+  const [dateErrors, setDateErrors] = useState({ dueDate: '', closeDate: '' });
 
   useEffect(() => {
     teacherApi.getMyClasses().then((res) => {
@@ -33,8 +34,22 @@ export default function TeacherAssignments() {
 
   const handleCreate = (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setError('');
+    // Validate dates before submitting
+    const now = new Date();
+    if (form.dueDate && new Date(form.dueDate) <= now) {
+      setDateErrors((d) => ({ ...d, dueDate: 'Thời hạn nộp bài phải là thời điểm trong tương lai (bao gồm cả giờ).' }));
+      return;
+    }
+    if (form.closeDate && new Date(form.closeDate) <= now) {
+      setDateErrors((d) => ({ ...d, closeDate: 'Thời điểm đóng nhận bài phải là thời điểm trong tương lai.' }));
+      return;
+    }
+    if (form.closeDate && form.dueDate && new Date(form.closeDate) <= new Date(form.dueDate)) {
+      setDateErrors((d) => ({ ...d, closeDate: 'Thời điểm đóng nhận bài phải sau thời hạn nộp bài.' }));
+      return;
+    }
+    setSubmitting(true);
     teacherApi.createAssignment({
       class: form.class,
       title: form.title,
@@ -88,8 +103,22 @@ export default function TeacherAssignments() {
       return <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-emerald-200">Đang mở</span>;
   };
 
-  // Auto-set closeDate = dueDate + 1 day when dueDate changes
+  // Returns current local datetime formatted as YYYY-MM-DDTHH:mm (for min attribute)
+  const getNowLocal = () => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const local = new Date(now.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
+  };
+
+  // Validate & set dueDate; also auto-set closeDate = dueDate + 1 day
   const handleDueDateChange = (val) => {
+    if (val && new Date(val) <= new Date()) {
+      setDateErrors((d) => ({ ...d, dueDate: 'Thời hạn nộp bài phải là thời điểm trong tương lai (bao gồm cả giờ, phút).' }));
+      setForm((f) => ({ ...f, dueDate: val }));
+      return;
+    }
+    setDateErrors((d) => ({ ...d, dueDate: '' }));
     setForm((f) => {
       let newClose = f.closeDate;
       if (val && (!newClose || newClose <= val)) {
@@ -99,6 +128,22 @@ export default function TeacherAssignments() {
       }
       return { ...f, dueDate: val, closeDate: newClose };
     });
+  };
+
+  // Validate & set closeDate
+  const handleCloseDateChange = (val) => {
+    if (val && new Date(val) <= new Date()) {
+      setDateErrors((d) => ({ ...d, closeDate: 'Thời điểm đóng nhận bài phải là thời điểm trong tương lai.' }));
+      setForm((f) => ({ ...f, closeDate: val }));
+      return;
+    }
+    if (val && form.dueDate && new Date(val) <= new Date(form.dueDate)) {
+      setDateErrors((d) => ({ ...d, closeDate: 'Thời điểm đóng nhận bài phải sau thời hạn nộp bài.' }));
+      setForm((f) => ({ ...f, closeDate: val }));
+      return;
+    }
+    setDateErrors((d) => ({ ...d, closeDate: '' }));
+    setForm((f) => ({ ...f, closeDate: val }));
   };
 
   return (
@@ -199,10 +244,19 @@ export default function TeacherAssignments() {
                                 <input
                                     type="datetime-local"
                                     required
+                                    min={getNowLocal()}
                                     value={form.dueDate}
                                     onChange={(e) => handleDueDateChange(e.target.value)}
-                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface"
+                                    className={`w-full bg-surface border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface ${
+                                      dateErrors.dueDate ? 'border-red-400 focus:ring-red-200' : 'border-outline-variant/40'
+                                    }`}
                                 />
+                                {dateErrors.dueDate && (
+                                  <p className="mt-1.5 ml-1 text-xs text-red-600 font-medium flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[14px]">error</span>
+                                    {dateErrors.dueDate}
+                                  </p>
+                                )}
                             </div>
 
                             <div>
@@ -212,10 +266,19 @@ export default function TeacherAssignments() {
                                 </label>
                                 <input
                                     type="datetime-local"
+                                    min={form.dueDate || getNowLocal()}
                                     value={form.closeDate}
-                                    onChange={(e) => setForm((f) => ({ ...f, closeDate: e.target.value }))}
-                                    className="w-full bg-surface border border-outline-variant/40 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface"
+                                    onChange={(e) => handleCloseDateChange(e.target.value)}
+                                    className={`w-full bg-surface border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface ${
+                                      dateErrors.closeDate ? 'border-red-400 focus:ring-red-200' : 'border-outline-variant/40'
+                                    }`}
                                 />
+                                {dateErrors.closeDate && (
+                                  <p className="mt-1.5 ml-1 text-xs text-red-600 font-medium flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[14px]">error</span>
+                                    {dateErrors.closeDate}
+                                  </p>
+                                )}
                             </div>
 
                             <div>

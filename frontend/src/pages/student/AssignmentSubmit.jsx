@@ -174,7 +174,7 @@ export default function AssignmentSubmit() {
                         </div>
                         
                         <div className="border border-dashed border-outline-variant/50 rounded-xl p-4 bg-surface hover:bg-surface-container-lowest transition-colors">
-                            <FileUpload value={attachments} onChange={setAttachments} label="Tệp đính kèm (Hình ảnh, PDF, DOCX)" disabled={submitting} />
+                            <FileUpload value={attachments} onChange={setAttachments} label="Tệp đính kèm (Word, Excel, PPT, PDF, Ảnh, Audio, TXT)" disabled={submitting} />
                         </div>
 
                         {error && (
