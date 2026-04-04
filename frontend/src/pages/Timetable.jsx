@@ -379,7 +379,7 @@ const Timetable = ({ role, fixedClassId, refreshKey = 0, onBulkAssignTeacherClic
                         className="px-5 py-2.5 bg-surface-container-low text-on-surface border border-outline-variant/30 rounded-lg font-bold hover:bg-surface-container transition-all"
                         onClick={onBulkAssignTeacherClick}
                       >
-                        Gán giáo viên buổi dạy
+                        Sắp xếp giáo viên
                       </button>
                     )}
                     <button type="button" className="px-5 py-2.5 bg-surface-container-low text-on-surface border border-outline-variant/30 rounded-lg font-bold hover:bg-surface-container transition-all" onClick={() => setIsGenerateModalOpen(true)}>Generate Auto</button>

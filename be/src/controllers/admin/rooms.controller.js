@@ -1,5 +1,6 @@
 const Room = require('../../models/Room');
 const Session = require('../../models/Session');
+const adminActivityLogService = require('../../services/adminActivityLog.service');
 const ApiResponse = require('../../utils/apiResponse');
 const ApiError = require('../../utils/apiError');
 
@@ -62,6 +63,13 @@ const getRoomById = async (req, res, next) => {
 const createRoom = async (req, res, next) => {
    try {
       const room = await Room.create(req.body);
+      await adminActivityLogService.log(req.user._id, {
+         action: 'room.create',
+         resourceType: 'room',
+         resourceId: room._id,
+         summary: `Tạo phòng học: ${room.name}`,
+         metadata: { name: room.name }
+      });
       ApiResponse.created(res, room, 'Tạo phòng học thành công');
    } catch (error) { next(error); }
 };
@@ -70,6 +78,13 @@ const updateRoom = async (req, res, next) => {
    try {
       const room = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
       if (!room) throw ApiError.notFound('Không tìm thấy phòng học');
+      await adminActivityLogService.log(req.user._id, {
+         action: 'room.update',
+         resourceType: 'room',
+         resourceId: room._id,
+         summary: `Cập nhật phòng học: ${room.name}`,
+         metadata: { name: room.name }
+      });
       ApiResponse.ok(res, room, 'Cập nhật phòng học thành công');
    } catch (error) { next(error); }
 };
@@ -78,6 +93,13 @@ const deleteRoom = async (req, res, next) => {
    try {
       const room = await Room.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
       if (!room) throw ApiError.notFound('Không tìm thấy phòng học');
+      await adminActivityLogService.log(req.user._id, {
+         action: 'room.delete',
+         resourceType: 'room',
+         resourceId: room._id,
+         summary: `Vô hiệu hóa phòng học: ${room.name}`,
+         metadata: { name: room.name }
+      });
       ApiResponse.ok(res, room, 'Xóa phòng học thành công');
    } catch (error) { next(error); }
 };

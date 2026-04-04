@@ -1,4 +1,5 @@
 const scheduleTemplateService = require('../../services/scheduleTemplate.service');
+const adminActivityLogService = require('../../services/adminActivityLog.service');
 const ApiResponse = require('../../utils/apiResponse');
 
 /**
@@ -37,6 +38,13 @@ const getTemplateById = async (req, res, next) => {
 const createTemplate = async (req, res, next) => {
    try {
       const template = await scheduleTemplateService.createTemplate(req.body);
+      await adminActivityLogService.log(req.user._id, {
+         action: 'schedule_template.create',
+         resourceType: 'schedule_template',
+         resourceId: template._id,
+         summary: `Tạo mẫu lịch học: ${template.name}`,
+         metadata: { name: template.name }
+      });
       ApiResponse.created(res, template, 'Schedule template created successfully');
    } catch (error) {
       next(error);
@@ -51,6 +59,13 @@ const createTemplate = async (req, res, next) => {
 const updateTemplate = async (req, res, next) => {
    try {
       const template = await scheduleTemplateService.updateTemplate(req.params.id, req.body);
+      await adminActivityLogService.log(req.user._id, {
+         action: 'schedule_template.update',
+         resourceType: 'schedule_template',
+         resourceId: template._id,
+         summary: `Cập nhật mẫu lịch học: ${template.name}`,
+         metadata: { name: template.name }
+      });
       ApiResponse.ok(res, template, 'Schedule template updated successfully');
    } catch (error) {
       next(error);
@@ -65,6 +80,13 @@ const updateTemplate = async (req, res, next) => {
 const deleteTemplate = async (req, res, next) => {
    try {
       const template = await scheduleTemplateService.deleteTemplate(req.params.id);
+      await adminActivityLogService.log(req.user._id, {
+         action: 'schedule_template.delete',
+         resourceType: 'schedule_template',
+         resourceId: template._id,
+         summary: `Vô hiệu hóa mẫu lịch học: ${template.name}`,
+         metadata: { name: template.name }
+      });
       ApiResponse.ok(res, template, 'Schedule template deleted successfully');
    } catch (error) {
       next(error);
