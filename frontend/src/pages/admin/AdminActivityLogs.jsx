@@ -23,6 +23,8 @@ const AdminActivityLogs = () => {
   const [items, setItems] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 0 });
   const [resourceType, setResourceType] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async (page = 1) => {
@@ -30,6 +32,8 @@ const AdminActivityLogs = () => {
     try {
       const params = { page, limit: 25 };
       if (resourceType) params.resourceType = resourceType;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
       const res = await adminApi.getActivityLogs(params);
       if (res?.success && res.data) {
         setItems(res.data.items || []);
@@ -41,7 +45,7 @@ const AdminActivityLogs = () => {
     } finally {
       setLoading(false);
     }
-  }, [resourceType]);
+  }, [resourceType, dateFrom, dateTo]);
 
   useEffect(() => {
     load(1);
@@ -58,8 +62,8 @@ const AdminActivityLogs = () => {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        <label className="text-sm font-semibold text-on-surface flex items-center gap-2">
+      <div className="flex flex-wrap items-end gap-4 mb-6">
+        <label className="text-sm font-semibold text-on-surface flex flex-col gap-1.5">
           <span className="text-on-surface-variant font-medium">Lọc theo loại</span>
           <select
             value={resourceType}
@@ -72,7 +76,39 @@ const AdminActivityLogs = () => {
             <option value="schedule_template">Mẫu lịch học</option>
           </select>
         </label>
-        <span className="text-sm text-on-surface-variant">
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="text-sm font-semibold text-on-surface flex flex-col gap-1.5">
+            <span className="text-on-surface-variant font-medium">Từ ngày</span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="rounded-lg border border-outline-variant/30 bg-surface-container-lowest px-3 py-2 text-sm font-medium text-on-surface outline-none focus:ring-2 focus:ring-primary min-w-[160px]"
+            />
+          </label>
+          <label className="text-sm font-semibold text-on-surface flex flex-col gap-1.5">
+            <span className="text-on-surface-variant font-medium">Đến ngày</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="rounded-lg border border-outline-variant/30 bg-surface-container-lowest px-3 py-2 text-sm font-medium text-on-surface outline-none focus:ring-2 focus:ring-primary min-w-[160px]"
+            />
+          </label>
+          {(dateFrom || dateTo) && (
+            <button
+              type="button"
+              onClick={() => {
+                setDateFrom('');
+                setDateTo('');
+              }}
+              className="px-3 py-2 rounded-lg text-sm font-semibold border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-high"
+            >
+              Xóa ngày
+            </button>
+          )}
+        </div>
+        <span className="text-sm text-on-surface-variant pb-2">
           {pagination.total > 0 ? `${pagination.total} bản ghi` : ''}
         </span>
       </div>
