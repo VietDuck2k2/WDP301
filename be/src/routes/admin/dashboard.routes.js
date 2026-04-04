@@ -10,4 +10,7 @@ router.use(authenticate, requireAdmin);
 // @route   GET /api/admin/dashboard/stats
 router.get('/stats', dashboardController.getDashboardStats);
 
+// @route   GET /api/admin/dashboard/charts/monthly?year=2026
+router.get('/charts/monthly', dashboardController.getMonthlyCharts);
+
 module.exports = router;

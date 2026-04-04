@@ -2,7 +2,23 @@ const User = require('../models/User');
 const Class = require('../models/Class');
 const Session = require('../models/Session');
 const Attendance = require('../models/Attendance');
-const Assignment = require('../models/Assignment');
+
+const MONTH_LABELS_VI = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+
+const parseYear = (yearInput) => {
+   const current = new Date().getFullYear();
+   const n = parseInt(yearInput, 10);
+   if (!Number.isFinite(n) || n < 2000 || n > current + 1) return current;
+   return n;
+};
+
+const mapAggToMonthlyCounts = (agg) => {
+   const counts = Array(12).fill(0);
+   agg.forEach(({ _id, count }) => {
+      if (_id >= 1 && _id <= 12) counts[_id - 1] = count;
+   });
+   return counts;
+};
 
 /**
  * Get admin dashboard overview stats
@@ -47,12 +63,11 @@ const getDashboardStats = async () => {
       ? ((weekPresent / weekTotal) * 100).toFixed(1)
       : 0;
 
-   // Recent sessions (last 5)
-   const recentSessions = await Session.find()
-      .populate('class', 'name code')
-      .sort({ date: -1, startTime: -1 })
+   // Most recently created classes (last 5) — same visibility as admin class list: chỉ lớp đang active
+   const recentClasses = await Class.find({ isActive: true })
+      .sort({ createdAt: -1 })
       .limit(5)
-      .select('title date startTime endTime status class room');
+      .select('name code level capacity status startDate endDate createdAt');
 
    return {
       users: {
@@ -72,10 +87,80 @@ const getDashboardStats = async () => {
          weekPresent,
          weekAttendanceRate: parseFloat(weekAttendanceRate)
       },
-      recentSessions
+      recentClasses
+   };
+};
+
+/**
+ * Monthly new registrations: teachers & students in a calendar year (by createdAt).
+ */
+const getMonthlyUserGrowth = async (yearInput) => {
+   const year = parseYear(yearInput);
+   const start = new Date(Date.UTC(year, 0, 1));
+   const end = new Date(Date.UTC(year + 1, 0, 1));
+
+   const [teachersAgg, studentsAgg] = await Promise.all([
+      User.aggregate([
+         { $match: { role: 'teacher', createdAt: { $gte: start, $lt: end } } },
+         { $group: { _id: { $month: '$createdAt' }, count: { $sum: 1 } } }
+      ]),
+      User.aggregate([
+         { $match: { role: 'student', createdAt: { $gte: start, $lt: end } } },
+         { $group: { _id: { $month: '$createdAt' }, count: { $sum: 1 } } }
+      ])
+   ]);
+
+   const teachers = mapAggToMonthlyCounts(teachersAgg);
+   const students = mapAggToMonthlyCounts(studentsAgg);
+
+   const usersByMonth = MONTH_LABELS_VI.map((label, i) => ({
+      month: i + 1,
+      label,
+      teachers: teachers[i],
+      students: students[i]
+   }));
+
+   return { year, usersByMonth };
+};
+
+/**
+ * Classes created per month in a calendar year (by createdAt).
+ */
+const getMonthlyClassCreations = async (yearInput) => {
+   const year = parseYear(yearInput);
+   const start = new Date(Date.UTC(year, 0, 1));
+   const end = new Date(Date.UTC(year + 1, 0, 1));
+
+   const agg = await Class.aggregate([
+      { $match: { createdAt: { $gte: start, $lt: end } } },
+      { $group: { _id: { $month: '$createdAt' }, count: { $sum: 1 } } }
+   ]);
+
+   const counts = mapAggToMonthlyCounts(agg);
+
+   const classesByMonth = MONTH_LABELS_VI.map((label, i) => ({
+      month: i + 1,
+      label,
+      classes: counts[i]
+   }));
+
+   return { year, classesByMonth };
+};
+
+const getMonthlyCharts = async (yearInput) => {
+   const year = parseYear(yearInput);
+   const [userBlock, classBlock] = await Promise.all([
+      getMonthlyUserGrowth(year),
+      getMonthlyClassCreations(year)
+   ]);
+   return {
+      year: userBlock.year,
+      usersByMonth: userBlock.usersByMonth,
+      classesByMonth: classBlock.classesByMonth
    };
 };
 
 module.exports = {
-   getDashboardStats
+   getDashboardStats,
+   getMonthlyCharts
 };

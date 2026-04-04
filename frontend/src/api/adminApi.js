@@ -59,6 +59,9 @@ export const adminApi = {
 
   getReportOverview: () => axiosInstance.get('/admin/reports/overview'),
   getAttendanceReport: (params = {}) => axiosInstance.get('/admin/reports/attendance', { params }),
+
+  getDashboardMonthlyCharts: (year) =>
+    axiosInstance.get('/admin/dashboard/charts/monthly', { params: year ? { year } : {} }),
 };
 
 export default adminApi;

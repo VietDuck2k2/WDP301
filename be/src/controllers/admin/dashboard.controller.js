@@ -15,6 +15,19 @@ const getDashboardStats = async (req, res, next) => {
    }
 };
 
+/**
+ * @route   GET /api/admin/dashboard/charts/monthly?year=
+ */
+const getMonthlyCharts = async (req, res, next) => {
+   try {
+      const data = await dashboardService.getMonthlyCharts(req.query.year);
+      ApiResponse.ok(res, data);
+   } catch (error) {
+      next(error);
+   }
+};
+
 module.exports = {
-   getDashboardStats
+   getDashboardStats,
+   getMonthlyCharts
 };
