@@ -113,6 +113,40 @@ export default function AssignmentSubmit() {
                         <p className="text-sm text-on-surface-variant whitespace-pre-wrap">{assignment.instructions}</p>
                     </div>
                 )}
+
+                {assignment.attachments?.length > 0 && (
+                    <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 mt-8 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-outline-variant/20 bg-surface-container-low/50 flex items-center justify-between">
+                            <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[18px]">attachment</span>
+                                Tài liệu đính kèm từ giáo viên
+                            </h4>
+                            <span className="text-xs font-bold text-on-surface-variant bg-surface px-2 py-0.5 rounded-md border border-outline-variant/30">
+                                {assignment.attachments.length} tệp
+                            </span>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {assignment.attachments.map((file, idx) => (
+                                <a 
+                                    key={idx} 
+                                    href={file.url?.startsWith('http') ? file.url : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '')}${file.url?.startsWith('/') ? '' : '/'}${file.url}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-4 p-4 rounded-xl bg-surface border border-outline-variant/40 hover:border-primary/50 hover:shadow-md transition-all group"
+                                >
+                                    <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                        <span className="material-symbols-outlined text-[24px]">description</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-sm text-on-surface truncate group-hover:text-primary transition-colors">{file.name || 'Tài liệu không tên'}</p>
+                                        <p className="text-[11px] text-on-surface-variant mt-0.5">Nhấn để tải về</p>
+                                    </div>
+                                    <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors shrink-0">download</span>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
 

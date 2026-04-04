@@ -237,6 +237,12 @@ export default function StudentAssignments() {
                     <span className="material-symbols-outlined text-[14px] text-amber-500">grade</span>
                     <span>Điểm tối đa: <strong className="text-on-surface">{a.maxScore}</strong></span>
                   </div>
+                  {a.attachments?.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[14px] text-blue-500">attachment</span>
+                      <span>Đính kèm: <strong className="text-on-surface">{a.attachments.length} tệp</strong></span>
+                    </div>
+                  )}
                   {a.allowLateSubmission && (
                     <div className="flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-[14px] text-amber-500">schedule_send</span>

@@ -204,9 +204,10 @@ export default function StudentClassDetail() {
                                                 Hạn: {new Date(assignment.dueDate).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                             
-                                            {assignment.fileUrl && (
-                                                <span className="text-[11px] px-3 py-1 bg-surface border border-outline-variant/30 text-slate-600 rounded-lg flex items-center gap-1 font-bold">
-                                                    <span className="material-symbols-outlined text-[14px]">attachment</span> Có file đính kèm
+                                            {assignment.attachments?.length > 0 && (
+                                                <span className="text-[11px] px-3 py-1 bg-surface border border-outline-variant/30 text-slate-600 rounded-lg flex items-center gap-1 font-bold shadow-sm">
+                                                    <span className="material-symbols-outlined text-[14px] text-blue-600">attachment</span> 
+                                                    <span className="text-blue-800">{assignment.attachments.length} tệp đính kèm</span>
                                                 </span>
                                             )}
                                         </div>

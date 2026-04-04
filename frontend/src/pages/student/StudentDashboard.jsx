@@ -87,8 +87,8 @@ const StudentDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  const progressPercent = data.attendanceSummary 
-    ? Math.round((data.attendanceSummary.presentSessionCount / data.attendanceSummary.totalSessionCount) * 100) || 0
+  const progressPercent = data.attendanceSummary && data.attendanceSummary.total > 0
+    ? Math.round((data.attendanceSummary.present / data.attendanceSummary.total) * 100) || 0
     : 0;
 
   return (
