@@ -17,6 +17,7 @@ const adminDashboardRoutes = require('./admin/dashboard.routes');
 const adminAttendancesRoutes = require('./admin/attendances.routes');
 const adminReportsRoutes = require('./admin/reports.routes');
 const adminRoomsRoutes = require('./admin/rooms.routes');
+const adminActivityLogsRoutes = require('./admin/activityLogs.routes');
 
 // Teacher routes
 const teacherClassesRoutes = require('./teacher/classes.routes');
@@ -53,6 +54,7 @@ router.use('/admin/dashboard', adminDashboardRoutes);
 router.use('/admin/attendances', adminAttendancesRoutes);
 router.use('/admin/reports', adminReportsRoutes);
 router.use('/admin/rooms', adminRoomsRoutes);
+router.use('/admin/activity-logs', adminActivityLogsRoutes);
 
 // Teacher routes
 router.use('/teacher/classes', teacherClassesRoutes);

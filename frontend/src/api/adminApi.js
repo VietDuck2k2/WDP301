@@ -62,6 +62,8 @@ export const adminApi = {
 
   getDashboardMonthlyCharts: (year) =>
     axiosInstance.get('/admin/dashboard/charts/monthly', { params: year ? { year } : {} }),
+
+  getActivityLogs: (params = {}) => axiosInstance.get('/admin/activity-logs', { params }),
 };
 
 export default adminApi;

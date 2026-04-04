@@ -13,6 +13,7 @@ import Templates from './pages/admin/Templates';
 import Rooms from './pages/admin/Rooms';
 import AttendanceAdmin from './pages/admin/AttendanceAdmin';
 import Reports from './pages/admin/Reports';
+import AdminActivityLogs from './pages/admin/AdminActivityLogs';
 
 import TeacherTimetable from './pages/teacher/TeacherTimetable';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
@@ -56,6 +57,7 @@ function App() {
               <Route path="/admin/attendance" element={<AttendanceAdmin />} />
               <Route path="/admin/attendance/class/:classId" element={<AttendanceAdmin />} />
               <Route path="/admin/reports" element={<Reports />} />
+              <Route path="/admin/activity-logs" element={<AdminActivityLogs />} />
               <Route path="/admin/timetable" element={<Dashboard />} />
             </Route>
 

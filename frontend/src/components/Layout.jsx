@@ -11,6 +11,7 @@ const adminNav = [
   { to: '/admin/session-rooms', label: 'Gán phòng', icon: 'meeting_room' },
   { to: '/admin/rooms', label: 'Phòng học', icon: 'door_front' },
   { to: '/admin/templates', label: 'Mẫu lịch học', icon: 'view_timeline' },
+  { to: '/admin/activity-logs', label: 'Nhật ký admin', icon: 'history' },
   { to: '/admin/attendance', label: 'Điểm danh', icon: 'fact_check' },
 ];
 

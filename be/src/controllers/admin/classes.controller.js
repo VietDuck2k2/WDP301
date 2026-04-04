@@ -1,5 +1,6 @@
 const classService = require('../../services/class.service');
 const sessionService = require('../../services/session.service');
+const adminActivityLogService = require('../../services/adminActivityLog.service');
 const ApiResponse = require('../../utils/apiResponse');
 
 /**
@@ -55,6 +56,14 @@ const createClass = async (req, res, next) => {
          }
       }
 
+      await adminActivityLogService.log(req.user._id, {
+         action: 'class.create',
+         resourceType: 'class',
+         resourceId: classData._id,
+         summary: `Tạo lớp: ${classData.name} (${classData.code})`,
+         metadata: { name: classData.name, code: classData.code }
+      });
+
       ApiResponse.created(res, classData, 'Class created successfully');
    } catch (error) {
       next(error);
@@ -103,6 +112,14 @@ const updateClass = async (req, res, next) => {
          }
       }
 
+      await adminActivityLogService.log(req.user._id, {
+         action: 'class.update',
+         resourceType: 'class',
+         resourceId: classData._id,
+         summary: `Cập nhật lớp: ${classData.name} (${classData.code})`,
+         metadata: { name: classData.name, code: classData.code }
+      });
+
       ApiResponse.ok(res, classData, 'Class updated successfully');
    } catch (error) {
       next(error);
@@ -117,6 +134,13 @@ const updateClass = async (req, res, next) => {
 const deleteClass = async (req, res, next) => {
    try {
       const classData = await classService.deleteClass(req.params.id);
+      await adminActivityLogService.log(req.user._id, {
+         action: 'class.delete',
+         resourceType: 'class',
+         resourceId: classData._id,
+         summary: `Vô hiệu hóa lớp: ${classData.name} (${classData.code})`,
+         metadata: { name: classData.name, code: classData.code }
+      });
       ApiResponse.ok(res, classData, 'Class deleted successfully');
    } catch (error) {
       next(error);
