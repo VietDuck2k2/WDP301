@@ -1,8 +1,18 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import adminApi from '../../api/adminApi';
+import { timetableApi } from '../../api/timetableApi';
 import Timetable from '../Timetable';
+import MultiSelectUserDropdown from '../../components/MultiSelectUserDropdown';
 import './ClassDetail.css';
+import './SessionRooms.css';
+
+const toSessionDateLabel = (value) => {
+  if (!value) return '-';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '-';
+  return d.toLocaleDateString('vi-VN');
+};
 
 const ClassDetail = () => {
   const { id } = useParams();
@@ -20,7 +30,7 @@ const ClassDetail = () => {
   const [teacherOptions, setTeacherOptions] = useState([]);
   const [studentOptions, setStudentOptions] = useState([]);
   const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
-  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
 
   // Generate TKB state
   const [templates, setTemplates] = useState([]);
@@ -28,6 +38,20 @@ const ClassDetail = () => {
   const [generateForm, setGenerateForm] = useState({ templateId: '' });
   const [generating, setGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState(null);
+
+  const [timetableRefreshKey, setTimetableRefreshKey] = useState(0);
+  const [bulkTeacherModalOpen, setBulkTeacherModalOpen] = useState(false);
+  const [bulkSessions, setBulkSessions] = useState([]);
+  const [bulkSessionsLoading, setBulkSessionsLoading] = useState(false);
+  const [bulkSelectedIds, setBulkSelectedIds] = useState(() => new Set());
+  const [bulkAssignTeacherId, setBulkAssignTeacherId] = useState('');
+  const [bulkRowSaving, setBulkRowSaving] = useState({});
+
+  const teachersInClass = useMemo(() => {
+    return allMembers
+      .filter((m) => m.role === 'teacher' && m.user?._id)
+      .map((m) => m.user);
+  }, [allMembers]);
 
   const fetchClassData = useCallback(async () => {
     setLoading(true);
@@ -99,10 +123,22 @@ const ClassDetail = () => {
   };
 
   const handleEnrollStudent = async () => {
-    if (!selectedStudentId) return;
+    if (!selectedStudentIds.length) return;
     try {
-      const res = await adminApi.enrollStudent(id, selectedStudentId);
-      if (res?.success) { setSelectedStudentId(''); fetchClassData(); }
+      const results = await Promise.allSettled(
+        selectedStudentIds.map((studentId) => adminApi.enrollStudent(id, studentId))
+      );
+      const failed = results
+        .map((r, i) => ({ r, id: selectedStudentIds[i] }))
+        .filter(({ r }) => r.status === 'rejected');
+      if (failed.length > 0) {
+        const msgs = failed.map(({ r }) => r.reason?.response?.data?.message || r.reason?.message || 'Lỗi');
+        alert(
+          `Đăng ký thất bại ${failed.length}/${selectedStudentIds.length} học sinh.\n${Array.from(new Set(msgs)).slice(0, 5).join('\n')}`
+        );
+      }
+      setSelectedStudentIds([]);
+      await fetchClassData();
     } catch (error) {
       alert(error?.response?.data?.message || 'Đăng ký học sinh thất bại');
     }
@@ -115,6 +151,87 @@ const ClassDetail = () => {
       if (res?.success) fetchClassData();
     } catch (error) {
       alert(error?.response?.data?.message || 'Xóa thành viên thất bại');
+    }
+  };
+
+  const loadBulkSessions = useCallback(async () => {
+    if (!id) return;
+    setBulkSessionsLoading(true);
+    try {
+      const res = await timetableApi.getSessions({ classId: id, limit: 500, page: 1 });
+      if (res?.success) {
+        const list = res.data?.sessions || [];
+        list.sort((a, b) => new Date(a.date) - new Date(b.date) || (a.sessionNumber || 0) - (b.sessionNumber || 0));
+        setBulkSessions(list);
+        setBulkSelectedIds(new Set());
+        setBulkAssignTeacherId('');
+      }
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Không tải được danh sách buổi học.');
+    } finally {
+      setBulkSessionsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (bulkTeacherModalOpen && id) loadBulkSessions();
+  }, [bulkTeacherModalOpen, id, loadBulkSessions]);
+
+  const toggleBulkSelected = (sessionId) => {
+    setBulkSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(sessionId)) next.delete(sessionId);
+      else next.add(sessionId);
+      return next;
+    });
+  };
+
+  const toggleBulkAll = (checked) => {
+    if (!checked) setBulkSelectedIds(new Set());
+    else setBulkSelectedIds(new Set(bulkSessions.map((s) => s._id)));
+  };
+
+  const saveTeacherForSessions = async () => {
+    const ids = Array.from(bulkSelectedIds).filter(Boolean);
+    if (ids.length === 0) return alert('Hãy chọn ít nhất một buổi học.');
+    if (!bulkAssignTeacherId) return alert('Vui lòng chọn giáo viên trước khi lưu.');
+
+    setBulkRowSaving((p) => {
+      const next = { ...p };
+      ids.forEach((sid) => {
+        next[sid] = true;
+      });
+      return next;
+    });
+
+    try {
+      const results = await Promise.allSettled(
+        ids.map((sid) => timetableApi.updateSession(sid, { teacher: bulkAssignTeacherId }))
+      );
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) {
+        const messages = failed.map((item) => {
+          const err = item.reason;
+          return err?.response?.data?.message || err?.message || 'Gán giáo viên thất bại';
+        });
+        const unique = Array.from(new Set(messages));
+        alert(
+          `Có ${failed.length}/${ids.length} buổi lưu thất bại.\n${unique.slice(0, 5).join('\n')}` +
+            (unique.length > 5 ? `\n...` : '')
+        );
+      }
+      await loadBulkSessions();
+      setTimetableRefreshKey((k) => k + 1);
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Gán giáo viên thất bại.');
+    } finally {
+      setBulkRowSaving((p) => {
+        const next = { ...p };
+        ids.forEach((sid) => {
+          next[sid] = false;
+        });
+        return next;
+      });
     }
   };
 
@@ -161,40 +278,45 @@ const ClassDetail = () => {
       </section>
 
       <section className="class-detail-tools">
-        <div className="tool-card">
+        <div className="tool-card tool-card--picker">
           <h3>Gán Giáo viên</h3>
           <div className="tool-row">
-            <select
-              multiple
-              value={selectedTeacherIds}
-              onChange={(e) => setSelectedTeacherIds(Array.from(e.target.selectedOptions, (opt) => opt.value))}
-              size={Math.min(6, Math.max(3, filteredTeacherOptions.length || 3))}
+            <MultiSelectUserDropdown
+              options={filteredTeacherOptions}
+              selectedIds={selectedTeacherIds}
+              onSelectionChange={setSelectedTeacherIds}
+              placeholder="Chọn giáo viên..."
+              emptyLabel="Không còn giáo viên khả dụng hoặc không khớp bộ lọc"
+            />
+            <button
+              type="button"
+              className="tool-action-btn"
+              disabled={selectedTeacherIds.length === 0}
+              onClick={handleAssignTeacher}
             >
-              {filteredTeacherOptions.map(t => (
-                <option key={t._id} value={t._id}>
-                  {t.firstName} {t.lastName} ({t.email}){t.phone ? ` - ${t.phone}` : ''}
-                </option>
-              ))}
-            </select>
-            <button type="button" onClick={handleAssignTeacher}>
-              Gán {selectedTeacherIds.length > 0 ? `${selectedTeacherIds.length} GV` : ''}
+              Gán{selectedTeacherIds.length > 0 ? ` ${selectedTeacherIds.length} GV` : ''}
             </button>
           </div>
-          <p className="hint-text" style={{ marginTop: 8 }}>
-            Có thể chọn nhiều giáo viên cùng lúc (giữ Ctrl hoặc Shift để chọn nhiều).
-          </p>
         </div>
 
-        <div className="tool-card">
+        <div className="tool-card tool-card--picker">
           <h3>Đăng ký Học sinh</h3>
           <div className="tool-row">
-            <select value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
-              <option value="">Chọn học sinh</option>
-              {filteredStudentOptions.map(s => (
-                <option key={s._id} value={s._id}>{s.firstName} {s.lastName} ({s.email})</option>
-              ))}
-            </select>
-            <button type="button" onClick={handleEnrollStudent}>Đăng ký</button>
+            <MultiSelectUserDropdown
+              options={filteredStudentOptions}
+              selectedIds={selectedStudentIds}
+              onSelectionChange={setSelectedStudentIds}
+              placeholder="Chọn học sinh..."
+              emptyLabel="Không còn học sinh khả dụng hoặc không khớp bộ lọc"
+            />
+            <button
+              type="button"
+              className="tool-action-btn"
+              disabled={selectedStudentIds.length === 0}
+              onClick={handleEnrollStudent}
+            >
+              Đăng ký{selectedStudentIds.length > 0 ? ` ${selectedStudentIds.length} HS` : ''}
+            </button>
           </div>
         </div>
       </section>
@@ -243,11 +365,125 @@ const ClassDetail = () => {
             <h2>Lịch học của Lớp</h2>
          </div>
          <div style={{ marginTop: '20px' }}>
-            <Timetable role="admin" fixedClassId={id} />
+            <Timetable
+              role="admin"
+              fixedClassId={id}
+              refreshKey={timetableRefreshKey}
+              onBulkAssignTeacherClick={() => setBulkTeacherModalOpen(true)}
+            />
          </div>
       </section>
 
       {/* Generate TKB Modal */}
+      {bulkTeacherModalOpen && (
+        <div className="modal-overlay" role="presentation" onClick={() => setBulkTeacherModalOpen(false)}>
+          <div className="modal-card assign-teacher-bulk-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <h2>Gán giáo viên buổi dạy</h2>
+            <p className="modal-subtitle">
+              Chọn các buổi học, sau đó chọn một giáo viên đã được gán cho lớp <strong>{classData?.name || ''}</strong> và bấm Lưu — tương tự giao diện gán phòng.
+            </p>
+
+            {teachersInClass.length === 0 ? (
+              <p className="hint-text">Chưa có giáo viên nào trong lớp. Hãy gán giáo viên ở phần &quot;Gán Giáo viên&quot; phía trên trước.</p>
+            ) : null}
+
+            <section className="session-rooms-table" style={{ marginTop: 12 }}>
+              {bulkSessionsLoading ? (
+                <div className="empty-box">Đang tải danh sách buổi học...</div>
+              ) : bulkSessions.length === 0 ? (
+                <div className="empty-box">Chưa có buổi học nào (hãy phát sinh lịch hoặc tạo buổi trước).</div>
+              ) : (
+                <>
+                  <div className="assign-bar">
+                    <label htmlFor="bulk-teacher-select">Chọn giáo viên</label>
+                    <select
+                      id="bulk-teacher-select"
+                      value={bulkAssignTeacherId}
+                      onChange={(e) => setBulkAssignTeacherId(e.target.value)}
+                      disabled={teachersInClass.length === 0}
+                    >
+                      <option value="">-- Chọn giáo viên --</option>
+                      {teachersInClass.map((t) => (
+                        <option key={t._id} value={t._id}>
+                          {t.firstName} {t.lastName} ({t.email})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      disabled={bulkSelectedIds.size === 0 || teachersInClass.length === 0}
+                      onClick={saveTeacherForSessions}
+                    >
+                      Lưu ({bulkSelectedIds.size})
+                    </button>
+                    {bulkSelectedIds.size === 0 && (
+                      <span className="assign-hint">Hãy tick các buổi cần gán giáo viên</span>
+                    )}
+                  </div>
+
+                  <div className="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th style={{ width: 40 }}>
+                            <input
+                              type="checkbox"
+                              checked={bulkSelectedIds.size > 0 && bulkSelectedIds.size === bulkSessions.length}
+                              onChange={(e) => toggleBulkAll(e.target.checked)}
+                              aria-label="Chọn tất cả"
+                            />
+                          </th>
+                          <th>Buổi</th>
+                          <th>Ngày</th>
+                          <th>Slot</th>
+                          <th>Giờ</th>
+                          <th>Giáo viên hiện tại</th>
+                          <th>Trạng thái</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bulkSessions.map((s) => (
+                          <tr key={s._id}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={bulkSelectedIds.has(s._id)}
+                                onChange={() => toggleBulkSelected(s._id)}
+                                disabled={!!bulkRowSaving[s._id]}
+                                aria-label={`Chọn buổi ${s.sessionNumber}`}
+                              />
+                            </td>
+                            <td>{s.title || `Buổi ${s.sessionNumber}`}</td>
+                            <td>{toSessionDateLabel(s.date)}</td>
+                            <td>{s.slotNumber ?? '-'}</td>
+                            <td>{s.startTime ? `${s.startTime}–${s.endTime}` : '-'}</td>
+                            <td>
+                              {s.teacher ? (
+                                `${s.teacher.firstName || ''} ${s.teacher.lastName || ''}`.trim() || '—'
+                              ) : (
+                                <span className="muted">Chưa gán</span>
+                              )}
+                            </td>
+                            <td>{s.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </section>
+
+            <div className="modal-actions" style={{ marginTop: 16 }}>
+              <button type="button" className="btn-secondary" onClick={() => setBulkTeacherModalOpen(false)}>
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {generateOpen && (
         <div className="modal-overlay" onClick={() => setGenerateOpen(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>

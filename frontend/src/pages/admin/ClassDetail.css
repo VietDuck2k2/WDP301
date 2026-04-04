@@ -90,24 +90,33 @@
 .class-detail-tools {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 16px;
 }
 
 .tool-card {
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.tool-card--picker h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
 .tool-card h3 {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
 }
 
 .tool-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 8px;
+  gap: 10px;
+  align-items: stretch;
 }
 
 .tool-row select {
@@ -117,13 +126,36 @@
   outline: none;
 }
 
-.tool-row button {
-  border: 0;
-  border-radius: 8px;
-  background: #0f172a;
-  color: #fff;
-  padding: 0 14px;
+.tool-action-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0 20px;
+  min-height: 44px;
   font-weight: 600;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.25);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.tool-action-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+}
+
+.tool-action-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+}
+
+.tool-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .class-members-panel {
@@ -273,4 +305,164 @@ tbody td {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 12px;
+}
+
+/* Modals (generate TKB + gán GV buổi dạy) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+}
+
+.modal-card h2 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 1.25rem;
+}
+
+.modal-card.assign-teacher-bulk-modal {
+  max-width: min(960px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+}
+
+/* Multi-select dropdown (gán GV / đăng ký HS) */
+.member-picker {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
+.member-picker-trigger {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #0f172a;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.member-picker-trigger:hover {
+  border-color: #cbd5e1;
+  background: #fff;
+}
+
+.member-picker-trigger:focus-visible {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  background: #fff;
+}
+
+.member-picker-trigger-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #334155;
+}
+
+.member-picker-trigger--placeholder .member-picker-trigger-text {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.member-picker-chevron {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.member-picker-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 80;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: min(320px, 70vh);
+}
+
+.member-picker-search {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.member-picker-search:focus {
+  background: #f8fafc;
+}
+
+.member-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.member-picker-empty {
+  padding: 14px 12px;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.member-picker-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.member-picker-item:hover {
+  background: #f1f5f9;
+}
+
+.member-picker-item input[type='checkbox'] {
+  margin-top: 3px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.member-picker-item-label {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
 }

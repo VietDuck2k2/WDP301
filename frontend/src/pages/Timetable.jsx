@@ -18,7 +18,7 @@ const getMonday = (d) => {
   return date;
 };
 
-const Timetable = ({ role, fixedClassId }) => {
+const Timetable = ({ role, fixedClassId, refreshKey = 0, onBulkAssignTeacherClick }) => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(getMonday(new Date()));
   const [timetableData, setTimetableData] = useState(null);
@@ -154,7 +154,7 @@ const Timetable = ({ role, fixedClassId }) => {
 
   useEffect(() => {
     fetchTimetable();
-  }, [currentDate, role, targetClassId, targetTeacherId]);
+  }, [currentDate, role, targetClassId, targetTeacherId, refreshKey]);
 
   useEffect(() => {
     fetchMasterData();
@@ -353,9 +353,18 @@ const Timetable = ({ role, fixedClassId }) => {
         
         <div className="flex flex-col gap-4 items-end">
             {role === 'admin' && (
-                <div className="flex gap-3">
-                    <button className="px-5 py-2.5 bg-primary text-white rounded-lg font-bold shadow-sm shadow-primary/30 hover:bg-primary-container transition-all" onClick={openCreateModal}>+ Tạo Buổi Học</button>
-                    <button className="px-5 py-2.5 bg-surface-container-low text-on-surface border border-outline-variant/30 rounded-lg font-bold hover:bg-surface-container transition-all" onClick={() => setIsGenerateModalOpen(true)}>Generate Auto</button>
+                <div className="flex flex-wrap gap-3 justify-end">
+                    <button type="button" className="px-5 py-2.5 bg-primary text-white rounded-lg font-bold shadow-sm shadow-primary/30 hover:bg-primary-container transition-all" onClick={openCreateModal}>+ Tạo Buổi Học</button>
+                    {fixedClassId && typeof onBulkAssignTeacherClick === 'function' && (
+                      <button
+                        type="button"
+                        className="px-5 py-2.5 bg-surface-container-low text-on-surface border border-outline-variant/30 rounded-lg font-bold hover:bg-surface-container transition-all"
+                        onClick={onBulkAssignTeacherClick}
+                      >
+                        Gán giáo viên buổi dạy
+                      </button>
+                    )}
+                    <button type="button" className="px-5 py-2.5 bg-surface-container-low text-on-surface border border-outline-variant/30 rounded-lg font-bold hover:bg-surface-container transition-all" onClick={() => setIsGenerateModalOpen(true)}>Generate Auto</button>
                 </div>
             )}
             <div className="flex items-center bg-surface-container-low p-1.5 rounded-xl border border-outline-variant/20 whisper-shadow inline-flex">

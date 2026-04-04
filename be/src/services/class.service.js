@@ -409,13 +409,7 @@ const assignTeacher = async (classId, teacherIdsInput) => {
       }
    }
 
-   // Keep old behavior for single-assign flow so existing timetable usage is unchanged.
-   if (teacherIds.length === 1) {
-      await Session.updateMany(
-         { class: classId },
-         { teacher: teacherIds[0] }
-      );
-   }
+   // Không gán giáo viên lên từng buổi tự động — buổi học để trống cho đến khi admin gán qua "Gán giáo viên buổi dạy".
 
    return {
       added,
