@@ -172,6 +172,24 @@ const Timetable = ({ role, fixedClassId, refreshKey = 0, onBulkAssignTeacherClic
     setCurrentDate(next);
   };
 
+  const getWeekLabel = () => {
+    const startOfWeek = getMonday(new Date());
+    const diff = Math.round((currentDate.getTime() - startOfWeek.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    
+    if (diff === 0) return 'Tuần này';
+    if (diff === 1) return 'Tuần tới';
+    if (diff === -1) return 'Tuần trước';
+    
+    const endOfWeek = new Date(currentDate);
+    endOfWeek.setDate(currentDate.getDate() + 6);
+    const fmt = (d) => `${d.getDate()}/${d.getMonth()+1}`;
+    return `${fmt(currentDate)} - ${fmt(endOfWeek)}`;
+  };
+
+  const resetToToday = () => {
+    setCurrentDate(getMonday(new Date()));
+  };
+
   const openEditModal = (session) => {
     if (role !== 'admin') return;
     setEditingSession(session);
@@ -369,7 +387,12 @@ const Timetable = ({ role, fixedClassId, refreshKey = 0, onBulkAssignTeacherClic
             )}
             <div className="flex items-center bg-surface-container-low p-1.5 rounded-xl border border-outline-variant/20 whisper-shadow inline-flex">
                 <button onClick={handlePrevWeek} className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-lg hover:bg-surface-container-lowest"><span className="material-symbols-outlined">chevron_left</span></button>
-                <div className="px-4 text-sm font-extrabold bg-surface-container-lowest text-primary shadow-sm rounded-lg py-2 cursor-pointer">Tuần này</div>
+                <div 
+                  onClick={resetToToday}
+                  className="px-4 text-xs font-extrabold bg-surface-container-lowest text-primary shadow-sm rounded-lg py-2 cursor-pointer hover:bg-primary/5 transition-colors min-w-[100px] text-center"
+                >
+                  {getWeekLabel()}
+                </div>
                 <button onClick={handleNextWeek} className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-lg hover:bg-surface-container-lowest"><span className="material-symbols-outlined">chevron_right</span></button>
             </div>
         </div>
