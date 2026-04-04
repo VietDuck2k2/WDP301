@@ -24,6 +24,8 @@ const Login = () => {
         if (result.success) {
             if (result.role === 'admin') {
                 navigate('/admin/dashboard');
+            } else if (result.role === 'teacher') {
+                navigate('/teacher/dashboard');
             } else {
                 navigate(`/${result.role}/timetable`);
             }

@@ -15,6 +15,7 @@ import AttendanceAdmin from './pages/admin/AttendanceAdmin';
 import Reports from './pages/admin/Reports';
 
 import TeacherTimetable from './pages/teacher/TeacherTimetable';
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherClasses from './pages/teacher/TeacherClasses';
 import TeacherClassDetail from './pages/teacher/TeacherClassDetail';
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
@@ -59,6 +60,7 @@ function App() {
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
+              <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
               <Route path="/teacher/timetable" element={<TeacherTimetable />} />
               <Route path="/teacher/classes" element={<TeacherClasses />} />
               <Route path="/teacher/classes/:id" element={<TeacherClassDetail />} />

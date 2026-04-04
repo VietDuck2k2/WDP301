@@ -15,6 +15,7 @@ const adminNav = [
 ];
 
 const teacherNav = [
+  { to: '/teacher/dashboard', label: 'Tổng quan', icon: 'dashboard' },
   { to: '/teacher/timetable', label: 'Thời khóa biểu', icon: 'calendar_month' },
   { to: '/teacher/classes', label: 'Lớp học', icon: 'school' },
   { to: '/teacher/attendances', label: 'Điểm danh', icon: 'fact_check' },
